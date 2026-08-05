@@ -23,7 +23,7 @@
 
 #define AppName "ePy Studio"
 #define AppDirName "epy_studio"
-#define AppVersion "0.1.0"
+#define AppVersion "0.2.0"
 #define AppPublisher "Ing. Angel Navarro-Mora M.Sc."
 #define AppURL "https://github.com/estructuraPy/epy_studio"
 #define AppId "{{7E2F9A41-5C38-4D06-B1E9-3A8D24C7F015}"
@@ -103,8 +103,10 @@ Filename: "{app}\epy_slides.exe"; Parameters: "--register"; \
     Flags: runascurrentuser nowait postinstall skipifsilent; \
     Description: "Register ePy Slides under Open with"; \
     Components: slides
-; epy_papers has no --register CLI (its argparse takes only [files ...]);
-; it never shipped file-type registration in its own installer either.
+Filename: "{app}\epy_papers.exe"; Parameters: "--register"; \
+    Flags: runascurrentuser nowait postinstall skipifsilent; \
+    Description: "Register ePy Papers under Open with"; \
+    Components: papers
 
 [UninstallRun]
 Filename: "{app}\epy_studio.exe"; Parameters: "--unregister"; \
@@ -113,3 +115,5 @@ Filename: "{app}\epy_reports.exe"; Parameters: "--unregister"; \
     RunOnceId: "UnregReports"; Flags: runascurrentuser nowait; Components: reports
 Filename: "{app}\epy_slides.exe"; Parameters: "--unregister"; \
     RunOnceId: "UnregSlides"; Flags: runascurrentuser nowait; Components: slides
+Filename: "{app}\epy_papers.exe"; Parameters: "--unregister"; \
+    RunOnceId: "UnregPapers"; Flags: runascurrentuser nowait; Components: papers

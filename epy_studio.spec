@@ -118,6 +118,28 @@ a_launcher = Analysis(
 )
 
 
+def _drop_icu_dlls(analysis) -> None:
+    """Strip any ICU DLL picked up from the build environment.
+
+    PySide6 >= 6.9 links Qt6Core against the Windows system ICU
+    (System32); a conda ICU copy bundled into _internal would shadow it
+    on end-user machines and kill every Qt import with WinError 127.
+    WebEngine's icudtl.dat is a data file, not a DLL — unaffected.
+    """
+    analysis.binaries = [
+        entry
+        for entry in analysis.binaries
+        if not (
+            (name := _Path(entry[0]).name.lower()).startswith("icu")
+            and name.endswith(".dll")
+        )
+    ]
+
+
+for _a in (a_reports, a_slides, a_papers, a_launcher):
+    _drop_icu_dlls(_a)
+
+
 def _exe(analysis, name: str, icon: str | None) -> EXE:  # noqa: F821
     return EXE(  # noqa: F821
         PYZ(analysis.pure),  # noqa: F821

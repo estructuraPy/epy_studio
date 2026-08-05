@@ -136,8 +136,25 @@ def _drop_icu_dlls(analysis) -> None:
     ]
 
 
+def _drop_qt_qml(analysis) -> None:
+    """Strip the PySide6 qml/ tree.
+
+    The apps are QtWidgets-only: the QML runtime is never loaded. The
+    PySide6 wheel's qml/ tree is large and carries build debris
+    (objects-Debug/*.obj) whose deep paths break the installer compile
+    (MAX_PATH). Qt6Qml*.dll stay: they are link-time deps of WebEngine.
+    """
+
+    def keep(entry) -> bool:
+        return not entry[0].replace("\\", "/").lower().startswith("pyside6/qml/")
+
+    analysis.binaries = [entry for entry in analysis.binaries if keep(entry)]
+    analysis.datas = [entry for entry in analysis.datas if keep(entry)]
+
+
 for _a in (a_reports, a_slides, a_papers, a_launcher):
     _drop_icu_dlls(_a)
+    _drop_qt_qml(_a)
 
 
 def _exe(analysis, name: str, icon: str | None) -> EXE:  # noqa: F821

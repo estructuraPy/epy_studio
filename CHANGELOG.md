@@ -4,6 +4,19 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] — 2026-08-06
+
+### Fixed
+- Ships epy_reports 0.4.4, epy_slides 0.3.1 and epy_papers 0.3.1: the
+  welcome document's scripting example no longer shows an import that
+  fails, and the Ubuntu `.deb` packagers no longer build themselves as
+  version 0.0.0.
+
+### Changed
+- The three bundled editors now share one internal layout — same
+  folders, same module names — so a fix written in one lands in the
+  same place in the others. No user-facing behaviour changed.
+
 ## [0.4.0] — 2026-08-05
 
 ### Fixed

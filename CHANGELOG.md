@@ -4,6 +4,20 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-08-05
+
+### Fixed
+- **Office exports carry the right geometry** (ships epy_reports 0.4.3,
+  epy_slides 0.3.0): PowerPoint decks no longer overflow their slides —
+  exported placeholders get shrink-on-overflow with a computed font
+  scale, and the reference typography now matches the live preview;
+  Word exports honor the document's `page-size:` (letter / a4 / legal)
+  instead of the reference doc's fixed size or the reader's locale.
+
+### Added
+- **4:3 PowerPoint export** (epy_slides): `aspect-ratio: "4:3"` decks
+  export on a true 10 x 7.5 in canvas.
+
 ## [0.3.2] — 2026-08-05
 
 ### Fixed

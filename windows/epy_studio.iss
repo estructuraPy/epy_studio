@@ -1,5 +1,6 @@
 ; Inno Setup script for ePy Studio — unified installer for the ePy
-; document apps (epy_reports, epy_slides, epy_papers) + launcher.
+; document apps (epy_reports, epy_slides, epy_papers), ContextCraft
+; (epy_craft) + launcher.
 ;
 ; Build from the epy_studio directory AFTER running `python build.py`:
 ;   ISCC.exe windows\epy_studio.iss
@@ -63,6 +64,7 @@ Name: "custom"; Description: "Custom installation"; Flags: iscustom
 Name: "reports"; Description: "ePy Reports — technical reports (PDF / Word / HTML)"; Types: full custom
 Name: "slides"; Description: "ePy Slides — presentation decks (reveal.js / PowerPoint)"; Types: full custom
 Name: "papers"; Description: "ePy Papers — academic manuscripts"; Types: full custom
+Name: "craft"; Description: "ContextCraft — batch LLM processing over your reference library"; Types: full custom
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -77,12 +79,14 @@ Source: "..\docs\USER_MANUAL_es.md"; DestDir: "{app}\docs"; Flags: ignoreversion
 Source: "{#DistDir}\epy_reports.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: reports
 Source: "{#DistDir}\epy_slides.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: slides
 Source: "{#DistDir}\epy_papers.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: papers
+Source: "{#DistDir}\epy_craft.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: craft
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\epy_studio.exe"; IconFilename: "{app}\epy_studio.exe"
 Name: "{autoprograms}\ePy Reports"; Filename: "{app}\epy_reports.exe"; IconFilename: "{app}\epy_reports.exe"; Components: reports
 Name: "{autoprograms}\ePy Slides"; Filename: "{app}\epy_slides.exe"; IconFilename: "{app}\epy_slides.exe"; Components: slides
 Name: "{autoprograms}\ePy Papers"; Filename: "{app}\epy_papers.exe"; IconFilename: "{app}\epy_papers.exe"; Components: papers
+Name: "{autoprograms}\ContextCraft"; Filename: "{app}\epy_craft.exe"; IconFilename: "{app}\epy_craft.exe"; Components: craft
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\epy_studio.exe"; IconFilename: "{app}\epy_studio.exe"; Tasks: desktopicon
 
 [Run]
@@ -107,6 +111,14 @@ Filename: "{app}\epy_papers.exe"; Parameters: "--register"; \
     Flags: runascurrentuser nowait postinstall skipifsilent; \
     Description: "Register ePy Papers under Open with"; \
     Components: papers
+; ContextCraft advertises an "Open with" entry only, and never
+; --as-default: it consumes Markdown and text as batch INPUT and
+; authors neither, so claiming the default would take it from ePy
+; Papers or ePy Reports for a type ContextCraft does not own.
+Filename: "{app}\epy_craft.exe"; Parameters: "--register"; \
+    Flags: runascurrentuser nowait postinstall skipifsilent; \
+    Description: "Register ContextCraft under Open with"; \
+    Components: craft
 
 [UninstallRun]
 Filename: "{app}\epy_studio.exe"; Parameters: "--unregister"; \
@@ -117,3 +129,5 @@ Filename: "{app}\epy_slides.exe"; Parameters: "--unregister"; \
     RunOnceId: "UnregSlides"; Flags: runascurrentuser nowait; Components: slides
 Filename: "{app}\epy_papers.exe"; Parameters: "--unregister"; \
     RunOnceId: "UnregPapers"; Flags: runascurrentuser nowait; Components: papers
+Filename: "{app}\epy_craft.exe"; Parameters: "--unregister"; \
+    RunOnceId: "UnregCraft"; Flags: runascurrentuser nowait; Components: craft

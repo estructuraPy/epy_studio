@@ -47,6 +47,11 @@ TOOLS: list[tuple[str, str, str]] = [
         "ePy Papers",
         "Academic manuscripts — journal templates and citations",
     ),
+    (
+        "epy_craft",
+        "ContextCraft",
+        "Batch LLM processing over your own reference library",
+    ),
 ]
 
 

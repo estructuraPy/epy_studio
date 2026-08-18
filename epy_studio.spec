@@ -50,35 +50,57 @@ _pandoc_bins = [*_pandoc_bins, (_pandoc, "pypandoc/files")]
 
 
 def _app_assets(pkg: str) -> list[tuple[str, str]]:
-    """Bundle <repo>/src/<pkg>/_config/_assets preserving package layout."""
-    assets = _SUITE / pkg / "src" / pkg / "_config" / "_assets"
+    """Bundle <repo>/src/<pkg>/_config preserving package layout.
+
+    The whole _config tree, not only _config/_assets. Measured before
+    widening it: epy_reports and epy_slides keep every non-.py file
+    under _assets, so nothing changes for them. Two apps did lose files
+    to the narrower walk -- epy_papers/_config/_data/journals.json, the
+    50-journal profile catalog its export path is built around, and all
+    five of epy_craft's .epyson catalogs, without which its loader
+    raises on first use rather than defaulting.
+    """
+    config = _SUITE / pkg / "src" / pkg / "_config"
     src_root = _SUITE / pkg / "src" / pkg
     return [
         (str(p), str(_Path(pkg) / p.relative_to(src_root).parent))
-        for p in assets.rglob("*")
-        if p.is_file() and p.suffix != ".py"
+        for p in config.rglob("*")
+        if p.is_file()
+        and p.suffix != ".py"
+        and "__pycache__" not in p.parts
     ]
 
 
-def _app_hidden(pkg: str, extra_asset_pkgs: list[str]) -> list[str]:
-    """Hidden imports: pypandoc + the dynamically-imported asset packages."""
+def _app_hidden(
+    pkg: str, extra_asset_pkgs: list[str], extra: list[str] | None = None
+) -> list[str]:
+    """Hidden imports: pypandoc + the dynamically-imported asset packages.
+
+    ``extra`` carries whatever else an app resolves at run time and the
+    dependency graph cannot see -- entry-point plugins, for instance.
+    """
     hidden = collect_submodules("pypandoc")
     hidden += [f"{pkg}._config", f"{pkg}._config._assets"]
     hidden += [f"{pkg}._config._assets.{sub}" for sub in extra_asset_pkgs]
+    hidden += list(extra or [])
     # Lazy-imported inside _pdf_footer.add_watermark; PyInstaller may miss
     # the in-function import.
     hidden += ["PIL", "PIL.Image"]
     return hidden
 
 
-def _app_analysis(pkg: str, extra_asset_pkgs: list[str]) -> Analysis:  # noqa: F821
+def _app_analysis(  # noqa: F821
+    pkg: str,
+    extra_asset_pkgs: list[str],
+    extra_hidden: list[str] | None = None,
+) -> Analysis:  # noqa: F821
     """One Analysis per app, built from its repo's src/ tree."""
     return Analysis(  # noqa: F821 — PyInstaller build namespace
         [str(_SUITE / pkg / "src" / pkg / "__main__.py")],
         pathex=[str(_SUITE / pkg / "src")],
         binaries=list(_pandoc_bins),
         datas=list(_pandoc_datas) + _app_assets(pkg),
-        hiddenimports=_app_hidden(pkg, extra_asset_pkgs),
+        hiddenimports=_app_hidden(pkg, extra_asset_pkgs, extra_hidden),
         hookspath=[],
         hooksconfig={},
         runtime_hooks=[],
@@ -103,6 +125,22 @@ a_slides = _app_analysis(
 a_papers = _app_analysis(
     "epy_papers",
     ["branding", "themes", "mathjax", "csl", "mermaid", "nomnoml"],
+)
+a_craft = _app_analysis(
+    "epy_craft",
+    ["branding", "prompts"],
+    # keyring resolves its backend through entry points, which the
+    # dependency graph cannot see. Without these the frozen app reports
+    # "no recommended backend" and silently loses every stored API key.
+    extra_hidden=[
+        "keyring.backends",
+        "keyring.backends.Windows",
+        "keyring.backends.SecretService",
+        "keyring.backends.chainer",
+        "keyring.backends.fail",
+        "yaml",
+        "pypdf",
+    ],
 )
 a_launcher = Analysis(
     [str(_ROOT / "launcher.py")],
@@ -152,7 +190,7 @@ def _drop_qt_qml(analysis) -> None:
     analysis.datas = [entry for entry in analysis.datas if keep(entry)]
 
 
-for _a in (a_reports, a_slides, a_papers, a_launcher):
+for _a in (a_reports, a_slides, a_papers, a_craft, a_launcher):
     _drop_icu_dlls(_a)
     _drop_qt_qml(_a)
 
@@ -183,6 +221,9 @@ exe_slides = _exe(
 exe_papers = _exe(
     a_papers, "epy_papers", _icon("epy_papers", "assets_build", "epy_papers.ico")
 )
+exe_craft = _exe(
+    a_craft, "epy_craft", _icon("epy_craft", "assets_build", "epy_craft.ico")
+)
 exe_launcher = _exe(
     a_launcher, "epy_studio", _icon("epy_reports", "assets_build", "epy_reports.ico")
 )
@@ -200,6 +241,9 @@ coll = COLLECT(  # noqa: F821
     exe_papers,
     a_papers.binaries,
     a_papers.datas,
+    exe_craft,
+    a_craft.binaries,
+    a_craft.datas,
     strip=False,
     upx=False,
     upx_exclude=[],

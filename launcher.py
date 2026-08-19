@@ -49,7 +49,7 @@ TOOLS: list[tuple[str, str, str]] = [
     ),
     (
         "epy_craft",
-        "ContextCraft",
+        "ePy Craft",
         "Batch LLM processing over your own reference library",
     ),
 ]

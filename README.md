@@ -23,7 +23,7 @@ docs/              user manual (English + Spanish), shipped with the app
 
 ## Build
 
-From this directory, with the three app repos as siblings and
+From this directory, with the four app repos as siblings and
 `pip install -e` applied to each:
 
 ```
@@ -35,7 +35,7 @@ Output: `dist/epy_studio-setup-<version>.exe`.
 
 ## Design notes
 
-- The three editors deduplicate through PyInstaller `COLLECT` (identical
+- The four applications deduplicate through PyInstaller `COLLECT` (identical
   runtime files collapse to one copy) — never share a runtime through
   NTFS junctions: the Windows loader refuses DLLs behind reparse points.
 - Windows 10/11 cannot be given a default app silently (`UserChoice` is

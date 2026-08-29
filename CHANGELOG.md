@@ -4,6 +4,44 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] — 2026-08-29
+
+### Added
+- **A fourth application: ePy Craft** (0.1.0), batch LLM processing over
+  your own reference library. It advertises an "Open with" entry only and
+  never registers as the default handler, because it consumes Markdown and
+  text as batch INPUT and authors neither.
+
+### Fixed
+- **The bundle carried torch and tensorflow, and nothing imports them.**
+  Measured: 872 MB / 3,429 files in June against 6.7 GB / 12,840 files
+  now, of which torch was 3.5 GB and tensorflow 1.2 GB, plus cv2,
+  nltk_data, faiss, pyarrow, scipy, kaleido, llvmlite and imageio_ffmpeg.
+
+  None of it is used. The chain starts at a dependency nothing imports:
+  epy_reports declares plotly, but its `_core/_plotly` imports only `re`
+  -- a plotly fence becomes a div and a JSON payload that the bundled
+  Plotly.js draws in the page. PyInstaller still found plotly in the
+  build environment and its hook pulled kaleido, skimage, scipy, torch
+  and tensorflow behind it.
+
+  Worse than the size is what it meant: the bundle's contents depended on
+  what happened to be installed on the machine doing the build, so the
+  same commit shipped differently from two laptops.
+
+  **6.7 GB to 1.02 GB**, 12,840 to 3,688 files, all five executables
+  present and all four applications starting. Verified where a smoke test
+  cannot reach: a report carrying a plotly fence still renders its figure
+  with plotly, kaleido, torch and scipy blocked at import.
+
+### Changed
+- Ships epy_reports 0.4.4, epy_slides 0.3.1, epy_papers 0.3.1 and
+  epy_craft 0.1.0.
+- The epy_docs exclusion now records the reasons that bind -- it is a
+  commercial package while this installer is a free MIT download, and
+  bundling it would not work regardless, since it shells out to `quarto`
+  and to a TeX distribution that PyInstaller cannot collect.
+
 ## [0.4.1] — 2026-08-06
 
 ### Fixed

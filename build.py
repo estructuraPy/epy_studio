@@ -1,4 +1,4 @@
-"""Build the ePy Studio unified bundle (three apps + launcher, one runtime).
+"""Build the ePy Studio unified bundle (four apps + launcher, one runtime).
 
 Run from this directory:
 

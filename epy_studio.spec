@@ -32,12 +32,53 @@ _EXCLUDES = [
     # pulled in by sibling libs). The apps use PySide6 exclusively.
     "PyQt5",
     "PyQt6",
-    # Heavy scientific stack reachable through optional epy_docs paths;
-    # never imported by the frozen editors themselves.
+    # epy_docs is excluded for a reason of its own, and not the one this
+    # comment used to give. It is a commercial, non-PyPI package; the
+    # Studio installer is a free per-user download under MIT, so bundling
+    # it would hand it to everyone who runs setup.exe. It would also not
+    # work: epy_docs shells out to the `quarto` executable and a TeX
+    # distribution, neither of which is a Python module PyInstaller can
+    # collect -- the menu would enable itself and the export would die in
+    # a worker thread. Reaching it is an out-of-process job, not a
+    # bundling one.
+    "epy_docs",
+    # The scientific stack, excluded by measurement rather than by
+    # reputation. NONE of these is named even once across the four apps'
+    # source (checked: torch, tensorflow, sklearn, skimage, cv2, faiss,
+    # nltk, pyarrow, numba, llvmlite, imageio, kaleido -> zero files).
+    #
+    # They arrive through one chain, and the chain starts at a dependency
+    # nothing imports: epy_reports declares plotly, but its _core/_plotly
+    # module imports only `re` -- the figures are rendered by the bundled
+    # Plotly.js in the page, never by the Python package. PyInstaller
+    # still finds plotly in the build environment, and its hook pulls
+    # kaleido, then skimage, then scipy, then torch, then tensorflow.
+    #
+    # Measured on this machine: the bundle went from 872 MB (June, three
+    # apps) to 6.7 GB / 12,840 files, of which torch is 3.5 GB and
+    # tensorflow 1.2 GB. Worse than the size is what it means -- the
+    # bundle's contents depend on what happens to be pip-installed on the
+    # machine doing the build, so the same commit ships differently from
+    # two laptops. Naming them here makes the answer the same everywhere.
     "matplotlib",
     "pandas",
     "numpy",
-    "epy_docs",
+    "plotly",
+    "kaleido",
+    "skimage",
+    "scipy",
+    "torch",
+    "tensorflow",
+    "sklearn",
+    "cv2",
+    "faiss",
+    "nltk",
+    "pyarrow",
+    "numba",
+    "llvmlite",
+    "imageio",
+    "imageio_ffmpeg",
+    "shapely",
 ]
 
 # pypandoc data + pandoc.exe (shared by the three apps; deduped in COLLECT).

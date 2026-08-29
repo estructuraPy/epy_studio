@@ -8,7 +8,7 @@
     {"id": "epy_reports", "display": "ePy Reports", "component": "reports", "register": "default", "description": "Technical reports — live preview, PDF / Word / HTML export"},
     {"id": "epy_slides", "display": "ePy Slides", "component": "slides", "register": "default", "description": "Presentation decks — reveal.js / PowerPoint export"},
     {"id": "epy_papers", "display": "ePy Papers", "component": "papers", "register": "default", "description": "Academic manuscripts — journal templates and citations"},
-    {"id": "epy_craft", "display": "ePy Craft", "component": "craft", "register": "openwith", "description": "Batch LLM processing over your own reference library"}
+    {"id": "epy_draft", "display": "ePy Draft", "component": "craft", "register": "openwith", "description": "Batch LLM processing over your own reference library"}
   ],
-  "_register_note": "'openwith' advertises an Open-with entry and never claims the default. ePy Craft consumes Markdown and text as batch INPUT and authors neither, so claiming the default would hand it documents it does not edit. That rule lived as a prose comment in the .iss, which is exactly what gets lost when a fifth application is added."
+  "_register_note": "'openwith' advertises an Open-with entry and never claims the default. ePy Draft consumes Markdown and text as batch INPUT and authors neither, so claiming the default would hand it documents it does not edit. That rule lived as a prose comment in the .iss, which is exactly what gets lost when a fifth application is added."
 }

@@ -9,17 +9,17 @@ from epy_studio._core import _catalog
 
 def test_every_shipped_application_is_listed() -> None:
     ids = [app.app_id for app in _catalog.apps()]
-    assert ids == ["epy_reports", "epy_slides", "epy_papers", "epy_craft"]
+    assert ids == ["epy_reports", "epy_slides", "epy_papers", "epy_draft"]
 
 
-def test_craft_advertises_open_with_and_never_claims_the_default() -> None:
+def test_draft_advertises_open_with_and_never_claims_the_default() -> None:
     # The rule lived as a prose comment in the installer script, which
     # is exactly what gets lost when a fifth application is added. ePy
-    # Craft consumes Markdown and text as batch INPUT and authors
+    # Draft consumes Markdown and text as batch INPUT and authors
     # neither, so claiming the default would hand it documents it does
     # not edit.
     by_id = {app.app_id: app for app in _catalog.apps()}
-    assert not by_id["epy_craft"].claims_default
+    assert not by_id["epy_draft"].claims_default
     assert by_id["epy_reports"].claims_default
 
 

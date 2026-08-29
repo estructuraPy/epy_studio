@@ -98,7 +98,7 @@ def _app_assets(pkg: str) -> list[tuple[str, str]]:
     under _assets, so nothing changes for them. Two apps did lose files
     to the narrower walk -- epy_papers/_config/_data/journals.json, the
     50-journal profile catalog its export path is built around, and all
-    five of epy_craft's .epyson catalogs, without which its loader
+    five of epy_draft's .epyson catalogs, without which its loader
     raises on first use rather than defaulting.
     """
     config = _SUITE / pkg / "src" / pkg / "_config"
@@ -168,7 +168,7 @@ a_papers = _app_analysis(
     ["branding", "themes", "mathjax", "csl", "mermaid", "nomnoml"],
 )
 a_craft = _app_analysis(
-    "epy_craft",
+    "epy_draft",
     ["branding", "prompts"],
     # keyring resolves its backend through entry points, which the
     # dependency graph cannot see. Without these the frozen app reports
@@ -273,7 +273,7 @@ exe_papers = _exe(
     a_papers, "epy_papers", _icon("epy_papers", "assets_build", "epy_papers.ico")
 )
 exe_craft = _exe(
-    a_craft, "epy_craft", _icon("epy_craft", "assets_build", "epy_craft.ico")
+    a_craft, "epy_draft", _icon("epy_draft", "assets_build", "epy_draft.ico")
 )
 exe_launcher = _exe(
     a_launcher, "epy_studio", _icon("epy_reports", "assets_build", "epy_reports.ico")

@@ -14,7 +14,9 @@ packages it with per-app components.
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -48,7 +50,9 @@ def _build_env() -> dict[str, str]:
     env = os.environ.copy()
     existing = env.get("PYTHONPATH")
     env["PYTHONPATH"] = (
-        f"{BUILD_SUPPORT}{os.pathsep}{existing}" if existing else str(BUILD_SUPPORT)
+        f"{BUILD_SUPPORT}{os.pathsep}{existing}"
+        if existing
+        else str(BUILD_SUPPORT)
     )
     return env
 
@@ -62,11 +66,21 @@ def _verify_qt_runtime(target: Path) -> None:
     """
     internal = target / "_internal"
     required = {
-        "Qt platform plugin": internal / "PySide6" / "plugins" / "platforms" / "qwindows.dll",
-        "WebEngine helper": internal / "PySide6" / "QtWebEngineProcess.exe",
-        "WebEngine ICU data": internal / "PySide6" / "resources" / "icudtl.dat",
+        "Qt platform plugin": (
+            internal / "PySide6" / "plugins" / "platforms" / "qwindows.dll"
+        ),
+        "WebEngine helper": (
+            internal / "PySide6" / "QtWebEngineProcess.exe"
+        ),
+        "WebEngine ICU data": (
+            internal / "PySide6" / "resources" / "icudtl.dat"
+        ),
     }
-    missing = [f"{label}: {path}" for label, path in required.items() if not path.is_file()]
+    missing = [
+        f"{label}: {path}"
+        for label, path in required.items()
+        if not path.is_file()
+    ]
     poison = [
         str(p)
         for p in internal.rglob("icu*.dll")
@@ -78,8 +92,79 @@ def _verify_qt_runtime(target: Path) -> None:
             print(f"MISSING  {line}")
         for line in poison:
             print(f"POISON   bundled ICU DLL: {line}")
-        sys.exit("Qt runtime verification failed — refusing to ship this bundle.")
-    print("Qt runtime verified: platform plugin, WebEngine helper and resources present.")
+        sys.exit(
+            "Qt runtime verification failed — refusing to ship "
+            "this bundle."
+        )
+    print(
+        "Qt runtime verified: platform plugin, WebEngine helper and "
+        "resources present."
+    )
+
+
+def _verify_manifest() -> None:
+    """Refuse to build when the installer and the catalog disagree.
+
+    The list of applications is stated in two places that cannot read
+    each other: ``src/epy_studio/_config/apps.epyson``, which the
+    launcher and this script read, and ``windows/epy_studio.iss``, which
+    Inno Setup reads and which cannot parse JSON.
+
+    Two is one more than one, and this repository has already paid for
+    it: the list also lived in the spec, the README and this script's
+    own docstring, and by the time a fourth application shipped three of
+    those still said "three editors". Checking is cheaper than the
+    drift.
+
+    The version is checked the same way and for a sharper reason:
+    ``OutputBaseFilename`` embeds ``AppVersion``, so a stale value
+    silently overwrites the previous release's artifact. Two different
+    bundles can ship under one filename.
+
+    Raises:
+        SystemExit: Naming what disagrees. Refusing to ship a bundle
+            that lies is already this script's idiom for the Qt runtime.
+    """
+    catalog = json.loads(
+        (ROOT / "src" / "epy_studio" / "_config" / "apps.epyson").read_text(
+            encoding="utf-8"
+        )
+    )
+    iss = (ROOT / "windows" / "epy_studio.iss").read_text(
+        encoding="utf-8", errors="replace"
+    )
+
+    problems: list[str] = []
+    for app in catalog["apps"]:
+        if f"{app['id']}.exe" not in iss:
+            problems.append(f"{app['id']}.exe is in the catalog, not the .iss")
+        if f"Name: \"{app['component']}\"" not in iss:
+            problems.append(
+                f"component {app['component']!r} is in the catalog, "
+                f"not the .iss"
+            )
+
+    declared = re.search(r'#define AppVersion "([^"]+)"', iss)
+    package = (ROOT / "src" / "epy_studio" / "__init__.py").read_text(
+        encoding="utf-8"
+    )
+    ours = re.search(r'__version__ = "([^"]+)"', package)
+    if declared and ours and declared.group(1) != ours.group(1):
+        problems.append(
+            f"AppVersion is {declared.group(1)} and __version__ is "
+            f"{ours.group(1)}; OutputBaseFilename embeds the first, so "
+            f"a stale value overwrites the previous release's artifact"
+        )
+
+    if problems:
+        raise SystemExit(
+            "refusing to build -- the installer and the catalog disagree:\n  "
+            + "\n  ".join(problems)
+        )
+    print(
+        f"Manifest verified: {len(catalog['apps'])} applications, "
+        f"version {ours.group(1) if ours else '?'}."
+    )
 
 
 def _clean() -> None:
@@ -113,6 +198,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    _verify_manifest()
     if not args.keep:
         _clean()
 

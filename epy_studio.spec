@@ -184,11 +184,21 @@ a_craft = _app_analysis(
     ],
 )
 a_launcher = Analysis(
-    [str(_ROOT / "launcher.py")],
-    pathex=[str(_ROOT)],
+    [str(_ROOT / "src" / "epy_studio" / "__main__.py")],
+    pathex=[str(_ROOT / "src")],
     binaries=[],
-    datas=[],
-    hiddenimports=["_assoc"],
+    # The application catalog. It is DATA, and a build that does not
+    # carry it produces an empty selector that looks like a broken
+    # install rather than a broken build -- which is why the loader
+    # raises instead of defaulting.
+    datas=[(
+        str(_ROOT / "src" / "epy_studio" / "_config" / "apps.epyson"),
+        "epy_studio/_config",
+    )],
+    # _assoc was a top-level module on sys.path, where any collision
+    # shadowed it silently. It is epy_studio._core.winreg_assoc now and
+    # the dependency graph can see it.
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

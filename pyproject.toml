@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "epy_studio"
+version = "0.5.0"
+description = "Pick the right ePy editor for the document at hand."
+authors = [{ name = "Ing. Angel Navarro-Mora M.Sc.", email = "ahnavarroitcr@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+classifiers = ["License :: OSI Approved :: MIT License"]
+dependencies = [
+    "PySide6>=6.6",
+]
+
+# NOTE: the four applications are NOT dependencies. Studio launches
+# their executables from the shared install directory; it never imports
+# them. Nor is epy_docs: it is a commercial package reached out of
+# process, and naming it in an extra would make a pip install resolve
+# against whatever public index happens to answer.
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5", "pyinstaller>=6.0"]
+
+[project.gui-scripts]
+epy_studio = "epy_studio.launcher:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/epy_studio"]
+
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "D", "UP", "B", "SIM"]
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
+"epy_studio.spec" = ["D", "F821", "E501"]
+"build.py" = ["D103"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers --strict-config"

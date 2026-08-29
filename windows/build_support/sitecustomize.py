@@ -20,13 +20,15 @@ import os
 import sys
 
 if sys.platform == "win32":
+    import contextlib
     import ctypes
 
     _system_icu = os.path.join(
         os.environ.get("SYSTEMROOT", r"C:\Windows"), "System32", "icuuc.dll"
     )
     if os.path.isfile(_system_icu):
-        try:
+        # Best effort: a machine with no system ICU is one where Qt
+        # fails loudly on its own, so swallowing this keeps the
+        # bootstrap from breaking an otherwise fine start.
+        with contextlib.suppress(OSError):
             ctypes.WinDLL(_system_icu)
-        except OSError:
-            pass

@@ -45,6 +45,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import _i18n
+
 __all__ = ["Backend", "detect_docs", "handoff_env"]
 
 ENV_PYTHON = "EPY_DOCS_PYTHON"
@@ -69,14 +71,33 @@ class Backend:
         python: The interpreter that carries it, when one was found.
         version: Its reported version.
         quarto: Path to the ``quarto`` executable it can reach.
-        detail: One line for a status strip, already phrased for a
-            reader rather than for a log.
     """
 
     python: Path | None = None
     version: str = ""
     quarto: str = ""
-    detail: str = "ePy Docs not installed — commercial add-on"
+
+    def describe(self) -> str:
+        """Return the status line for this backend, translated.
+
+        Built when it is READ rather than when the backend is detected:
+        a sentence baked in English at detection time cannot follow a
+        language the user changes afterwards.
+
+        Returns:
+            One line naming the state and, where it matters, what to do
+            about it.
+        """
+        if self.python is None:
+            return _i18n.tr("ePy Docs not installed — commercial add-on")
+        if self.quarto:
+            return _i18n.tr("ePy Docs {version} (Quarto found)").format(
+                version=self.version
+            )
+        return _i18n.tr(
+            "ePy Docs {version} found, but Quarto is not installed — "
+            "PDF export through it will fail"
+        ).format(version=self.version)
 
     @property
     def present(self) -> bool:
@@ -152,15 +173,7 @@ def detect_docs(*, timeout: float = 20.0) -> Backend:
             # package case. Not a backend.
             continue
         version, quarto = lines[0].strip(), lines[2].strip()
-        detail = (
-            f"ePy Docs {version} (Quarto found)"
-            if quarto
-            else f"ePy Docs {version} found, but Quarto is not installed "
-            f"— PDF export through it will fail"
-        )
-        return Backend(
-            python=python, version=version, quarto=quarto, detail=detail
-        )
+        return Backend(python=python, version=version, quarto=quarto)
     return Backend()
 
 

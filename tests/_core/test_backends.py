@@ -12,7 +12,7 @@ def test_nothing_found_is_a_normal_answer() -> None:
     absent = _backends.Backend()
     assert not absent.present
     assert not absent.complete
-    assert "not installed" in absent.detail
+    assert "not installed" in absent.describe()
 
 
 def test_found_without_quarto_is_its_own_state() -> None:
@@ -20,9 +20,9 @@ def test_found_without_quarto_is_its_own_state() -> None:
     # render dies later in a worker thread. Present and complete are
     # separate questions because they need separate actions.
     half = _backends.Backend(
-        python=Path("py.exe"), version="1.4.2", quarto="",
-        detail="ePy Docs 1.4.2 found, but Quarto is not installed",
+        python=Path("py.exe"), version="1.4.2", quarto=""
     )
+    assert "Quarto" in half.describe()
     assert half.present
     assert not half.complete
 
@@ -87,7 +87,7 @@ def test_a_complete_interpreter_is_reported_with_quarto(
     found = _backends.detect_docs()
     assert found.present and found.complete
     assert found.version == "1.4.2"
-    assert "1.4.2" in found.detail
+    assert "1.4.2" in found.describe()
 
 
 def test_a_hanging_interpreter_does_not_hang_the_selector(

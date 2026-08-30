@@ -1,14 +1,15 @@
 {
   "config_id": "apps",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Which applications this Studio bundle carries: the executable each ships, how it is presented in the selector, which installer component installs it, and whether it may register as the default document handler.",
   "audit_status": "verified",
   "_note": "One place, because the list was in five and three of them had already drifted -- launcher.py, epy_studio.spec (three sections), windows/epy_studio.iss (five sections), build.py and README, with the last two still saying 'three editors' after the fourth shipped. launcher.py reads this at run time and epy_studio.spec reads it at build time, so a fifth application is one entry here instead of nine edits. The .iss cannot read JSON; build.py refuses to build when the two disagree.",
+  "_description_note": "The four sentences answer the SAME questions in the same order: what kind of document, what the editor gives you, what comes out. They did not before -- ePy Reports claimed 'live preview' while Slides and Papers said nothing about it, and all three have it (measured: 15, 16 and 9 files reaching the preview widget), so a reader comparing them would have concluded the other two lacked it. ePy Draft is the one that genuinely differs, and saying so is the point of having a sentence at all. These are English keys; the Spanish lives in _core/_i18n.py.",
   "apps": [
-    {"id": "epy_reports", "display": "ePy Reports", "component": "reports", "register": "default", "description": "Technical reports — live preview, PDF / Word / HTML export"},
-    {"id": "epy_slides", "display": "ePy Slides", "component": "slides", "register": "default", "description": "Presentation decks — reveal.js / PowerPoint export"},
-    {"id": "epy_papers", "display": "ePy Papers", "component": "papers", "register": "default", "description": "Academic manuscripts — journal templates and citations"},
-    {"id": "epy_draft", "display": "ePy Draft", "component": "craft", "register": "openwith", "description": "Batch LLM processing over your own reference library"}
+    {"id": "epy_reports", "display": "ePy Reports", "component": "reports", "register": "default", "description": "Technical reports — live preview, exports to PDF, Word and HTML"},
+    {"id": "epy_slides", "display": "ePy Slides", "component": "slides", "register": "default", "description": "Presentation decks — live preview, exports to PDF, PowerPoint and HTML"},
+    {"id": "epy_papers", "display": "ePy Papers", "component": "papers", "register": "default", "description": "Academic manuscripts — live preview, journal profiles, exports to PDF and Word"},
+    {"id": "epy_draft", "display": "ePy Draft", "component": "craft", "register": "openwith", "description": "Batch drafting over your reference library — no preview, renders through the other three"}
   ],
   "_register_note": "'openwith' advertises an Open-with entry and never claims the default. ePy Draft consumes Markdown and text as batch INPUT and authors neither, so claiming the default would hand it documents it does not edit. That rule lived as a prose comment in the .iss, which is exactly what gets lost when a fifth application is added."
 }

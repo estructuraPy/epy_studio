@@ -20,6 +20,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from .._core import _i18n
 from .._core._backends import Backend, detect_docs, handoff_env
 from .._core._catalog import App, apps, install_dir
 
@@ -46,13 +47,50 @@ def manual_path() -> Path | None:
     return None
 
 
-def build_window(files: list[str], *, backend: Backend | None = None) -> Any:
+def preferred_language() -> str:
+    """Return the language this reader already chose, if any.
+
+    The four applications each store the choice under ``language`` in
+    the ``ANM Ingenieria`` organisation. Studio reads the same key
+    rather than asking again: the selector is the FIRST window a reader
+    sees, which is the wrong place to be asked something they answered
+    the last time they opened an editor.
+
+    Falls back to the system language, and then to English. Neither is
+    a guess about the reader -- it is the order that gets a Spanish
+    system a Spanish window on a fresh install.
+
+    Returns:
+        A code from :data:`_i18n.LANGUAGES`.
+    """
+    from PySide6.QtCore import QLocale, QSettings  # noqa: PLC0415
+
+    for name in ("epy_studio", "epy_reports", "epy_slides", "epy_papers"):
+        stored = str(QSettings("ANM Ingenieria", name).value("language", ""))
+        if stored in _i18n.LANGUAGES:
+            return stored
+    if QLocale.system().language() == QLocale.Language.Spanish:
+        return "es"
+    return "en"
+
+
+def build_window(
+    files: list[str],
+    *,
+    backend: Backend | None = None,
+    language: str | None = None,
+) -> Any:
     """Build the selector window.
 
     Args:
         files: Documents to forward to whichever application is picked.
         backend: What was found for ePy Docs. Detected when not given;
             injectable so a test does not pay for a subprocess.
+        language: Which language to build in. Resolved from the
+            reader's stored choice when not given -- and passed
+            explicitly by the language switch, which would
+            otherwise have its choice overwritten by the resolver
+            on the very rebuild meant to apply it.
 
     Returns:
         The window, ready to show.
@@ -64,11 +102,13 @@ def build_window(files: list[str], *, backend: Backend | None = None) -> Any:
         QHBoxLayout,
         QLabel,
         QMainWindow,
+        QMenu,
         QPushButton,
         QVBoxLayout,
         QWidget,
     )
 
+    _i18n.set_language(language or preferred_language())
     found = detect_docs() if backend is None else backend
 
     class StudioWindow(QMainWindow):
@@ -95,9 +135,17 @@ def build_window(files: list[str], *, backend: Backend | None = None) -> Any:
 
             if self._files:
                 names = ", ".join(Path(f).name for f in self._files)
-                subtitle = QLabel(f"Open <b>{names}</b> with:", root)
+                subtitle = QLabel(
+                    _i18n.tr("Open <b>{names}</b> with:").format(
+                        names=names
+                    ),
+                    root,
+                )
             else:
-                subtitle = QLabel("Choose the editor for your document:", root)
+                subtitle = QLabel(
+                    _i18n.tr("Choose the editor for your document:"),
+                    root,
+                )
             layout.addWidget(subtitle)
 
             base = install_dir()
@@ -106,7 +154,7 @@ def build_window(files: list[str], *, backend: Backend | None = None) -> Any:
 
             bottom = QHBoxLayout()
             manual = manual_path()
-            manual_btn = QPushButton("User manual", root)
+            manual_btn = QPushButton(_i18n.tr("User manual"), root)
             if manual is not None:
                 manual_btn.clicked.connect(
                     lambda _checked=False, p=manual: QDesktopServices.openUrl(
@@ -116,16 +164,55 @@ def build_window(files: list[str], *, backend: Backend | None = None) -> Any:
             else:
                 manual_btn.setEnabled(False)
             bottom.addWidget(manual_btn)
+            # A reader who changes it here changes it for the selector
+            # only; each application keeps its own, because each stores
+            # the choice under its own name. Studio writes its own key
+            # so the next launch remembers.
+            language_btn = QPushButton(_i18n.tr("Language"), root)
+            language_menu = QMenu(language_btn)
+            for code, name in _i18n.LANGUAGES.items():
+                action = language_menu.addAction(name)
+                action.setCheckable(True)
+                action.setChecked(code == _i18n.current_language())
+                action.triggered.connect(
+                    lambda _checked=False, c=code: self._set_language(c)
+                )
+            language_btn.setMenu(language_menu)
+            bottom.addWidget(language_btn)
             bottom.addStretch(1)
             # One strip for the whole install, not one line per row: the
             # backend is a property of the machine, and repeating the
             # same sentence four times says nothing four times.
-            status = QLabel(f"Export backends: built-in · {found.detail}")
+            status = QLabel(
+                f'{_i18n.tr("Export backends: built-in")} · '
+                f"{found.describe()}"
+            )
             status.setWordWrap(True)
             bottom.addWidget(status)
             layout.addLayout(bottom)
             layout.addStretch(1)
             self.setCentralWidget(root)
+
+        def _set_language(self, code: str) -> None:
+            """Store the choice and rebuild the window in that language.
+
+            Rebuilt rather than relabelled: the selector is small and
+            built in one pass, so a second pass is cheaper than a
+            registry of every widget that carries a string -- and a
+            registry is what silently misses the one label somebody
+            added last.
+            """
+            from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+            _i18n.set_language(code)
+            QSettings("ANM Ingenieria", "epy_studio").setValue(
+                "language", code
+            )
+            replacement = build_window(
+                self._files, backend=self._backend, language=code
+            )
+            replacement.show()
+            self.close()
 
         def _tool_row(self, base: Path, app: App) -> Any:
             """Build one launchable row."""
@@ -141,12 +228,12 @@ def build_window(files: list[str], *, backend: Backend | None = None) -> Any:
             name_font.setBold(True)
             name_label.setFont(name_font)
             text_col.addWidget(name_label)
-            desc_label = QLabel(app.description, row)
+            desc_label = QLabel(_i18n.tr(app.description), row)
             desc_label.setWordWrap(True)
             text_col.addWidget(desc_label)
             line.addLayout(text_col, stretch=1)
 
-            button = QPushButton("Open", row)
+            button = QPushButton(_i18n.tr("Open"), row)
             button.setMinimumWidth(96)
             if exe_path.is_file():
                 button.clicked.connect(
@@ -156,9 +243,16 @@ def build_window(files: list[str], *, backend: Backend | None = None) -> Any:
             else:
                 button.setEnabled(False)
                 button.setToolTip(
-                    "Not installed — re-run the installer to add it."
+                    _i18n.tr(
+                        "Not installed — re-run the installer to "
+                        "add it."
+                    )
                 )
-                desc_label.setText(app.description + "  (not installed)")
+                desc_label.setText(
+                    _i18n.tr(app.description)
+                    + "  "
+                    + _i18n.tr("(not installed)")
+                )
             line.addWidget(button, alignment=Qt.AlignmentFlag.AlignVCenter)
             return row
 

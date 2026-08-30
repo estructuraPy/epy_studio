@@ -43,6 +43,11 @@ ignore = ["D203", "D213"]
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
+# housekeeper.py is generated from _packaging/_tooling/templates/
+# housekeeper_minimal.py. Upstream owns its formatting: reformatting
+# here forks the template, and the next sync either reverts the
+# change or conflicts with it.
+"housekeeper.py" = ["E501", "D103"]
 "tests/*" = ["D"]
 "epy_studio.spec" = ["D", "F821", "E501"]
 "build.py" = ["D103"]

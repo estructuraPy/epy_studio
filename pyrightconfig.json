@@ -1,0 +1,17 @@
+{
+  "include": ["src"],
+  "exclude": [
+    "tests",
+    "_archive",
+    "**/__pycache__",
+    "**/.venv"
+  ],
+  "typeCheckingMode": "strict",
+  "pythonVersion": "3.10",
+  "reportMissingTypeStubs": false,
+  "reportUnknownMemberType": false,
+  "reportPrivateImportUsage": false,
+  "reportUnusedFunction": false,
+  "reportUnusedClass": false,
+  "reportUnusedImport": false
+}

@@ -20,6 +20,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from epy_export import LEGACY_ORGANIZATIONS, ORGANIZATION
+
 from .._core import _i18n
 from .._core._backends import Backend, detect_docs, handoff_env
 from .._core._catalog import App, apps, install_dir
@@ -51,10 +53,14 @@ def preferred_language() -> str:
     """Return the language this reader already chose, if any.
 
     The four applications each store the choice under ``language`` in
-    the ``ANM Ingenieria`` organisation. Studio reads the same key
-    rather than asking again: the selector is the FIRST window a reader
-    sees, which is the wrong place to be asked something they answered
-    the last time they opened an editor.
+    the organisation scope named by ``epy_export.ORGANIZATION``. Studio
+    reads the same key rather than asking again: the selector is the
+    FIRST window a reader sees, which is the wrong place to be asked
+    something they answered the last time they opened an editor.
+
+    Studio and epy_draft wrote under an unaccented spelling of the
+    organisation before. Those two scopes are still read, after the
+    current one, so a person who chose a language there keeps it.
 
     Falls back to the system language, and then to English. Neither is
     a guess about the reader -- it is the order that gets a Spanish
@@ -65,8 +71,21 @@ def preferred_language() -> str:
     """
     from PySide6.QtCore import QLocale, QSettings  # noqa: PLC0415
 
-    for name in ("epy_studio", "epy_reports", "epy_slides", "epy_papers"):
-        stored = str(QSettings("ANM Ingenieria", name).value("language", ""))
+    current = (
+        "epy_studio",
+        "epy_draft",
+        "epy_reports",
+        "epy_slides",
+        "epy_papers",
+    )
+    scopes = [(ORGANIZATION, name) for name in current]
+    scopes += [
+        (legacy, name)
+        for legacy in LEGACY_ORGANIZATIONS
+        for name in ("epy_studio", "epy_draft")
+    ]
+    for organisation, name in scopes:
+        stored = str(QSettings(organisation, name).value("language", ""))
         if stored in _i18n.LANGUAGES:
             return stored
     if QLocale.system().language() == QLocale.Language.Spanish:
@@ -205,7 +224,7 @@ def build_window(
             from PySide6.QtCore import QSettings  # noqa: PLC0415
 
             _i18n.set_language(code)
-            QSettings("ANM Ingenieria", "epy_studio").setValue(
+            QSettings(ORGANIZATION, "epy_studio").setValue(
                 "language", code
             )
             replacement = build_window(

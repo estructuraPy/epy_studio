@@ -12,6 +12,7 @@ requires-python = ">=3.10"
 license = { text = "MIT" }
 classifiers = ["License :: OSI Approved :: MIT License"]
 dependencies = [
+    "epy_export>=0.1.0",
     "PySide6>=6.6",
 ]
 
@@ -20,6 +21,9 @@ dependencies = [
 # them. Nor is epy_docs: it is a commercial package reached out of
 # process, and naming it in an extra would make a pip install resolve
 # against whatever public index happens to answer.
+#
+# epy_export IS a dependency: a library, not an application, and the
+# one place the organisation name of every settings scope lives.
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.5", "pyinstaller>=6.0"]

@@ -185,7 +185,7 @@ a_craft = _app_analysis(
 )
 a_launcher = Analysis(
     [str(_ROOT / "src" / "epy_studio" / "__main__.py")],
-    pathex=[str(_ROOT / "src")],
+    pathex=[str(_ROOT / "src"), str(_SUITE / "epy_export" / "src")],
     binaries=[],
     # The application catalog. It is DATA, and a build that does not
     # carry it produces an empty selector that looks like a broken

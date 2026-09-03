@@ -44,6 +44,13 @@ SHIPPED_FIXES = (
     ("epy_reports", "epy_reports._ui.tab", "epy_reports — ANM Ingeniería"),
     # a .kepy on the command line opens its project (epy_draft d5670af).
     ("epy_draft", "epy_draft.app", "_project_root_for"),
+    # The optional autosave: its module constant only exists with it.
+    ("epy_reports", "epy_reports.app", "AUTOSAVE_INTERVAL_MS"),
+    ("epy_slides", "epy_slides.app", "AUTOSAVE_INTERVAL_MS"),
+    ("epy_papers", "epy_papers.app", "AUTOSAVE_INTERVAL_MS"),
+    # One settings organisation for the family; the launcher must
+    # carry epy_export to read the language the editors stored.
+    ("epy_studio", "epy_export._core._identity", "ANM Ingeniería"),
 )
 
 

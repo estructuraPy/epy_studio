@@ -74,3 +74,80 @@ def test_every_application_gets_a_row(qt_app) -> None:
     texts = _labels(build_window([], backend=Backend(), language="en"))
     for app in apps():
         assert app.display in texts, f"{app.app_id} has no row"
+
+
+# ------------------------------------------- the stored language
+
+
+@pytest.fixture()
+def ini_settings(tmp_path, monkeypatch):
+    """Route ``QSettings(org, app)`` to INI files under ``tmp_path``.
+
+    One file per (organisation, application) pair, which is what the
+    registry gives the real program: a language stored by one editor
+    must be found by reading THAT scope and no other. The two-argument
+    constructor IGNORES ``setDefaultFormat`` (Qt documents it) and goes
+    to the registry, so the constructor itself is replaced, not the
+    format. The system locale is pinned to English so the fallback
+    cannot masquerade as a hit.
+    """
+    from PySide6 import QtCore
+
+    real = QtCore.QSettings
+
+    def scratch(organisation: str, name: str) -> object:
+        return real(
+            str(tmp_path / f"{organisation}__{name}.ini"),
+            real.Format.IniFormat,
+        )
+
+    monkeypatch.setattr(QtCore, "QSettings", scratch)
+    monkeypatch.setattr(
+        QtCore.QLocale,
+        "system",
+        staticmethod(lambda: QtCore.QLocale(QtCore.QLocale.Language.English)),
+    )
+    return scratch
+
+
+def test_the_language_an_editor_stored_is_found(qt_app, ini_settings) -> None:
+    # Three editors save under the accented organisation and the selector
+    # read the unaccented one: the person's choice was never found and
+    # the first window kept asking what they had already answered.
+    from epy_export import ORGANIZATION
+
+    from epy_studio._ui import selector
+
+    ini_settings(ORGANIZATION, "epy_reports").setValue("language", "es")
+    assert selector.preferred_language() == "es"
+
+
+def test_the_unaccented_scope_studio_wrote_is_still_read(
+    qt_app, ini_settings
+) -> None:
+    # Studio and epy_draft stored under the old spelling until today; a
+    # selector that forgot that scope would ask again after the update.
+    from epy_studio._ui import selector
+
+    ini_settings("ANM Ingenieria", "epy_studio").setValue("language", "es")
+    assert selector.preferred_language() == "es"
+
+
+def test_nothing_stored_falls_back_to_the_system_language(
+    qt_app, ini_settings
+) -> None:
+    from epy_studio._ui import selector
+
+    assert selector.preferred_language() == "en"
+
+
+def test_the_organisation_is_not_spelt_inline() -> None:
+    # The whole point: one constant, imported, so the five programs
+    # cannot drift into two registry trees again.
+    import inspect
+
+    from epy_studio._ui import selector
+
+    source = inspect.getsource(selector)
+    assert 'QSettings("ANM' not in source
+    assert "ORGANIZATION" in source

@@ -13,11 +13,13 @@ whichever editor fits the job.
 ## Layout
 
 ```
-launcher.py        selector window + --register/--unregister CLI
-_assoc.py          HKCU file-association helpers (Studio identity)
-epy_studio.spec    multi-exe PyInstaller spec (3 apps + launcher, one COLLECT)
+launcher.py        selector window, the --register CLI, and the
+                   first-start offer a silent install never gets
+_core/winreg_assoc HKCU file-association helpers (Studio identity)
+epy_studio.spec    multi-exe PyInstaller spec (4 apps + launcher, one COLLECT)
 build.py           builds dist/epy_studio/ (installer input)
-windows/           Inno Setup script (components: reports/slides/papers)
+windows/           Inno Setup script
+                   (components: reports/slides/papers/craft)
 docs/              user manual (English + Spanish), shipped with the app
 ```
 

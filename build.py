@@ -51,6 +51,10 @@ SHIPPED_FIXES = (
     # One settings organisation for the family; the launcher must
     # carry epy_export to read the language the editors stored.
     ("epy_studio", "epy_export._core._identity", "ANM Ingeniería"),
+    # The offer a silent install needs, and the export that no
+    # longer freezes the window while LaTeX runs.
+    ("epy_studio", "epy_studio._core.winreg_assoc", "is_registered"),
+    ("epy_papers", "epy_papers.app", "_run_off_thread"),
 )
 
 

@@ -4,6 +4,39 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] — 2026-09-04
+
+### Added
+- **A first-start offer to register the file associations.** Every
+  `[Run]` entry in the installer carries `skipifsilent`, so a silent
+  deployment installs ePy Studio and registers nothing: the documents it
+  was installed for keep opening in whatever handled them before, with
+  nothing on screen to say why. The first start now asks, once, and
+  remembers either answer. Saying no writes nothing at all; saying yes
+  adds an "Open with" entry (Windows still asks the reader to confirm a
+  default in Settings) and asks each installed editor to register
+  itself. A source checkout never writes the registry, and a machine
+  whose policy blocks the read is never asked again.
+
+### Fixed
+- **The selector never found the language a reader had already chosen.**
+  It read `language` under `ANM Ingenieria` while three editors wrote it
+  under `ANM Ingeniería` — on Windows, two registry trees. The
+  organisation name now comes from `epy_export.ORGANIZATION`, one place
+  for the whole family, and the unaccented scope this launcher and ePy
+  Draft used to write is still read after it, so nobody is asked twice.
+- The layout section of the README still described three applications
+  and a module that had been moved.
+
+### Changed
+- **The build refuses to ship a stale bundle.** `SHIPPED_FIXES` names a
+  module and a literal per fix that must be present inside each produced
+  executable's PYZ; the build fails when one is missing. It now covers
+  the optional autosave in all three editors and the shared settings
+  identity in the launcher.
+- Ships epy_reports 0.5.0, epy_slides 0.4.0, epy_papers 0.4.0 and ePy
+  Draft 0.1.0.
+
 ## [0.5.0] — 2026-08-29
 
 ### Added

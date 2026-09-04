@@ -48,6 +48,40 @@ def _set_value(key, name, value: str) -> None:
     winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
 
 
+def is_registered() -> bool:
+    """Return whether this executable is the handler behind the ProgID.
+
+    A missing key means nothing ever registered: every ``[Run]`` entry in
+    the installer carries ``skipifsilent``, so a silent deployment leaves
+    documents unhandled. A key naming a DIFFERENT executable means the
+    bundle moved -- a reinstall into another folder leaves the old command
+    behind, and a document opened from the shell then starts a program
+    that is no longer there.
+
+    Any other registry error answers ``True``. A machine whose policy
+    blocks HKCU must never be asked the same question on every start.
+
+    Returns:
+        ``True`` when the stored open command is this executable, or when
+        the registry could not be read at all.
+    """
+    if sys.platform != "win32":
+        return True
+    import winreg
+
+    try:
+        with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            f"Software\\Classes\\{PROGID}\\shell\\open\\command",
+        ) as key:
+            stored, _ = winreg.QueryValueEx(key, "")
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return True
+    return str(stored).strip().lower() == _open_command().strip().lower()
+
+
 def register(make_default: bool = False) -> list[str]:
     """Register ePy Studio for Markdown documents in HKCU.
 

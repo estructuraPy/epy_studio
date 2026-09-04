@@ -33,6 +33,15 @@ _ES: dict[str, str] = {
     "Not installed — re-run the installer to add it.":
         "No instalado — vuelva a ejecutar el instalador para agregarlo.",
     "(not installed)": "(no instalado)",
+    "ePy Studio is not set up to open your documents. Add it to "
+    "the list of applications that handle Markdown files?\n\n"
+    "This only adds it to “Open with”. Windows still asks you to "
+    "confirm a default in Settings.":
+        "ePy Studio no está configurado para abrir sus documentos. "
+        "¿Desea agregarlo a la lista de aplicaciones que manejan "
+        "archivos Markdown?\n\nEsto solo lo agrega a «Abrir con». "
+        "Windows le pedirá confirmar el valor predeterminado en "
+        "Configuración.",
     "Export backends: built-in": "Motores de exportación: integrados",
     # --- what each application is for ---------------------------------
     #

@@ -10,7 +10,20 @@ from __future__ import annotations
 
 import pytest
 
-from epy_studio._core import _i18n
+# Before any test module imports Qt. In a conda environment PySide6 does
+# not load until the system ICU is pinned ahead of it, and the failure is
+# a DLL error that `importorskip` turns into a silent skip -- a whole file
+# of assertions that never ran. Studio is a launcher and never needs the
+# pin at run time (the frozen bundle carries no conda ICU), so it lives
+# here rather than in the package.
+try:
+    from epy_export import pin_system_icu
+
+    pin_system_icu()
+except ImportError:  # pragma: no cover - epy_export is optional here
+    pass
+
+from epy_studio._core import _i18n  # noqa: E402 - must follow the ICU pin
 
 
 @pytest.fixture(autouse=True)

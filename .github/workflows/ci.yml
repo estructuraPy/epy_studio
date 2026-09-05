@@ -79,21 +79,13 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: pytest tests/ -q
 
-  housekeeper:
-    name: Housekeeper (--strict)
-    needs: [lint]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      # The nine audits this repository was two generations behind on
-      # until 2026-09-05, and which found two forbidden test skips the
-      # day they were wired. Running them by hand is how they went two
-      # generations stale in the first place.
-      - name: housekeeper --strict
-        run: python housekeeper.py --strict
+  # NO housekeeper job, and this is the reason rather than an oversight.
+  # Its --strict audits load their canonical blocks from
+  # _packaging/_tooling/, which is a SEPARATE and private repository. A
+  # runner that checks out this one alone does not have them, and the
+  # housekeeper fails loudly when a block is missing -- deliberately, on
+  # the principle that a silently skipped rule is worse than none. The
+  # audits therefore run from a full-suite checkout, not from here.
 
   build:
     name: Build distribution

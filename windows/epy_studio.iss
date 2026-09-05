@@ -24,7 +24,7 @@
 
 #define AppName "ePy Studio"
 #define AppDirName "epy_studio"
-#define AppVersion "0.6.0"
+#define AppVersion "0.6.1"
 #define AppPublisher "Ing. Angel Navarro-Mora M.Sc."
 #define AppURL "https://github.com/estructuraPy/epy_studio"
 #define AppId "{{7E2F9A41-5C38-4D06-B1E9-3A8D24C7F015}"

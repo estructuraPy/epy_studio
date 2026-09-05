@@ -4,6 +4,21 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] — 2026-09-05
+
+### Fixed
+- **Ships a working PDF export.** Two imports in epy_reports' export
+  path still named a module that had moved to the shared engine, so
+  every PDF export from that window failed in the 0.6.0 bundle. The
+  build carried it because the imports are inside the export function
+  and nothing on the way to a bundle reaches them.
+
+### Changed
+- Ships epy_reports 0.5.1, epy_slides 0.4.1, epy_papers 0.4.1 and ePy
+  Draft 0.1.0, and the shared engine at 0.2.0.
+- This housekeeper runs the same nine audits as the rest of the suite,
+  with `--strict`, instead of the three it was frozen at.
+
 ## [0.6.0] — 2026-09-04
 
 ### Added

@@ -1,17 +1,16 @@
 {
-  "include": ["src"],
-  "exclude": [
-    "tests",
-    "_archive",
-    "**/__pycache__",
-    "**/.venv"
+  "include": [
+    "src",
+    "tests"
   ],
-  "typeCheckingMode": "strict",
+  "exclude": [
+    "**/__pycache__",
+    "**/.venv",
+    "examples"
+  ],
+  "typeCheckingMode": "standard",
   "pythonVersion": "3.10",
+  "pythonPlatform": "Windows",
   "reportMissingTypeStubs": false,
-  "reportUnknownMemberType": false,
-  "reportPrivateImportUsage": false,
-  "reportUnusedFunction": false,
-  "reportUnusedClass": false,
-  "reportUnusedImport": false
+  "reportPrivateImportUsage": false
 }

@@ -22,10 +22,11 @@ import pytest
 from epy_studio import launcher
 from epy_studio._core import winreg_assoc
 
-# conftest pins ICU before any test module loads: without it Qt does not
-# import in a conda environment, and importorskip would turn that into a
-# skip -- a silently skipped file proves nothing.
-pytest.importorskip("PySide6.QtWidgets", exc_type=ImportError)
+# conftest pins ICU before any test module loads, which is what lets
+# PySide6 import under conda. Qt is a hard dependency of this package, so
+# a failure to import it is a broken environment and must be read as one:
+# skipping here would turn the whole file green on a machine where the
+# launcher cannot start.
 
 
 class _FakeKey:

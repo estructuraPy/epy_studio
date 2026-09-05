@@ -42,10 +42,22 @@ def _icon_source() -> str:
     return f'"{sys.executable}",0'
 
 
-def _set_value(key, name, value: str) -> None:
+def _set_value(key: object, name: str, value: str) -> None:
+    """Write one string value under an already-open registry key.
+
+    Args:
+        key: The open key. Typed ``object`` because ``winreg.HKEYType``
+            only exists on Windows, and this module is imported (never
+            called) elsewhere; the calls below are what pin the shape.
+        name: Value name. Empty means the key's default value.
+        value: The string to store.
+    """
     import winreg
 
-    winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
+    # The stub types the key as HKEYType, which exists only on Windows.
+    # Naming it in the signature would make this module unimportable
+    # everywhere else, and it is imported (never called) there.
+    winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)  # pyright: ignore[reportArgumentType, reportCallIssue] - the key is Windows-only in the stub
 
 
 def is_registered() -> bool:

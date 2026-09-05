@@ -6,19 +6,11 @@ import pytest
 
 from epy_studio._core._backends import Backend
 
-# In a conda environment Qt does not import until ICU is pinned.
-# epy_export owns that workaround for the whole family; Studio is a
-# launcher and never needed it at run time, because the frozen
-# bundle strips the conda ICU that shadows the system one. A source
-# checkout has no such stripping, so the test asks for the pin.
-try:
-    from epy_export import pin_system_icu
-
-    pin_system_icu()
-except ImportError:  # pragma: no cover - epy_export is optional here
-    pass
-
-pytest.importorskip("PySide6.QtWidgets", exc_type=ImportError)
+# conftest pins ICU before any test module loads, which is what lets
+# PySide6 import under conda. Qt is a hard dependency of this package,
+# so a failure to import it is a broken environment and must be read as
+# one: skipping here would turn the whole file green on a machine where
+# the launcher cannot start.
 
 
 @pytest.fixture(scope="module")

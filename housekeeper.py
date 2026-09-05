@@ -833,6 +833,22 @@ def report_tutorials_layout(violations: list[str]) -> None:
 # several of them under the words "confirmed by direct SQLite query". An id
 # that resolves to something looks exactly like an id that resolves to the
 # right thing until the two are checked against each other.
+_SUITE_TOOLING = (
+    Path(__file__).resolve().parent.parent / "_packaging" / "_tooling"
+)
+"""The suite's private half, which is OPTIONAL exactly like epy_docs.
+
+Several rules keep their canonical implementation there so twenty-nine
+housekeepers cannot drift apart. A checkout without it -- a third party's
+clone of a public repository, or a single-repository CI runner -- simply
+cannot run those rules. That is reported by name and is not a failure.
+
+A checkout that HAS the tooling and is missing one block is a different
+thing entirely: there the rule was expected to run, and it stays a loud
+failure, because a silently skipped rule is worse than none.
+"""
+
+
 _SOURCE_IDS_BLOCK = (
     Path(__file__).resolve().parent.parent / "_packaging" / "_tooling"
     / "source_ids_block.py"
@@ -848,6 +864,8 @@ if _SOURCE_IDS_BLOCK.exists():
 else:  # pragma: no cover - only when the tooling repo is absent
 
     def audit_source_ids(lib_root):
+        if not _SUITE_TOOLING.is_dir():
+            return {"ran": False, "why": None, "violations": []}
         return {
             "ran": True,
             "why": None,
@@ -862,6 +880,11 @@ else:  # pragma: no cover - only when the tooling repo is absent
         print("\n" + "=" * 70)
         print("  SOURCE.md REFERENCE IDS (the filename is the identity)")
         print("=" * 70)
+        if not result["violations"]:
+            print(
+                "    - NOT CHECKED: this rule is implemented in the suite tooling, which this checkout does not have. Optional by design."
+            )
+            return
         for rel, why in result["violations"]:
             print(f"    - {rel}: {why}")
 
@@ -887,6 +910,8 @@ if _SUITE_MANUAL_BLOCK.exists():
 else:  # pragma: no cover - only when the tooling repo is absent
 
     def audit_suite_manual(lib_root):
+        if not _SUITE_TOOLING.is_dir():
+            return {"ran": False, "why": None, "violations": []}
         return {
             "ran": True,
             "why": None,
@@ -901,6 +926,11 @@ else:  # pragma: no cover - only when the tooling repo is absent
         print("\n" + "=" * 70)
         print("  SUITE-WIDE MANUAL (one home: references/, never a library repo)")
         print("=" * 70)
+        if not result["violations"]:
+            print(
+                "    - NOT CHECKED: this rule is implemented in the suite tooling, which this checkout does not have. Optional by design."
+            )
+            return
         for rel, why in result["violations"]:
             print(f"    - {rel}: {why}")
 
@@ -927,6 +957,8 @@ if _V_SELFCMP_BLOCK.exists():
 else:  # pragma: no cover - only when the tooling repo is absent
 
     def audit_v_selfcomparison(lib_root):
+        if not _SUITE_TOOLING.is_dir():
+            return []
         return [
             "v-selfcomparison: _packaging/_tooling/v_selfcomparison_block.py is "
             "missing, so the V_ validation rows were NOT checked. This is a loud "
@@ -937,6 +969,11 @@ else:  # pragma: no cover - only when the tooling repo is absent
         print("\n" + "=" * 70)
         print("  V_ VALIDATION ROWS (a comparison needs two numbers)")
         print("=" * 70)
+        if not violations:
+            print(
+                "    - NOT CHECKED: this rule is implemented in the suite tooling, which this checkout does not have. Optional by design."
+            )
+            return
         for v in violations:
             print(f"    - {v}")
 

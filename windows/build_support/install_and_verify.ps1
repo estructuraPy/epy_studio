@@ -32,14 +32,22 @@ if (-not (Test-Path (Join-Path $root "dist\epy_studio\epy_studio.exe"))) {
 }
 if (-not (Test-Path $iscc)) { throw "ISCC not found at $iscc" }
 
-Write-Host "== 1/5 installer ($version) =="
+Write-Host "== 1/6 does the bundle carry what this release promised? =="
+# Asked BEFORE the installer is compiled. An optional application whose
+# sibling checkout was absent leaves one printed SKIP line in a build
+# log nobody re-reads, and the short installer looks exactly like a
+# complete one from the outside.
+& $python (Join-Path $root "windows\build_support\verify_release.py")
+if ($LASTEXITCODE -ne 0) { throw "the bundle is short of what release.epyson promises" }
+
+Write-Host "== 2/6 installer ($version) =="
 # ISCC is a console tool; capturing it is fine.
 & $iscc /Qp $iss | Select-Object -Last 3
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit $LASTEXITCODE" }
 if (-not (Test-Path $setup)) { throw "installer not produced: $setup" }
 Write-Host ("   {0}  {1:N1} MB" -f (Split-Path $setup -Leaf), ((Get-Item $setup).Length / 1MB))
 
-Write-Host "== 2/5 silent install over the previous release =="
+Write-Host "== 3/6 silent install over the previous release =="
 $p = Start-Process -FilePath $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait -PassThru
 if ($p.ExitCode -ne 0) { throw "installer exited $($p.ExitCode)" }
 $installed = (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
@@ -47,16 +55,25 @@ $installed = (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\
 Write-Host "   registry DisplayVersion: $installed"
 if ($installed -ne $version) { throw "installed $installed, expected $version" }
 
-Write-Host "== 3/5 register the file types (silent installs skip this) =="
-# GUI-subsystem exe: waited on, never piped.
-$r = Start-Process -FilePath (Join-Path $target "epy_draft.exe") -ArgumentList "--register" -Wait -PassThru
-if ($r.ExitCode -ne 0) { throw "epy_draft.exe --register exited $($r.ExitCode)" }
+Write-Host "== 4/6 register the file types (silent installs skip this) =="
+# ePy Draft is OPTIONAL, so this cannot assume it is there. Step 1
+# already refused if this release promised it and the bundle is short,
+# so reaching here without the executable means the release genuinely
+# does not carry it -- and then there is nothing to register.
+$draft = Join-Path $target "epy_draft.exe"
+if (Test-Path $draft) {
+    # GUI-subsystem exe: waited on, never piped.
+    $r = Start-Process -FilePath $draft -ArgumentList "--register" -Wait -PassThru
+    if ($r.ExitCode -ne 0) { throw "epy_draft.exe --register exited $($r.ExitCode)" }
+} else {
+    Write-Host "   ePy Draft is not in this release; nothing to register."
+}
 
-Write-Host "== 4/5 probe the INSTALLED executables and the registry =="
+Write-Host "== 5/6 probe the INSTALLED executables and the registry =="
 & $python (Join-Path $root "windows\build_support\probe_installed.py") --target $target
 if ($LASTEXITCODE -ne 0) { throw "installed-bundle probe failed" }
 
-Write-Host "== 5/5 the drawing reader in the installed exe =="
+Write-Host "== 6/6 the drawing reader in the installed exe =="
 & $python (Join-Path $root "windows\build_support\probe_dxf_reader.py")
 if ($LASTEXITCODE -ne 0) { throw "drawing-reader probe failed" }
 

@@ -1,0 +1,9 @@
+{
+  "config_id": "release",
+  "version": "1.0.0",
+  "description": "What THIS release of ePy Studio promises to carry, as opposed to what the catalog says it CAN carry.",
+  "audit_status": "verified",
+  "_note": "The catalog (_config/apps.epyson) answers a different question: which applications the bundle is ABLE to carry, and which of those may be absent because their repository is private. That question is about the checkout. This file answers the release question: what the installer being cut right now is promising to contain. The two must stay separate. Without this file an optional application that failed to build, or whose sibling checkout was simply not there that day, would leave a smaller installer behind one printed SKIP line -- and a release is exactly where nobody re-reads the build log.",
+  "_editing_note": "Add an id here the day a release starts carrying that application, and remove it the day it stops. Every id must exist in the catalog; the check refuses an id it does not recognise, so a typo cannot pass as a promise nobody made.",
+  "must_carry": ["epy_reports", "epy_slides", "epy_papers", "epy_draft"]
+}

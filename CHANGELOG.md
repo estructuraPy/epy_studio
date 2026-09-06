@@ -21,6 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The first optional entry: `epy_quoting` (ePy Quoting), a private
   application for service offers, developed separately. Nothing the
   user receives changes until its executable exists.
+- **A release manifest** (`release.epyson`) and its check. The catalog
+  answers what the bundle CAN carry; this answers what the release
+  being cut PROMISES to carry, and the release step refuses a bundle
+  that is short. The two questions were the same while every
+  application was required; they stop being the same the moment one
+  can be absent, and a release is where nobody re-reads a build log.
+
+### Changed
+- **`optional` now follows PRIVACY, and ePy Draft is optional.** Its
+  repository is private while this one is public, so a clone of this
+  repository could not be built at all: the build refused, naming a
+  checkout a stranger cannot have. The three public editors stay
+  required. Draft keeps its `openwith` registration, so its `[Run]`
+  lines are guarded like the rest -- optional and register are
+  independent axes.
+- The release script no longer assumes ePy Draft is installed, and the
+  installed-bundle probe skips the file types of an application this
+  release does not carry.
 
 ## [0.7.0] — 2026-09-05
 

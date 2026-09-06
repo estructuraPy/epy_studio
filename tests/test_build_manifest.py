@@ -41,21 +41,46 @@ def test_the_real_installer_script_agrees_with_the_catalog(
     build._verify_manifest()
 
 
-def test_the_optional_application_is_guarded_in_the_real_script() -> None:
+def test_every_optional_application_is_guarded_and_no_required_one_is(
+) -> None:
+    # Stated structurally rather than by name, so it keeps holding as
+    # applications are added in either direction. An optional
+    # application's every line sits inside an #ifexist naming its own
+    # executable; a required one's lines sit in the open, because a
+    # build without it is a broken build and ISCC should say so.
     iss = (ROOT / "windows" / "epy_studio.iss").read_text(encoding="utf-8")
     guards = list(build._GUARD.finditer(iss))
     assert guards, "no #ifexist block at all"
-    # Every guard in the script is the optional application's own, and
-    # each body names either its executable or its component -- the
-    # [Components] block carries the component, the others the exe.
-    for match in guards:
-        assert match.group("exe") == "epy_quoting.exe"
-        body = match.group("body")
-        assert "epy_quoting.exe" in body or 'Name: "quoting"' in body, body
+    optional = build._optional_ids()
+    guarded_exes = {match.group("exe") for match in guards}
+    assert guarded_exes == {f"{app_id}.exe" for app_id in optional}
+
     outside = build._GUARD.sub("", iss)
-    assert "epy_quoting" not in outside
-    assert 'Name: "quoting"' not in outside
-    assert "Components: quoting" not in outside
+    for app in build._catalog_apps():
+        app_id, component = str(app["id"]), str(app["component"])
+        exe = f"{app_id}.exe"
+        if app_id in optional:
+            assert exe not in outside, f"{exe} names itself outside a guard"
+            assert f"Components: {component}" not in outside, component
+            assert f'Name: "{component}"' not in outside, component
+        else:
+            assert exe in outside, f"{exe} is required but only guarded"
+
+
+def test_a_guard_body_names_the_application_it_guards() -> None:
+    # A guard that wraps the wrong lines would compile and install the
+    # wrong thing. The [Components] block carries only the component
+    # name; every other block carries the executable.
+    iss = (ROOT / "windows" / "epy_studio.iss").read_text(encoding="utf-8")
+    by_exe = {
+        f"{app['id']}.exe": str(app["component"])
+        for app in build._catalog_apps()
+    }
+    for match in build._GUARD.finditer(iss):
+        exe = match.group("exe")
+        body = match.group("body")
+        component = by_exe[exe]
+        assert exe in body or f'Name: "{component}"' in body, body
 
 
 def test_an_optional_line_outside_its_guard_refuses_the_build(
@@ -129,4 +154,5 @@ def test_a_required_application_missing_from_the_script_still_refuses(
 
 
 def test_the_optional_ids_come_from_the_catalog() -> None:
-    assert build._optional_ids() == frozenset({"epy_quoting"})
+    # The private applications, and only those.
+    assert build._optional_ids() == frozenset({"epy_draft", "epy_quoting"})

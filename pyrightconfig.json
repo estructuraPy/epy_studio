@@ -1,13 +1,8 @@
 {
-  "include": [
-    "src",
-    "tests"
-  ],
-  "exclude": [
-    "**/__pycache__",
-    "**/.venv",
-    "examples"
-  ],
+  "include": ["src", "tests"],
+  "exclude": ["**/__pycache__", "**/.venv", "examples"],
+  "_extraPaths_note": "The build-support scripts are imported the way they run: probe_installed.py and verify_release.py put this directory on sys.path themselves, and their tests do the same. Without it pyright cannot resolve an import that works at run time.",
+  "extraPaths": ["windows/build_support"],
   "typeCheckingMode": "standard",
   "pythonVersion": "3.10",
   "pythonPlatform": "Windows",

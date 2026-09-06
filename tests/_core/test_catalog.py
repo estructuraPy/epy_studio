@@ -61,19 +61,36 @@ def test_draft_advertises_open_with_and_never_claims_the_default() -> None:
     assert by_id["epy_reports"].claims_default
 
 
-def test_quoting_is_optional_and_registers_nothing() -> None:
-    # The fifth application is the owner's to hand out. It authors no
-    # document type, so it has nothing to register -- and a bundle may
-    # be built and installed without it.
+# The applications whose repositories are PRIVATE. Kept as a literal
+# rather than derived, because the fact lives on GitHub and a test that
+# asked the network would answer differently offline.
+PRIVATE = frozenset({"epy_draft", "epy_quoting"})
+
+
+def test_an_application_is_optional_exactly_when_it_is_private() -> None:
+    # Privacy is what decides whether a checkout may be ABSENT, so it is
+    # what decides `optional`. epy_studio is public: a stranger who
+    # clones it must be able to build the public editors, and before
+    # this rule the build refused because ePy Draft was marked required
+    # while its repository is private.
+    for app in _catalog.apps():
+        assert app.optional == (app.app_id in PRIVATE), app.app_id
+
+
+def test_optional_and_register_are_independent_axes() -> None:
+    # ePy Draft is optional AND registers document types; ePy Quoting is
+    # optional and registers none. Collapsing the two into one flag
+    # would have left Draft's [Run] lines unguarded, which is the case
+    # that breaks the installer on a machine without its executable.
     by_id = {app.app_id: app for app in _catalog.apps()}
-    quoting = by_id["epy_quoting"]
-    assert quoting.optional
-    assert not quoting.registers
-    assert not quoting.claims_default
-    # The four that were always there are still required.
-    for app_id in ("epy_reports", "epy_slides", "epy_papers", "epy_draft"):
-        assert not by_id[app_id].optional, app_id
-        assert by_id[app_id].registers, app_id
+    assert by_id["epy_draft"].optional and by_id["epy_draft"].registers
+    assert by_id["epy_quoting"].optional
+    assert not by_id["epy_quoting"].registers
+    assert by_id["epy_reports"].registers
+    assert not by_id["epy_reports"].optional
+    # No application claims the default except the ones that author the
+    # type: ePy Draft consumes Markdown as batch input and authors none.
+    assert not by_id["epy_draft"].claims_default
 
 
 def test_the_build_lists_match_what_the_spec_carried() -> None:
@@ -154,7 +171,7 @@ def test_an_absent_optional_application_is_skipped_by_name(
     # from the outside.
     suite = _suite_with(
         tmp_path, "epy_reports", "epy_slides", "epy_papers", "epy_draft"
-    )
+    )  # every optional one but epy_quoting
     built, skipped = _catalog.for_build(suite)
     assert [app.app_id for app in built] == [
         "epy_reports", "epy_slides", "epy_papers", "epy_draft",
@@ -178,7 +195,26 @@ def test_a_present_optional_application_is_built(tmp_path: Path) -> None:
 def test_an_absent_required_application_refuses_the_build(
     tmp_path: Path,
 ) -> None:
-    # The behaviour there always was, now naming the application.
-    suite = _suite_with(tmp_path, "epy_reports", "epy_slides", "epy_papers")
-    with pytest.raises(SystemExit, match="epy_draft"):
+    # The behaviour there always was, now naming the application. A
+    # PUBLIC editor is not the owner's to hand out: a bundle without it
+    # is a broken build, not a smaller one.
+    suite = _suite_with(tmp_path, "epy_reports", "epy_slides")
+    with pytest.raises(SystemExit, match="epy_papers"):
         _catalog.for_build(suite)
+
+
+def test_the_public_editors_alone_are_a_buildable_bundle(
+    tmp_path: Path,
+) -> None:
+    # What a stranger who clones the PUBLIC repository has. Before the
+    # privacy rule this refused, because ePy Draft was required and its
+    # repository is private.
+    suite = _suite_with(tmp_path, "epy_reports", "epy_slides", "epy_papers")
+    built, skipped = _catalog.for_build(suite)
+    assert [app.app_id for app in built] == [
+        "epy_reports", "epy_slides", "epy_papers",
+    ]
+    assert len(skipped) == 2
+    assert {"epy_draft", "epy_quoting"} == {
+        line.split()[3].rstrip(":") for line in skipped
+    }

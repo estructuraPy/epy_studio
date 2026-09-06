@@ -126,6 +126,17 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     for extension, exe_name in REGISTERED:
+        if not (target / exe_name).is_file():
+            # The application that claims this type is not installed.
+            # Only an OPTIONAL one can be legitimately absent, and the
+            # loop above has already refused a required one by name, so
+            # reaching here means the release does not carry it and the
+            # type belongs to nobody.
+            print(
+                f"registry: {extension} -> skipped, "
+                f"{exe_name} not installed"
+            )
+            continue
         command = _open_command(extension)
         if not command:
             problems.append(

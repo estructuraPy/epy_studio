@@ -33,7 +33,7 @@
     },
     {
       "id": "epy_draft", "display": "ePy Draft", "component": "craft",
-      "register": "openwith", "optional": false,
+      "register": "openwith", "optional": true,
       "asset_packages": ["branding", "prompts"],
       "hidden_imports": ["keyring.backends", "keyring.backends.Windows", "keyring.backends.SecretService", "keyring.backends.chainer", "keyring.backends.fail", "yaml", "pypdf"],
       "icon": "_core/_packaging/assets_build/epy_draft.ico",

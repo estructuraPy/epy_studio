@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.0] — 2026-09-05
 
 ### Changed
-- **Ships ePy Draft 0.2.0.** The project is its `.kepy`: it opens by
+- **Ships ePy Draft 0.2.1.** The project is its `.kepy`: it opens by
   file or by folder under any name, *New project* makes the working
   folders, *Seal into one file* writes a `.zepy` whose integrity is
   checkable, structural drawings (`.dxf`) are indexed, and the prompts,

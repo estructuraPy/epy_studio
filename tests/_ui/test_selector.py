@@ -183,3 +183,82 @@ def test_the_organisation_is_not_spelt_inline() -> None:
     source = inspect.getsource(selector)
     assert 'QSettings("ANM' not in source
     assert "ORGANIZATION" in source
+
+
+def _checkboxes(window) -> list[str]:
+    from PySide6.QtWidgets import QCheckBox
+
+    return [
+        item.text() for item in window.findChildren(QCheckBox) if item.text()
+    ]
+
+
+def test_the_renderer_choice_appears_only_when_there_is_one(qt_app) -> None:
+    # A checkbox for a package nobody has is a question with one answer,
+    # and the status strip already says the package is absent.
+    from pathlib import Path
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui.selector import build_window
+
+    absent = build_window([], backend=Backend(), language="en")
+    assert not any("ePy Docs" in text for text in _checkboxes(absent))
+
+    found = Backend(python=Path("C:/py/python.exe"), version="1.4")
+    present = build_window([], backend=found, language="en")
+    assert any("ePy Docs" in text for text in _checkboxes(present))
+
+
+def test_the_choice_defaults_to_offering_it(monkeypatch) -> None:
+    # Somebody who installed a commercial add-on installed it to use it.
+    # Offering changes what is AVAILABLE; each application keeps its own
+    # engine as the default, so nothing renders differently by itself.
+    from epy_studio._ui import selector
+
+    class _Settings:
+        def __init__(self, *args: object) -> None:
+            pass
+
+        def value(self, key: str, default: object = None) -> object:
+            return default
+
+    monkeypatch.setattr(
+        "PySide6.QtCore.QSettings", _Settings, raising=True
+    )
+    assert selector.docs_offered() is True
+
+
+def test_the_choice_reaches_the_launched_application(
+    qt_app, monkeypatch, tmp_path
+) -> None:
+    # The only place the choice has any effect. Everything else about
+    # it can be right while the launcher never asks, and the whole
+    # feature would be inert with every other test still green --
+    # measured: planting exactly that broke nothing.
+    from pathlib import Path
+
+    from epy_studio._core._backends import ENV_PYTHON, Backend
+    from epy_studio._ui import selector
+
+    handed: dict[str, str] = {}
+
+    def fake_popen(args, **kwargs):
+        handed.clear()
+        handed.update(kwargs.get("env", {}))
+
+        class _Started:
+            pass
+
+        return _Started()
+
+    monkeypatch.setattr(selector.subprocess, "Popen", fake_popen)
+    found = Backend(python=Path("C:/py/python.exe"), version="1.4")
+    exe = tmp_path / "epy_reports.exe"
+
+    monkeypatch.setattr(selector, "docs_offered", lambda: True)
+    selector.build_window([], backend=found, language="en")._launch(exe)
+    assert ENV_PYTHON in handed
+
+    monkeypatch.setattr(selector, "docs_offered", lambda: False)
+    selector.build_window([], backend=found, language="en")._launch(exe)
+    assert ENV_PYTHON not in handed

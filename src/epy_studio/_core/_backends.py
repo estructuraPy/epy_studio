@@ -45,12 +45,21 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from epy_export import ENV_DOCS_PYTHON
+
 from . import _i18n
 
 __all__ = ["Backend", "detect_docs", "handoff_env"]
 
-ENV_PYTHON = "EPY_DOCS_PYTHON"
-"""Where an interpreter carrying ePy Docs was found, for the children."""
+ENV_PYTHON = ENV_DOCS_PYTHON
+"""Where an interpreter carrying ePy Docs was found, for the children.
+
+Imported rather than spelled again. Studio publishes this variable
+and the applications read it through ``epy_export``, and neither
+package depends on the other -- so a rename spelled twice would
+leave one side listening for a name the other stopped setting, and
+the only symptom would be a menu entry quietly greying out.
+"""
 
 ENV_VERSION = "EPY_DOCS_VERSION"
 """Its version, so a child need not pay for a second subprocess."""
@@ -177,7 +186,7 @@ def detect_docs(*, timeout: float = 20.0) -> Backend:
     return Backend()
 
 
-def handoff_env(backend: Backend) -> dict[str, str]:
+def handoff_env(backend: Backend, *, offer: bool = True) -> dict[str, str]:
     """Return the environment additions for a launched application.
 
     A HINT, never a dependency. An application launched from the Start
@@ -187,11 +196,17 @@ def handoff_env(backend: Backend) -> dict[str, str]:
 
     Args:
         backend: What :func:`detect_docs` found.
+        offer: Whether the user wants ePy Docs offered at all. Off, the
+            applications behave exactly as they do when it is not
+            installed: the hint is what makes the entry reachable, so
+            withholding it withdraws the offer without pretending the
+            machine lacks the package.
 
     Returns:
-        Variables to add, empty when nothing was found.
+        Variables to add, empty when nothing was found or nothing is
+        offered.
     """
-    if backend.python is None:
+    if backend.python is None or not offer:
         return {}
     return {
         ENV_PYTHON: str(backend.python),

@@ -20,10 +20,18 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from epy_export import LEGACY_ORGANIZATIONS, ORGANIZATION
+from epy_export import (
+    LEGACY_ORGANIZATIONS,
+    ORGANIZATION,
+    is_truthy,
+)
 
 from .._core import _i18n
-from .._core._backends import Backend, detect_docs, handoff_env
+from .._core._backends import (
+    Backend,
+    detect_docs,
+    handoff_env,
+)
 from .._core._catalog import App, apps, install_dir
 
 __all__ = ["APP_NAME", "build_window", "manual_path"]
@@ -93,6 +101,44 @@ def preferred_language() -> str:
     return "en"
 
 
+DOCS_OFFERED_KEY = "backends/offer_docs"
+"""Whether ePy Docs is offered to the applications Studio launches."""
+
+
+def docs_offered() -> bool:
+    """Report whether the reader wants ePy Docs offered as a renderer.
+
+    Defaults to yes. Somebody who has installed a commercial add-on
+    installed it to use it, and the applications keep their own engine
+    as the DEFAULT either way -- so offering it changes what is
+    available, never what happens when nobody chooses.
+
+    Returns:
+        The stored choice, or ``True`` when nothing is stored.
+    """
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    stored = QSettings(ORGANIZATION, "epy_studio").value(
+        DOCS_OFFERED_KEY, "true"
+    )
+    # QSettings hands back a string on Windows and the stored type
+    # elsewhere, so the answer is normalised rather than trusted.
+    return is_truthy(str(stored))
+
+
+def set_docs_offered(offered: bool) -> None:
+    """Store whether ePy Docs is offered.
+
+    Args:
+        offered: The reader's choice.
+    """
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    QSettings(ORGANIZATION, "epy_studio").setValue(
+        DOCS_OFFERED_KEY, "true" if offered else "false"
+    )
+
+
 def build_window(
     files: list[str],
     *,
@@ -117,6 +163,7 @@ def build_window(
     from PySide6.QtCore import Qt  # noqa: PLC0415
     from PySide6.QtGui import QDesktopServices, QFont, QIcon  # noqa: PLC0415
     from PySide6.QtWidgets import (  # noqa: PLC0415
+        QCheckBox,
         QFrame,
         QHBoxLayout,
         QLabel,
@@ -206,6 +253,23 @@ def build_window(
                 )
             language_btn.setMenu(language_menu)
             bottom.addWidget(language_btn)
+            # Offered only where there is something to offer: a
+            # checkbox for a package nobody has is a question with
+            # one answer, and the status strip already says so.
+            if found.present:
+                docs_box = QCheckBox(
+                    _i18n.tr("Offer ePy Docs as a renderer"), root
+                )
+                docs_box.setChecked(docs_offered())
+                docs_box.setToolTip(
+                    _i18n.tr(
+                        "Adds ePy Docs to the export choices of the "
+                        "applications launched from here. Each one keeps "
+                        "its own renderer as the default."
+                    )
+                )
+                docs_box.toggled.connect(set_docs_offered)
+                bottom.addWidget(docs_box)
             bottom.addStretch(1)
             # One strip for the whole install, not one line per row: the
             # backend is a property of the machine, and repeating the
@@ -288,7 +352,10 @@ def build_window(
             subprocess.Popen(  # noqa: S603 — fixed path in our install dir
                 [str(exe_path), *self._files],
                 cwd=str(exe_path.parent),
-                env={**os.environ, **handoff_env(self._backend)},
+                env={
+                    **os.environ,
+                    **handoff_env(self._backend, offer=docs_offered()),
+                },
             )
             self.close()
 

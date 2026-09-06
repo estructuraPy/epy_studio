@@ -30,6 +30,14 @@ _ES: dict[str, str] = {
     "Open": "Abrir",
     "User manual": "Manual de usuario",
     "Language": "Idioma",
+    "Offer ePy Docs as a renderer":
+        "Ofrecer ePy Docs como motor de composicion",
+    "Adds ePy Docs to the export choices of the applications "
+    "launched from here. Each one keeps its own renderer as the "
+    "default.":
+        "Agrega ePy Docs a las opciones de exportacion de las "
+        "aplicaciones que se abren desde aqui. Cada una conserva "
+        "su propio motor como predeterminado.",
     "Not installed — re-run the installer to add it.":
         "No instalado — vuelva a ejecutar el instalador para agregarlo.",
     "(not installed)": "(no instalado)",

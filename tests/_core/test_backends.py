@@ -44,6 +44,39 @@ def test_the_handoff_names_the_interpreter_and_the_version() -> None:
     assert handed[_backends.ENV_VERSION] == "1.4"
 
 
+def test_the_handoff_is_withheld_when_the_reader_declines_it() -> None:
+    # The choice the owner asked for: offer it, or do not. Withheld, the
+    # applications behave exactly as they do on a machine without the
+    # package -- because the hint is what makes the entry reachable at
+    # all inside a frozen bundle.
+    found = _backends.Backend(python=Path("C:/py/python.exe"), version="1.4")
+    assert _backends.handoff_env(found, offer=False) == {}
+    assert _backends.handoff_env(found, offer=True) != {}
+    # And declining does not conjure a backend that is not there.
+    assert _backends.handoff_env(_backends.Backend(), offer=True) == {}
+
+
+def test_the_variable_name_has_one_home() -> None:
+    # Studio publishes it, the applications read it through epy_export,
+    # and neither package depends on the other. Spelled twice, a rename
+    # would leave one side listening for a name the other stopped
+    # setting, and the only symptom would be a menu entry going grey.
+    #
+    # Checked against the SOURCE, not by comparing the two values:
+    # Python interns a short string literal, so the same name spelled
+    # twice is the same object and an identity check cannot tell the
+    # two apart. Measured -- that version of this test passed with the
+    # literal restored.
+    import inspect
+
+    import epy_export
+
+    assert _backends.ENV_PYTHON == epy_export.ENV_DOCS_PYTHON
+    source = inspect.getsource(_backends)
+    assert '"EPY_DOCS_PYTHON"' not in source
+    assert "ENV_DOCS_PYTHON" in source
+
+
 def test_an_interpreter_without_documentwriter_is_not_a_backend(
     monkeypatch, tmp_path
 ) -> None:

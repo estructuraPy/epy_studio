@@ -39,6 +39,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The release script no longer assumes ePy Draft is installed, and the
   installed-bundle probe skips the file types of an application this
   release does not carry.
+- **The reader chooses whether ePy Docs is offered as a renderer.** A
+  checkbox beside the language switch, remembered between launches, and
+  shown only where there is something to offer. Declined, the hint is
+  withheld and the applications behave exactly as they do on a machine
+  without the package. It defaults to offering: somebody who installed
+  a commercial add-on installed it to use it, and each application
+  keeps its own engine as the DEFAULT either way, so this changes what
+  is available and never what happens when nobody chooses.
+- The name of the hint variable is imported from `epy_export` instead
+  of spelled here. Studio publishes it and the applications read it,
+  and neither package depends on the other: spelled twice, a rename
+  would leave one side listening for a name the other stopped setting,
+  and the only symptom would be a menu entry quietly going grey.
 
 ## [0.7.0] — 2026-09-05
 

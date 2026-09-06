@@ -42,8 +42,17 @@ SHIPPED_FIXES = (
     # add_metadata is called with creator/producer; the producer literal
     # exists only because that call site was fixed (epy_reports d5a6ee6).
     ("epy_reports", "epy_reports._ui.tab", "epy_reports — ANM Ingeniería"),
-    # a .kepy on the command line opens its project (epy_draft d5670af).
-    ("epy_draft", "epy_draft.app", "_project_root_for"),
+    # A project is its store file, opened by .kepy or by folder, and
+    # sealed into one .zepy (epy_draft 87b55f0, 86cf01b). The old
+    # probe named _project_root_for, retired there: a stale probe
+    # refusing the build is the probe working.
+    ("epy_draft", "epy_draft.app", "open_path"),
+    ("epy_draft", "epy_draft._core._project", "LEGACY_STORE_NAME"),
+    ("epy_draft", "epy_draft._core._project.archive", "ARCHIVE_SUFFIX"),
+    # The project owns its prompts, and the batch reads them from the
+    # store (epy_draft 970fa9b); drawings are indexed (68626b2).
+    ("epy_draft", "epy_draft._core._project.content", "doc_for"),
+    ("epy_draft", "epy_draft._core._index.extract", "_DXF_SUFFIX"),
     # The optional autosave: its module constant only exists with it.
     ("epy_reports", "epy_reports.app", "AUTOSAVE_INTERVAL_MS"),
     ("epy_slides", "epy_slides.app", "AUTOSAVE_INTERVAL_MS"),

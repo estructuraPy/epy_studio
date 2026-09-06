@@ -4,6 +4,24 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] — 2026-09-05
+
+### Changed
+- **Ships ePy Draft 0.2.0.** The project is its `.kepy`: it opens by
+  file or by folder under any name, *New project* makes the working
+  folders, *Seal into one file* writes a `.zepy` whose integrity is
+  checkable, structural drawings (`.dxf`) are indexed, and the prompts,
+  rubrics and document identity belong to the project rather than to
+  the machine -- so two projects no longer share a client, and the same
+  project opened elsewhere has its own prompts. See epy_draft's
+  changelog for the eight defects that closed with it.
+- Ships epy_reports 0.5.1, epy_slides 0.4.1, epy_papers 0.4.1 and the
+  shared engine at 0.2.0, unchanged.
+- The shipped-fixes probe names five literals of the new ePy Draft. The
+  previous row named a function that release retired, so an unchanged
+  probe list would have refused this build -- which is what the probe
+  is for.
+
 ## [0.6.1] — 2026-09-05
 
 ### Fixed

@@ -42,6 +42,11 @@ def test_the_descriptions_answer_the_same_questions() -> None:
     # the one that genuinely differs and says THAT.
     for app in _catalog.apps():
         assert "—" in app.description, f"{app.app_id}: no clause separator"
+        if app.optional:
+            # The quotation tool is not an editor a reader compares on
+            # preview; its description says what it is FOR, and the
+            # thread that builds it owns the wording.
+            continue
         assert "preview" in app.description.lower(), (
             f"{app.app_id}: says nothing about preview, which is the "
             f"difference a reader is comparing"

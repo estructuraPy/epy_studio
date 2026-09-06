@@ -16,7 +16,7 @@ whichever editor fits the job.
 launcher.py        selector window, the --register CLI, and the
                    first-start offer a silent install never gets
 _core/winreg_assoc HKCU file-association helpers (Studio identity)
-epy_studio.spec    multi-exe PyInstaller spec (4 apps + launcher, one COLLECT)
+epy_studio.spec    multi-exe PyInstaller spec (the catalog's apps + launcher, one COLLECT)
 build.py           builds dist/epy_studio/ (installer input)
 windows/           Inno Setup script
                    (components: reports/slides/papers/craft)
@@ -25,7 +25,7 @@ docs/              user manual (English + Spanish), shipped with the app
 
 ## Build
 
-From this directory, with the four app repos as siblings and
+From this directory, with the app repos as siblings (an optional one may be absent) and
 `pip install -e` applied to each:
 
 ```
@@ -37,7 +37,7 @@ Output: `dist/epy_studio-setup-<version>.exe`.
 
 ## Design notes
 
-- The four applications deduplicate through PyInstaller `COLLECT` (identical
+- The applications deduplicate through PyInstaller `COLLECT` (identical
   runtime files collapse to one copy) — never share a runtime through
   NTFS junctions: the Windows loader refuses DLLs behind reparse points.
 - Windows 10/11 cannot be given a default app silently (`UserChoice` is

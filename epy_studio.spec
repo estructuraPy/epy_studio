@@ -155,34 +155,42 @@ def _icon(pkg: str, *parts: str) -> str | None:
     return str(path) if path.exists() else None
 
 
-a_reports = _app_analysis(
-    "epy_reports",
-    ["branding", "themes", "reference_docx", "mathjax", "csl", "mermaid", "nomnoml"],
-)
-a_slides = _app_analysis(
-    "epy_slides",
-    ["branding", "themes", "reference_pptx", "mathjax", "revealjs", "mermaid", "nomnoml"],
-)
-a_papers = _app_analysis(
-    "epy_papers",
-    ["branding", "themes", "mathjax", "csl", "mermaid", "nomnoml"],
-)
-a_craft = _app_analysis(
-    "epy_draft",
-    ["branding", "prompts"],
-    # keyring resolves its backend through entry points, which the
-    # dependency graph cannot see. Without these the frozen app reports
-    # "no recommended backend" and silently loses every stored API key.
-    extra_hidden=[
-        "keyring.backends",
-        "keyring.backends.Windows",
-        "keyring.backends.SecretService",
-        "keyring.backends.chainer",
-        "keyring.backends.fail",
-        "yaml",
-        "pypdf",
-    ],
-)
+# The applications come from the catalog, which is the one place
+# that lists them. An OPTIONAL application whose sibling checkout is
+# absent is skipped BY NAME; a required one refuses the build.
+import sys as _sys
+
+_sys.path.insert(0, str(_ROOT / "src"))
+from epy_studio._core._catalog import for_build as _for_build  # noqa: E402
+
+_built, _skipped = _for_build(_SUITE)
+for _line in _skipped:
+    print(_line)
+if not _built:
+    raise SystemExit("refusing to build: the catalog yielded no application")
+_analyses = [
+    (
+        _app,
+        _app_analysis(
+            _app.app_id,
+            list(_app.asset_packages),
+            list(_app.hidden_imports) or None,
+        ),
+    )
+    for _app in _built
+]
+
+
+def _icon_for(app) -> str | None:
+    """The application's own icon, or the launcher's, said out loud."""
+    if app.icon:
+        own = _SUITE / app.app_id / "src" / app.app_id / app.icon
+        if own.exists():
+            return str(own)
+        print(f"NOTE: {app.app_id} has no icon at {own}; using the launcher's")
+    return _icon("epy_reports", "assets_build", "epy_reports.ico")
+
+
 a_launcher = Analysis(
     [str(_ROOT / "src" / "epy_studio" / "__main__.py")],
     pathex=[str(_ROOT / "src"), str(_SUITE / "epy_export" / "src")],
@@ -241,7 +249,7 @@ def _drop_qt_qml(analysis) -> None:
     analysis.datas = [entry for entry in analysis.datas if keep(entry)]
 
 
-for _a in (a_reports, a_slides, a_papers, a_craft, a_launcher):
+for _a in [*(a for _, a in _analyses), a_launcher]:
     _drop_icu_dlls(_a)
     _drop_qt_qml(_a)
 
@@ -263,18 +271,12 @@ def _exe(analysis, name: str, icon: str | None) -> EXE:  # noqa: F821
     )
 
 
-exe_reports = _exe(
-    a_reports, "epy_reports", _icon("epy_reports", "assets_build", "epy_reports.ico")
-)
-exe_slides = _exe(
-    a_slides, "epy_slides", _icon("epy_slides", "assets_build", "epy_slides.ico")
-)
-exe_papers = _exe(
-    a_papers, "epy_papers", _icon("epy_papers", "assets_build", "epy_papers.ico")
-)
-exe_craft = _exe(
-    a_craft, "epy_draft", _icon("epy_draft", "assets_build", "epy_draft.ico")
-)
+_exes = [_exe(a, app.app_id, _icon_for(app)) for app, a in _analyses]
+_app_collect = [
+    item
+    for app_exe, (_, a) in zip(_exes, _analyses)
+    for item in (app_exe, a.binaries, a.datas)
+]
 exe_launcher = _exe(
     a_launcher, "epy_studio", _icon("epy_reports", "assets_build", "epy_reports.ico")
 )
@@ -283,18 +285,7 @@ coll = COLLECT(  # noqa: F821
     exe_launcher,
     a_launcher.binaries,
     a_launcher.datas,
-    exe_reports,
-    a_reports.binaries,
-    a_reports.datas,
-    exe_slides,
-    a_slides.binaries,
-    a_slides.datas,
-    exe_papers,
-    a_papers.binaries,
-    a_papers.datas,
-    exe_craft,
-    a_craft.binaries,
-    a_craft.datas,
+    *_app_collect,
     strip=False,
     upx=False,
     upx_exclude=[],

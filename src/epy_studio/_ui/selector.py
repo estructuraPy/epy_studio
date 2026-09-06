@@ -169,6 +169,14 @@ def build_window(
 
             base = install_dir()
             for app in apps():
+                if app.optional and not (base / f"{app.app_id}.exe").is_file():
+                    # An OPTIONAL application that is not installed
+                    # is not offered at all -- not greyed. A greyed
+                    # row says 'you could have this, re-run the
+                    # installer'; an optional one is the owner's to
+                    # hand out, and its absence is not an incomplete
+                    # install.
+                    continue
                 layout.addWidget(self._tool_row(base, app))
 
             bottom = QHBoxLayout()

@@ -58,6 +58,13 @@ def _shipped_fixes() -> tuple[tuple[str, str, str], ...]:
     return tuple(build.SHIPPED_FIXES)
 
 
+def _optional_ids() -> frozenset[str]:
+    """Return build.py's own notion of which applications may be absent."""
+    import build  # noqa: PLC0415 - the repo root is on sys.path above
+
+    return build._optional_ids()  # noqa: SLF001 - the same rule, one home
+
+
 def _reg_default(key: str) -> str:
     """Return a registry key's default value, or "" when absent."""
     try:
@@ -93,10 +100,17 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     problems: list[str] = []
+    skipped = 0
+    optional = _optional_ids()
     rows = _shipped_fixes() + DRAWING_READER
     for stem, module, literal in rows:
         exe = target / f"{stem}.exe"
         if not exe.is_file():
+            if stem in optional:
+                # The owner hands this one out; a machine without it
+                # is not a stale install.
+                skipped += 1
+                continue
             problems.append(f"{exe.name}: not installed")
             continue
         try:
@@ -104,8 +118,12 @@ def main(argv: list[str] | None = None) -> int:
                 problems.append(f"{exe.name}: {module} lacks {literal!r}")
         except pyz_probe.BundleProbeError as exc:
             problems.append(f"{exe.name}: {exc}")
-    present = len(rows) - len(problems)
-    print(f"PYZ: {present}/{len(rows)} literal(s) present in {target}")
+    present = len(rows) - len(problems) - skipped
+    note = f"  ({skipped} skipped: optional, not installed)" if skipped else ""
+    print(
+        f"PYZ: {present}/{len(rows) - skipped} literal(s) present in {target}"
+        f"{note}"
+    )
 
     for extension, exe_name in REGISTERED:
         command = _open_command(extension)

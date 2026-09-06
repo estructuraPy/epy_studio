@@ -149,9 +149,19 @@ def _verify_shipped_fixes(target: Path) -> None:
     identical from the outside, and this is the only place that can tell.
     """
     missing: list[str] = []
+    skipped: list[str] = []
+    optional = _optional_ids()
     for stem, module, literal in SHIPPED_FIXES:
         exe = target / f"{stem}.exe"
         if not exe.is_file():
+            if stem in optional:
+                # Not produced because its checkout was absent: said,
+                # not failed. Its probes wait for the day it ships.
+                skipped.append(
+                    f"{exe.name}: optional, not built -- {literal!r} "
+                    f"not probed"
+                )
+                continue
             missing.append(f"{exe.name}: not produced")
             continue
         try:
@@ -164,10 +174,36 @@ def _verify_shipped_fixes(target: Path) -> None:
             "Shipped-fix verification FAILED -- the bundle does not carry "
             "a fix that is in git:\n  " + "\n  ".join(missing)
         )
+    for line in skipped:
+        print(f"SKIPPED {line}")
     print(
-        f"Shipped fixes verified: {len(SHIPPED_FIXES)} literal(s) present "
+        f"Shipped fixes verified: {len(SHIPPED_FIXES) - len(skipped)} "
+        f"literal(s) present "
         f"in the produced executables."
     )
+
+
+def _catalog_apps() -> list[dict[str, object]]:
+    """Return the catalog's entries as written."""
+    catalog = json.loads(
+        (ROOT / "src" / "epy_studio" / "_config" / "apps.epyson").read_text(
+            encoding="utf-8"
+        )
+    )
+    return list(catalog["apps"])
+
+
+def _optional_ids() -> frozenset[str]:
+    """Return the ids of the applications the bundle may lack."""
+    return frozenset(
+        str(app["id"]) for app in _catalog_apps() if app.get("optional")
+    )
+
+
+_GUARD = re.compile(
+    r"#ifexist[^\n]*?\b(?P<exe>[A-Za-z0-9_]+\.exe)\"[^\n]*\n(?P<body>.*?)#endif",
+    re.S,
+)
 
 
 def _verify_manifest() -> None:
@@ -203,10 +239,40 @@ def _verify_manifest() -> None:
     )
 
     problems: list[str] = []
+    # An OPTIONAL application's lines must sit inside #ifexist blocks
+    # naming its own executable, and NOWHERE else: one unguarded line
+    # is enough for ISCC to refuse to compile the day the executable is
+    # not there, which is the whole case an optional application is
+    # for. A required application's lines are checked as before.
+    guarded: dict[str, str] = {}
+    for match in _GUARD.finditer(iss):
+        exe_name = match.group("exe")
+        guarded[exe_name] = guarded.get(exe_name, "") + match.group("body")
+    unguarded = _GUARD.sub("", iss)
     for app in catalog["apps"]:
-        if f"{app['id']}.exe" not in iss:
-            problems.append(f"{app['id']}.exe is in the catalog, not the .iss")
-        if f"Name: \"{app['component']}\"" not in iss:
+        exe = f"{app['id']}.exe"
+        component = f"Name: \"{app['component']}\""
+        if app.get("optional"):
+            inside = guarded.get(exe, "")
+            if exe not in inside:
+                problems.append(
+                    f"{exe} is optional and has no #ifexist block of its "
+                    f"own in the .iss"
+                )
+            if component not in inside:
+                problems.append(
+                    f"component {app['component']!r} of optional {exe} is "
+                    f"not inside its #ifexist block"
+                )
+            if exe in unguarded or component in unguarded:
+                problems.append(
+                    f"{exe} is optional but a line names it outside its "
+                    f"#ifexist block; ISCC would fail without the exe"
+                )
+            continue
+        if exe not in unguarded:
+            problems.append(f"{exe} is in the catalog, not the .iss")
+        if component not in unguarded:
             problems.append(
                 f"component {app['component']!r} is in the catalog, "
                 f"not the .iss"

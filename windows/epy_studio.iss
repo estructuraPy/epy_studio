@@ -65,6 +65,11 @@ Name: "reports"; Description: "ePy Reports — technical reports (PDF / Word / H
 Name: "slides"; Description: "ePy Slides — presentation decks (reveal.js / PowerPoint)"; Types: full custom
 Name: "papers"; Description: "ePy Papers — academic manuscripts"; Types: full custom
 Name: "craft"; Description: "ePy Draft — batch LLM processing over your reference library"; Types: full custom
+; An OPTIONAL application: present only when the build produced it.
+; Without the guard ISCC refuses to compile over a missing Source.
+#ifexist DistDir + "\epy_quoting.exe"
+Name: "quoting"; Description: "ePy Quoting — service offers and fee quotation"; Types: full custom
+#endif
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -80,6 +85,9 @@ Source: "{#DistDir}\epy_reports.exe"; DestDir: "{app}"; Flags: ignoreversion; Co
 Source: "{#DistDir}\epy_slides.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: slides
 Source: "{#DistDir}\epy_papers.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: papers
 Source: "{#DistDir}\epy_draft.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: craft
+#ifexist DistDir + "\epy_quoting.exe"
+Source: "{#DistDir}\epy_quoting.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: quoting
+#endif
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\epy_studio.exe"; IconFilename: "{app}\epy_studio.exe"
@@ -87,6 +95,9 @@ Name: "{autoprograms}\ePy Reports"; Filename: "{app}\epy_reports.exe"; IconFilen
 Name: "{autoprograms}\ePy Slides"; Filename: "{app}\epy_slides.exe"; IconFilename: "{app}\epy_slides.exe"; Components: slides
 Name: "{autoprograms}\ePy Papers"; Filename: "{app}\epy_papers.exe"; IconFilename: "{app}\epy_papers.exe"; Components: papers
 Name: "{autoprograms}\ePy Draft"; Filename: "{app}\epy_draft.exe"; IconFilename: "{app}\epy_draft.exe"; Components: craft
+#ifexist DistDir + "\epy_quoting.exe"
+Name: "{autoprograms}\ePy Quoting"; Filename: "{app}\epy_quoting.exe"; IconFilename: "{app}\epy_quoting.exe"; Components: quoting
+#endif
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\epy_studio.exe"; IconFilename: "{app}\epy_studio.exe"; Tasks: desktopicon
 
 [Run]

@@ -59,11 +59,51 @@ def test_a_caller_that_names_a_language_is_not_overridden(qt_app) -> None:
     assert english != spanish
 
 
-def test_every_application_gets_a_row(qt_app) -> None:
+def test_every_required_application_gets_a_row(qt_app) -> None:
+    # From a source checkout nothing is installed, so every required
+    # application is offered greyed: that is a custom install the user
+    # could complete, and the row says how.
     from epy_studio._core._catalog import apps
     from epy_studio._ui.selector import build_window
 
     texts = _labels(build_window([], backend=Backend(), language="en"))
+    for app in apps():
+        if app.optional:
+            continue
+        assert app.display in texts, f"{app.app_id} has no row"
+
+
+def test_an_optional_application_without_its_exe_is_not_offered(
+    qt_app,
+) -> None:
+    # The owner's rule: not greyed, ABSENT. An optional application is
+    # handed out, not installed by leaving a box ticked, so a row for
+    # one that is not there would advertise something the installer
+    # cannot give.
+    from epy_studio._core._catalog import apps
+    from epy_studio._ui.selector import build_window
+
+    optional = [app for app in apps() if app.optional]
+    assert optional, "nothing optional to test against"
+    texts = _labels(build_window([], backend=Backend(), language="en"))
+    for app in optional:
+        assert app.display not in texts, f"{app.app_id} was offered"
+
+
+def test_an_optional_application_with_its_exe_is_offered(
+    qt_app, tmp_path, monkeypatch
+) -> None:
+    # The control: present, it gets its row like any other.
+    from epy_studio._core import _catalog
+    from epy_studio._core._catalog import apps
+    from epy_studio._ui import selector
+
+    for app in apps():
+        (tmp_path / f"{app.app_id}.exe").write_bytes(b"MZ")
+    monkeypatch.setattr(selector, "install_dir", lambda: tmp_path)
+    monkeypatch.setattr(_catalog, "install_dir", lambda: tmp_path)
+    window = selector.build_window([], backend=Backend(), language="en")
+    texts = _labels(window)
     for app in apps():
         assert app.display in texts, f"{app.app_id} has no row"
 

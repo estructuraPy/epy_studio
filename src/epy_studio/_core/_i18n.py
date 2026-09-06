@@ -69,6 +69,9 @@ _ES: dict[str, str] = {
     "through the other three":
         "Redacción por lotes sobre su biblioteca de referencias — sin vista "
         "previa, renderiza con los otros tres",
+    "Service offers — fee quotation for structural-engineering work":
+        "Ofertas de servicios — cotización de honorarios para trabajos "
+        "de ingeniería estructural",
     # --- the export backend strip -------------------------------------
     "ePy Docs not installed — commercial add-on":
         "ePy Docs no instalado — complemento comercial",

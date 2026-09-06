@@ -4,6 +4,24 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **An application may be optional.** The catalog gained `optional`,
+  `register: none`, and the build-time lists the spec used to carry in
+  code (`asset_packages`, `hidden_imports`, `icon`), so a new
+  application really is one catalog entry. An optional application
+  whose sibling checkout is absent is skipped BY NAME at build time,
+  its installer lines sit inside `#ifexist` blocks so the script
+  compiles either way, the probes report it as skipped rather than
+  missing, and when its executable is not installed the selector does
+  not offer it at all -- not greyed, absent. A required application
+  keeps every contract it had: an absent checkout refuses the build,
+  naming it, and an absent executable keeps its greyed row.
+- The first optional entry: `epy_quoting` (ePy Quoting), a private
+  application for service offers, developed separately. Nothing the
+  user receives changes until its executable exists.
+
 ## [0.7.0] — 2026-09-05
 
 ### Changed

@@ -1,15 +1,52 @@
 {
   "config_id": "apps",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Which applications this Studio bundle carries: the executable each ships, how it is presented in the selector, which installer component installs it, and whether it may register as the default document handler.",
   "audit_status": "verified",
   "_note": "One place, because the list was in five and three of them had already drifted -- launcher.py, epy_studio.spec (three sections), windows/epy_studio.iss (five sections), build.py and README, with the last two still saying 'three editors' after the fourth shipped. launcher.py reads this at run time and epy_studio.spec reads it at build time, so a fifth application is one entry here instead of nine edits. The .iss cannot read JSON; build.py refuses to build when the two disagree.",
   "_description_note": "The four sentences answer the SAME questions in the same order: what kind of document, what the editor gives you, what comes out. They did not before -- ePy Reports claimed 'live preview' while Slides and Papers said nothing about it, and all three have it (measured: 15, 16 and 9 files reaching the preview widget), so a reader comparing them would have concluded the other two lacked it. ePy Draft is the one that genuinely differs, and saying so is the point of having a sentence at all. These are English keys; the Spanish lives in _core/_i18n.py.",
+  "_optional_note": "An optional application is one the owner hands out, not one the installer offers. Its sibling checkout may be ABSENT when Studio is built: the spec skips it by name, the installer script wraps its lines in #ifexist so it compiles either way, and the selector does not offer it at all when its executable is not there -- not greyed, absent. A required application whose executable is missing keeps its greyed row: that is a custom install the user chose, and saying how to complete it is still right. The lists an application needs at build time -- asset subpackages, hidden imports, its icon -- live here too, so a new application really is one entry and not nine edits.",
   "apps": [
-    {"id": "epy_reports", "display": "ePy Reports", "component": "reports", "register": "default", "description": "Technical reports — live preview, exports to PDF, Word and HTML"},
-    {"id": "epy_slides", "display": "ePy Slides", "component": "slides", "register": "default", "description": "Presentation decks — live preview, exports to PDF, PowerPoint and HTML"},
-    {"id": "epy_papers", "display": "ePy Papers", "component": "papers", "register": "default", "description": "Academic manuscripts — live preview, journal profiles, exports to PDF and Word"},
-    {"id": "epy_draft", "display": "ePy Draft", "component": "craft", "register": "openwith", "description": "Batch drafting over your reference library — no preview, renders through the other three"}
+    {
+      "id": "epy_reports", "display": "ePy Reports", "component": "reports",
+      "register": "default", "optional": false,
+      "asset_packages": ["branding", "themes", "reference_docx", "mathjax", "csl", "mermaid", "nomnoml"],
+      "hidden_imports": [],
+      "icon": "_core/_packaging/assets_build/epy_reports.ico",
+      "description": "Technical reports — live preview, exports to PDF, Word and HTML"
+    },
+    {
+      "id": "epy_slides", "display": "ePy Slides", "component": "slides",
+      "register": "default", "optional": false,
+      "asset_packages": ["branding", "themes", "reference_pptx", "mathjax", "revealjs", "mermaid", "nomnoml"],
+      "hidden_imports": [],
+      "icon": "_core/_packaging/assets_build/epy_slides.ico",
+      "description": "Presentation decks — live preview, exports to PDF, PowerPoint and HTML"
+    },
+    {
+      "id": "epy_papers", "display": "ePy Papers", "component": "papers",
+      "register": "default", "optional": false,
+      "asset_packages": ["branding", "themes", "mathjax", "csl", "mermaid", "nomnoml"],
+      "hidden_imports": [],
+      "icon": "_core/_packaging/assets_build/epy_papers.ico",
+      "description": "Academic manuscripts — live preview, journal profiles, exports to PDF and Word"
+    },
+    {
+      "id": "epy_draft", "display": "ePy Draft", "component": "craft",
+      "register": "openwith", "optional": false,
+      "asset_packages": ["branding", "prompts"],
+      "hidden_imports": ["keyring.backends", "keyring.backends.Windows", "keyring.backends.SecretService", "keyring.backends.chainer", "keyring.backends.fail", "yaml", "pypdf"],
+      "icon": "_core/_packaging/assets_build/epy_draft.ico",
+      "description": "Batch drafting over your reference library — no preview, renders through the other three"
+    },
+    {
+      "id": "epy_quoting", "display": "ePy Quoting", "component": "quoting",
+      "register": "none", "optional": true,
+      "asset_packages": ["branding"],
+      "hidden_imports": [],
+      "icon": "_core/_packaging/assets_build/epy_quoting.ico",
+      "description": "Service offers — fee quotation for structural-engineering work"
+    }
   ],
-  "_register_note": "'openwith' advertises an Open-with entry and never claims the default. ePy Draft consumes Markdown and text as batch INPUT and authors neither, so claiming the default would hand it documents it does not edit. That rule lived as a prose comment in the .iss, which is exactly what gets lost when a fifth application is added."
+  "_register_note": "'openwith' advertises an Open-with entry and never claims the default. ePy Draft consumes Markdown and text as batch INPUT and authors neither, so claiming the default would hand it documents it does not edit. That rule lived as a prose comment in the .iss, which is exactly what gets lost when a fifth application is added. 'none' claims nothing: no --register, no [Run] line, no [UninstallRun] line."
 }

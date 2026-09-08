@@ -186,10 +186,18 @@ def test_the_organisation_is_not_spelt_inline() -> None:
 
 
 def _checkboxes(window) -> list[str]:
+    """The checkboxes a person can actually see.
+
+    Hidden ones are excluded on purpose: the renderer choice is built
+    every time and shown only once the machine has answered, so
+    findChildren alone would report a question nobody was asked.
+    """
     from PySide6.QtWidgets import QCheckBox
 
     return [
-        item.text() for item in window.findChildren(QCheckBox) if item.text()
+        item.text()
+        for item in window.findChildren(QCheckBox)
+        if item.text() and not item.isHidden()
     ]
 
 
@@ -262,3 +270,67 @@ def test_the_choice_reaches_the_launched_application(
     monkeypatch.setattr(selector, "docs_offered", lambda: False)
     selector.build_window([], backend=found, language="en")._launch(exe)
     assert ENV_PYTHON not in handed
+
+
+def test_the_window_does_not_wait_for_the_machine_to_answer(
+    qt_app, monkeypatch
+) -> None:
+    """Measured on the installed 0.8.0 bundle: 45 seconds to a window.
+
+    Detection asks the MACHINE, which means a subprocess per candidate
+    interpreter -- and inside the frozen bundle this process is not one
+    of them, so it probes whatever ``python`` and ``py`` mean there.
+    Two of them hit the timeout. Shortening that timeout would trade a
+    slow answer for a wrong one, and a wrong one withdraws the feature
+    without saying so, so the window opens first instead.
+    """
+    import time
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    def _slow() -> Backend:
+        time.sleep(5)
+        return Backend()
+
+    monkeypatch.setattr(selector, "detect_docs", _slow)
+    started = time.perf_counter()
+    window = selector.build_window([], language="en")
+    elapsed = time.perf_counter() - started
+    assert elapsed < 2.0, f"the window waited {elapsed:.1f}s"
+    assert any("looking for" in text for text in _labels(window))
+
+
+def test_the_answer_reaches_the_strip_and_the_choice(
+    qt_app, monkeypatch
+) -> None:
+    # And when it lands, it is said: the strip stops looking and the
+    # renderer choice appears, because a checkbox for a package nobody
+    # has is a question with one answer.
+    from pathlib import Path
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    monkeypatch.setattr(selector, "detect_docs", lambda: Backend())
+    window = selector.build_window([], language="en")
+    found = Backend(python=Path("C:/py/python.exe"), version="1.4")
+    window._on_detected(found)
+    assert any("1.4" in text for text in _labels(window))
+    assert not any("looking for" in text for text in _labels(window))
+    assert any("ePy Docs" in text for text in _checkboxes(window))
+
+
+def test_a_caller_that_already_knows_never_asks(qt_app, monkeypatch) -> None:
+    # The language switch rebuilds the window and passes the answer it
+    # already has. Detecting again would make every language change
+    # cost what the first open cost.
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    def _refuse() -> Backend:
+        raise AssertionError("asked the machine again")
+
+    monkeypatch.setattr(selector, "detect_docs", _refuse)
+    window = selector.build_window([], backend=Backend(), language="en")
+    assert not any("looking for" in text for text in _labels(window))

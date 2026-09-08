@@ -101,6 +101,13 @@ def preferred_language() -> str:
     return "en"
 
 
+_DETECT_WAIT_MS = 30_000
+"""How long a LAUNCH waits for the machine to answer, in ms.
+
+Only a launch waits, and only because the hint is what makes ePy
+Docs reachable in a frozen bundle. The window itself never does.
+"""
+
 DOCS_OFFERED_KEY = "backends/offer_docs"
 """Whether ePy Docs is offered to the applications Studio launches."""
 
@@ -160,7 +167,11 @@ def build_window(
     Returns:
         The window, ready to show.
     """
-    from PySide6.QtCore import Qt  # noqa: PLC0415
+    from PySide6.QtCore import (  # noqa: PLC0415
+        Qt,  # noqa: PLC0415
+        QThread,
+        Signal,
+    )
     from PySide6.QtGui import QDesktopServices, QFont, QIcon  # noqa: PLC0415
     from PySide6.QtWidgets import (  # noqa: PLC0415
         QCheckBox,
@@ -175,7 +186,25 @@ def build_window(
     )
 
     _i18n.set_language(language or preferred_language())
-    found = detect_docs() if backend is None else backend
+    # Not detected here. Asking the machine means starting a subprocess
+    # per candidate interpreter, and inside the frozen bundle this
+    # process is not one of them -- so it probes whatever `python` and
+    # `py` mean on that machine. Measured on the installed bundle: 45
+    # seconds before a window appeared. A shorter timeout would trade a
+    # slow answer for a wrong one, and a wrong one silently withdraws
+    # the feature.
+    pending = backend is None
+    found = backend if backend is not None else Backend()
+
+    class _Detector(QThread):
+        """Asks the machine about ePy Docs, off the interface thread."""
+
+        done = Signal(object)
+
+        def run(self) -> None:
+            """Detect, and hand the answer back whatever it is."""
+            self.done.emit(detect_docs())
+
 
     class StudioWindow(QMainWindow):
         """One row per application; launching closes the selector."""
@@ -256,33 +285,75 @@ def build_window(
             # Offered only where there is something to offer: a
             # checkbox for a package nobody has is a question with
             # one answer, and the status strip already says so.
-            if found.present:
-                docs_box = QCheckBox(
-                    _i18n.tr("Offer ePy Docs as a renderer"), root
+            docs_box = QCheckBox(
+                _i18n.tr("Offer ePy Docs as a renderer"), root
+            )
+            docs_box.setChecked(docs_offered())
+            docs_box.setToolTip(
+                _i18n.tr(
+                    "Adds ePy Docs to the export choices of the "
+                    "applications launched from here. Each one keeps "
+                    "its own renderer as the default."
                 )
-                docs_box.setChecked(docs_offered())
-                docs_box.setToolTip(
-                    _i18n.tr(
-                        "Adds ePy Docs to the export choices of the "
-                        "applications launched from here. Each one keeps "
-                        "its own renderer as the default."
-                    )
-                )
-                docs_box.toggled.connect(set_docs_offered)
-                bottom.addWidget(docs_box)
+            )
+            docs_box.toggled.connect(set_docs_offered)
+            docs_box.setVisible(found.present)
+            bottom.addWidget(docs_box)
+            self._docs_box = docs_box
             bottom.addStretch(1)
             # One strip for the whole install, not one line per row: the
             # backend is a property of the machine, and repeating the
             # same sentence four times says nothing four times.
             status = QLabel(
                 f'{_i18n.tr("Export backends: built-in")} · '
-                f"{found.describe()}"
+                + (
+                    _i18n.tr("looking for ePy Docs…")
+                    if pending
+                    else found.describe()
+                )
             )
             status.setWordWrap(True)
             bottom.addWidget(status)
+            self._status = status
             layout.addLayout(bottom)
             layout.addStretch(1)
             self.setCentralWidget(root)
+
+            self._detector: QThread | None = None
+            if pending:
+                detector = _Detector(self)
+                detector.done.connect(self._on_detected)
+                self._detector = detector
+                detector.start()
+
+        def _on_detected(self, backend: Backend) -> None:
+            """Record what the machine answered and say so.
+
+            Args:
+                backend: What :func:`detect_docs` found.
+            """
+            self._backend = backend
+            self._status.setText(
+                f'{_i18n.tr("Export backends: built-in")} · '
+                f"{backend.describe()}"
+            )
+            # A checkbox for a package nobody has is a question with one
+            # answer, so it appears only once there is something to
+            # offer -- and never before the answer is in.
+            self._docs_box.setVisible(backend.present)
+
+        def _settled_backend(self) -> Backend:
+            """Return the answer, waiting for it only if a launch needs it.
+
+            The window never waits; a LAUNCH does, because the hint is
+            what makes the entry reachable inside the frozen bundle and
+            handing over an empty one would withdraw the feature without
+            saying so.
+            """
+            detector = self._detector
+            if detector is not None and detector.isRunning():
+                detector.wait(_DETECT_WAIT_MS)
+            return self._backend
 
         def _set_language(self, code: str) -> None:
             """Store the choice and rebuild the window in that language.
@@ -354,7 +425,9 @@ def build_window(
                 cwd=str(exe_path.parent),
                 env={
                     **os.environ,
-                    **handoff_env(self._backend, offer=docs_offered()),
+                    **handoff_env(
+                        self._settled_backend(), offer=docs_offered()
+                    ),
                 },
             )
             self.close()

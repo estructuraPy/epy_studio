@@ -30,6 +30,7 @@ _ES: dict[str, str] = {
     "Open": "Abrir",
     "User manual": "Manual de usuario",
     "Language": "Idioma",
+    "looking for ePy Docs…": "buscando ePy Docs…",
     "Offer ePy Docs as a renderer":
         "Ofrecer ePy Docs como motor de composicion",
     "Adds ePy Docs to the export choices of the applications "

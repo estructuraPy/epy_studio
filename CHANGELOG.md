@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of four hand-copied fragments.
 
 ### Fixed
+- **The selector opens at once instead of waiting 45 seconds.** Measured
+  on the installed bundle: detection asks the MACHINE, which means a
+  subprocess per candidate interpreter -- and inside the frozen bundle
+  this process is not one of them, so it probes whatever `python` and
+  `py` happen to mean there. Two of them hit the timeout. Shortening
+  that timeout would have traded a slow answer for a wrong one, and a
+  wrong one withdraws the feature without saying so, so the window
+  opens first and says it is looking. The answer arrives, the strip
+  changes and the renderer choice appears. Only a LAUNCH waits, because
+  the hint is what makes ePy Docs reachable at all.
 - **The installed-bundle probe reads where the installer RECORDED that
   it wrote**, instead of assuming the conventional path, and refuses a
   `--target` that disagrees with the registry. Measured the hard way: a

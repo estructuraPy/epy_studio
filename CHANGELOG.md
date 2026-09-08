@@ -4,7 +4,16 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.0] — 2026-09-08
+
+### Changed
+- **Ships ePy Reports 0.6.0, ePy Slides 0.5.0, ePy Papers 0.5.0 and ePy
+  Draft 0.3.0, on the shared engine at 0.3.0.** The three editors gain a
+  second rendering option, ePy Docs, which had been greyed out in every
+  shipped executable since the first release because availability was
+  asked as "does it import HERE?" and PyInstaller closes that path. ePy
+  Draft's drafting prompts now carry one shared Markdown contract
+  instead of four hand-copied fragments.
 
 ### Added
 - **An application may be optional.** The catalog gained `optional`,

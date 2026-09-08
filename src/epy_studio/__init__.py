@@ -15,7 +15,7 @@ graphs.
 
 from __future__ import annotations
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 __author__ = "Ing. Angel Navarro-Mora M.Sc."
 
 __all__ = ["__author__", "__version__"]

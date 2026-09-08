@@ -47,6 +47,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a commercial add-on installed it to use it, and each application
   keeps its own engine as the DEFAULT either way, so this changes what
   is available and never what happens when nobody chooses.
+- **The page where a person chooses which tools to install is now
+  usable in both languages, and decoded the way it was written.**
+  Every component and both installation types take their name from
+  `[CustomMessages]`, so a Spanish install no longer wraps an
+  English list in Spanish chrome. And the script carries a UTF-8
+  byte-order mark: it has em dashes in it, and Inno reads a file
+  without one in the machine's ANSI codepage, so those names were
+  being decoded by luck.
 - The name of the hint variable is imported from `epy_export` instead
   of spelled here. Studio publishes it and the applications read it,
   and neither package depends on the other: spelled twice, a rename

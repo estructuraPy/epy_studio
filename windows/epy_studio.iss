@@ -1,4 +1,4 @@
-; Inno Setup script for ePy Studio — unified installer for the ePy
+﻿; Inno Setup script for ePy Studio — unified installer for the ePy
 ; document apps (epy_reports, epy_slides, epy_papers), ePy Draft
 ; (epy_draft) + launcher.
 ;
@@ -56,14 +56,33 @@ DisableProgramGroupPage=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
+[CustomMessages]
+; The page where a person CHOOSES is the one page that must not be half
+; translated. Inno translates its own chrome from the .isl; these are
+; ours, so they are ours to translate.
+english.TypeFull=Full installation (every tool)
+spanish.TypeFull=Instalación completa (todas las herramientas)
+english.TypeCustom=Choose which tools to install
+spanish.TypeCustom=Elegir qué herramientas instalar
+english.CompReports=ePy Reports — technical reports (PDF / Word / HTML)
+spanish.CompReports=ePy Reports — informes técnicos (PDF / Word / HTML)
+english.CompSlides=ePy Slides — presentation decks (reveal.js / PowerPoint)
+spanish.CompSlides=ePy Slides — presentaciones (reveal.js / PowerPoint)
+english.CompPapers=ePy Papers — academic manuscripts in a journal's shape
+spanish.CompPapers=ePy Papers — manuscritos académicos con el formato de la revista
+english.CompCraft=ePy Draft — batch drafting over your reference library
+spanish.CompCraft=ePy Draft — redacción por lotes sobre su biblioteca de referencias
+english.CompQuoting=ePy Quoting — service offers and fee quotation
+spanish.CompQuoting=ePy Quoting — ofertas de servicios y cotización de honorarios
+
 [Types]
-Name: "full"; Description: "Full installation (all apps)"
-Name: "custom"; Description: "Custom installation"; Flags: iscustom
+Name: "full"; Description: "{cm:TypeFull}"
+Name: "custom"; Description: "{cm:TypeCustom}"; Flags: iscustom
 
 [Components]
-Name: "reports"; Description: "ePy Reports — technical reports (PDF / Word / HTML)"; Types: full custom
-Name: "slides"; Description: "ePy Slides — presentation decks (reveal.js / PowerPoint)"; Types: full custom
-Name: "papers"; Description: "ePy Papers — academic manuscripts"; Types: full custom
+Name: "reports"; Description: "{cm:CompReports}"; Types: full custom
+Name: "slides"; Description: "{cm:CompSlides}"; Types: full custom
+Name: "papers"; Description: "{cm:CompPapers}"; Types: full custom
 ; ePy Draft is a PRIVATE application, so a checkout of this
 ; PUBLIC repository need not carry it and the build may not
 ; produce its executable. Every line naming it is guarded the
@@ -71,12 +90,12 @@ Name: "papers"; Description: "ePy Papers — academic manuscripts"; Types: full 
 ; document types, so its [Run] lines are guarded too: optional
 ; and register are independent axes.
 #ifexist DistDir + "\epy_draft.exe"
-Name: "craft"; Description: "ePy Draft — batch LLM processing over your reference library"; Types: full custom
+Name: "craft"; Description: "{cm:CompCraft}"; Types: full custom
 #endif
 ; An OPTIONAL application: present only when the build produced it.
 ; Without the guard ISCC refuses to compile over a missing Source.
 #ifexist DistDir + "\epy_quoting.exe"
-Name: "quoting"; Description: "ePy Quoting — service offers and fee quotation"; Types: full custom
+Name: "quoting"; Description: "{cm:CompQuoting}"; Types: full custom
 #endif
 
 [Tasks]

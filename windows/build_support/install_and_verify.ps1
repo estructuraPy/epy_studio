@@ -48,8 +48,36 @@ if (-not (Test-Path $setup)) { throw "installer not produced: $setup" }
 Write-Host ("   {0}  {1:N1} MB" -f (Split-Path $setup -Leaf), ((Get-Item $setup).Length / 1MB))
 
 Write-Host "== 3/6 silent install over the previous release =="
-$p = Start-Process -FilePath $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait -PassThru
+# The directory, the setup type AND the component list are all stated.
+# Inno remembers each of the three from whatever ran last, and it does
+# so silently: measured, an install inherited a scratch directory from
+# a component-selection proof, wrote itself there, and left the real
+# installation on the previous release with every check green.
+#
+# It also cannot replace a file that is in use. A running editor makes
+# the installer stop, and with /SUPPRESSMSGBOXES it stops by ABORTING
+# (exit 5) rather than asking -- so that is named here rather than read
+# as a broken installer.
+$components = "reports,slides,papers,craft,quoting"
+$p = Start-Process -FilePath $setup -ArgumentList `
+    "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", `
+    "/DIR=$target", "/TYPE=full", "/COMPONENTS=$components" -Wait -PassThru
+if ($p.ExitCode -eq 5) {
+    throw ("installer exited 5: it could not replace a file in use. " +
+           "Close any running ePy application and run this again.")
+}
 if ($p.ExitCode -ne 0) { throw "installer exited $($p.ExitCode)" }
+# What the installer WROTE, against what the build produced. The
+# version in the registry is not evidence: it is written even when the
+# files went somewhere else.
+$built = Join-Path $root "dist\epy_studio"
+$stale = @(Get-ChildItem $built -Filter *.exe | ForEach-Object {
+    $there = Join-Path $target $_.Name
+    if (-not (Test-Path $there)) { "$($_.Name): missing" }
+    elseif ((Get-Item $there).Length -ne $_.Length) { "$($_.Name): stale" }
+})
+if ($stale.Count -gt 0) { throw "installed files differ from the build: $($stale -join ', ')" }
+Write-Host "   $((Get-ChildItem $built -Filter *.exe).Count) executable(s) match the build"
 $installed = (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
     Where-Object { $_.DisplayName -like "*ePy Studio*" } | Select-Object -First 1).DisplayVersion
 Write-Host "   registry DisplayVersion: $installed"

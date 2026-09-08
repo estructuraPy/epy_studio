@@ -31,9 +31,49 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1]))
 import pyz_probe  # noqa: E402 - needs HERE on sys.path first
 
-DEFAULT_TARGET = (
+CONVENTIONAL_TARGET = (
     Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "epy_studio"
 )
+"""Where a default install lands. A fallback, never the answer."""
+
+_UNINSTALL = (
+    r"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall"
+)
+
+
+def installed_location() -> Path | None:
+    """Return where the installer RECORDED that it wrote, or None.
+
+    Not where an install conventionally goes. Inno remembers the
+    directory, the setup type and the component list from whatever ran
+    last, so a silent install can land somewhere nobody asked for --
+    measured: one inherited a scratch directory from a subset proof,
+    and a probe pointed at the usual path by hand then verified the
+    PREVIOUS release and called the bundle sound.
+
+    Returns:
+        The recorded location, or ``None`` when nothing is registered.
+    """
+    listing = subprocess.run(
+        ["reg", "query", _UNINSTALL],
+        capture_output=True, text=True, check=False,
+    ).stdout
+    for key in listing.splitlines():
+        key = key.strip()
+        if not key.startswith("HKEY_"):
+            continue
+        values = subprocess.run(
+            ["reg", "query", key],
+            capture_output=True, text=True, check=False,
+        ).stdout
+        if "ePy Studio" not in values:
+            continue
+        for line in values.splitlines():
+            if "InstallLocation" in line and "REG_SZ" in line:
+                where = line.split("REG_SZ", 1)[1].strip()
+                if where:
+                    return Path(where)
+    return None
 
 DRAWING_READER: tuple[tuple[str, str, str], ...] = (
     # Our reader's own literal is already a build.py row; these are the
@@ -92,9 +132,33 @@ def _open_command(extension: str) -> str:
 def main(argv: list[str] | None = None) -> int:
     """Probe the installed bundle and the registry; say what is wrong."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--target", type=Path, default=DEFAULT_TARGET)
+    parser.add_argument(
+        "--target",
+        type=Path,
+        default=None,
+        help=(
+            "Where to probe. Defaults to the location the installer "
+            "RECORDED, which is the only one it can be trusted to have "
+            "written."
+        ),
+    )
     args = parser.parse_args(argv)
-    target: Path = args.target
+    recorded = installed_location()
+    target: Path = args.target or recorded or CONVENTIONAL_TARGET
+    if recorded is None:
+        print("nothing registered as installed; probing " + str(target))
+    elif args.target is not None and (
+        Path(str(args.target).rstrip("\\/")).resolve()
+        != Path(str(recorded).rstrip("\\/")).resolve()
+    ):
+        # The false green this exists to refuse: a directory that was
+        # asked for is not a directory the installer wrote.
+        print(
+            f"refusing to probe {target}: the installer recorded "
+            f"{recorded}. Probing a directory the installer did not "
+            f"write is how a stale bundle passes every check."
+        )
+        return 1
     if not target.is_dir():
         print(f"not installed: {target}")
         return 1

@@ -15,6 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Draft's drafting prompts now carry one shared Markdown contract
   instead of four hand-copied fragments.
 
+### Fixed
+- **The installed-bundle probe reads where the installer RECORDED that
+  it wrote**, instead of assuming the conventional path, and refuses a
+  `--target` that disagrees with the registry. Measured the hard way: a
+  silent install inherited a directory from a component-selection proof
+  that had passed `/DIR`, wrote itself into a scratch folder, and the
+  probe verified the PREVIOUS release's files and called the bundle
+  sound. Every check was green and the machine had not been updated.
+- **The release script states the directory, the setup type AND the
+  component list** on the silent install. Inno remembers all three from
+  whatever ran last, silently. It also names exit code 5 for what it
+  is: the installer could not replace a file in use, which is what a
+  running editor does, and with message boxes suppressed it aborts
+  rather than asking.
+
 ### Added
 - **An application may be optional.** The catalog gained `optional`,
   `register: none`, and the build-time lists the spec used to carry in

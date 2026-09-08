@@ -4,7 +4,7 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.1] — 2026-09-08
+## [0.8.2] — 2026-09-08
 
 Everything 0.8.0 shipped, plus what installing it and watching it
 start made visible. None of it changes an application; all three
@@ -18,9 +18,18 @@ are about the launcher and about how a release is verified.
   `py` happen to mean there. Two of them hit the timeout. Shortening
   that timeout would have traded a slow answer for a wrong one, and a
   wrong one withdraws the feature without saying so, so the window
-  opens first and says it is looking. The answer arrives, the strip
-  changes and the renderer choice appears. Only a LAUNCH waits, because
-  the hint is what makes ePy Docs reachable at all.
+  opens first and says it is looking, and **what the machine answered
+  is remembered**, so the next launch does not pay for the question
+  again: measured on this machine, half a minute, because the
+  `python` on that PATH takes ten seconds to say it has no ePy
+  Docs and then `py` is asked too. The remembered answer is used
+  at once and the question asked again anyway, so a change is
+  picked up on the following launch; an answer naming an
+  interpreter that is gone is discarded rather than trusted.
+  Closing the window never waits, because the detection runs on a
+  daemon thread rather than a QThread -- Qt aborts the process
+  when a QThread is destroyed while running, which is what made
+  the whole test suite pass and the interpreter then die.
 - **The installed-bundle probe reads where the installer RECORDED that
   it wrote**, instead of assuming the conventional path, and refuses a
   `--target` that disagrees with the registry. Measured the hard way: a

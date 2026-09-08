@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -109,6 +110,8 @@ Docs reachable in a frozen bundle. The window itself never does.
 """
 
 DOCS_OFFERED_KEY = "backends/offer_docs"
+REMEMBERED_KEY = "backends/docs_seen"
+"""The last answer about ePy Docs, as ``python|version|quarto``."""
 """Whether ePy Docs is offered to the applications Studio launches."""
 
 
@@ -146,6 +149,50 @@ def set_docs_offered(offered: bool) -> None:
     )
 
 
+def remembered_backend() -> Backend | None:
+    """Return the last answer about ePy Docs, or None if never asked.
+
+    A machine does not change between one launch and the next, and the
+    question costs a subprocess per candidate interpreter: measured on
+    a real machine, about half a minute. Using the last answer at once
+    is what keeps a launch from waiting for a question already asked.
+
+    Returns:
+        What was seen last time, or ``None``.
+    """
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    stored = str(
+        QSettings(ORGANIZATION, "epy_studio").value(REMEMBERED_KEY, "")
+    )
+    if not stored:
+        return None
+    python, _, rest = stored.partition("|")
+    version, _, quarto = rest.partition("|")
+    if not python or not Path(python).is_file():
+        # The interpreter it named is gone, so the answer is gone too.
+        return None
+    return Backend(python=Path(python), version=version, quarto=quarto)
+
+
+def remember_backend(backend: Backend) -> None:
+    """Store what the machine answered, for the next launch.
+
+    Args:
+        backend: What :func:`detect_docs` found. An absent one is
+            remembered as absence, so a machine without ePy Docs stops
+            paying for the question every time.
+    """
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    value = (
+        f"{backend.python}|{backend.version}|{backend.quarto}"
+        if backend.python is not None
+        else ""
+    )
+    QSettings(ORGANIZATION, "epy_studio").setValue(REMEMBERED_KEY, value)
+
+
 def build_window(
     files: list[str],
     *,
@@ -168,8 +215,8 @@ def build_window(
         The window, ready to show.
     """
     from PySide6.QtCore import (  # noqa: PLC0415
+        QObject,
         Qt,  # noqa: PLC0415
-        QThread,
         Signal,
     )
     from PySide6.QtGui import QDesktopServices, QFont, QIcon  # noqa: PLC0415
@@ -194,15 +241,36 @@ def build_window(
     # slow answer for a wrong one, and a wrong one silently withdraws
     # the feature.
     pending = backend is None
-    found = backend if backend is not None else Backend()
+    recalled = remembered_backend() if pending else None
+    # The last answer is used AT ONCE and the question asked again
+    # anyway: a stale answer that is corrected a moment later beats a
+    # window that waits, and beats a launch that waits more.
+    found = backend if backend is not None else (recalled or Backend())
 
-    class _Detector(QThread):
-        """Asks the machine about ePy Docs, off the interface thread."""
+    class _Detector(QObject):
+        """Asks the machine about ePy Docs, off the interface thread.
+
+        A plain daemon thread rather than a QThread. Qt aborts the
+        process when a QThread is destroyed while still running, so the
+        window would have had to WAIT for it on close -- and the answer
+        takes about half a minute on a real machine, which would make
+        closing the selector as slow as opening it used to be. A daemon
+        thread dies with the process and owes nobody a wait.
+        """
 
         done = Signal(object)
 
-        def run(self) -> None:
-            """Detect, and hand the answer back whatever it is."""
+        def ask(self) -> None:
+            """Start asking. Returns at once."""
+            threading.Thread(target=self._work, daemon=True).start()
+
+        def _work(self) -> None:
+            """Detect, and hand the answer back whatever it is.
+
+            The signal crosses back to the interface thread by itself:
+            a queued connection is what Qt does when the sender is not
+            the receiver's thread.
+            """
             self.done.emit(detect_docs())
 
 
@@ -308,7 +376,7 @@ def build_window(
                 f'{_i18n.tr("Export backends: built-in")} · '
                 + (
                     _i18n.tr("looking for ePy Docs…")
-                    if pending
+                    if pending and recalled is None
                     else found.describe()
                 )
             )
@@ -319,12 +387,20 @@ def build_window(
             layout.addStretch(1)
             self.setCentralWidget(root)
 
-            self._detector: QThread | None = None
+            # A caller that HANDED us the answer -- the language
+            # switch, which rebuilds the window -- has answered it.
+            # Reading this as unanswered made every launch after a
+            # language change wait the full budget for a question
+            # nobody had asked.
+            self._answered = not pending or recalled is not None
+            self._settled = threading.Event()
+            if self._answered:
+                self._settled.set()
             if pending:
-                detector = _Detector(self)
-                detector.done.connect(self._on_detected)
-                self._detector = detector
-                detector.start()
+                # Kept on the window so the signal has a live receiver.
+                self._detector = _Detector(self)
+                self._detector.done.connect(self._on_detected)
+                self._detector.ask()
 
         def _on_detected(self, backend: Backend) -> None:
             """Record what the machine answered and say so.
@@ -333,6 +409,9 @@ def build_window(
                 backend: What :func:`detect_docs` found.
             """
             self._backend = backend
+            self._answered = True
+            self._settled.set()
+            remember_backend(backend)
             self._status.setText(
                 f'{_i18n.tr("Export backends: built-in")} · '
                 f"{backend.describe()}"
@@ -350,9 +429,8 @@ def build_window(
             handing over an empty one would withdraw the feature without
             saying so.
             """
-            detector = self._detector
-            if detector is not None and detector.isRunning():
-                detector.wait(_DETECT_WAIT_MS)
+            if not self._answered:
+                self._settled.wait(_DETECT_WAIT_MS / 1000)
             return self._backend
 
         def _set_language(self, code: str) -> None:

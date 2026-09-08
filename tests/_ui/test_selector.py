@@ -297,12 +297,41 @@ def test_the_window_does_not_wait_for_the_machine_to_answer(
     started = time.perf_counter()
     window = selector.build_window([], language="en")
     elapsed = time.perf_counter() - started
-    assert elapsed < 2.0, f"the window waited {elapsed:.1f}s"
-    assert any("looking for" in text for text in _labels(window))
+    try:
+        assert elapsed < 2.0, f"the window waited {elapsed:.1f}s"
+        assert any("looking for" in text for text in _labels(window))
+    finally:
+        # Qt aborts the process when a QThread is destroyed while still
+        # running, and the abort lands after the last test rather than
+        # inside one -- so the suite reports every test passing and the
+        # interpreter dies. Closing the window is what stops it.
+        window.close()
+
+
+@pytest.fixture()
+def scratch_registry(tmp_path, monkeypatch):
+    """Send QSettings to an INI file under tmp_path.
+
+    The selector REMEMBERS what the machine answered, which means it
+    writes. A test that let it write for real would edit the reader's
+    own settings, and this suite has done that before.
+    """
+    from PySide6 import QtCore
+
+    real = QtCore.QSettings
+
+    def scratch(organisation: str, name: str) -> object:
+        return real(
+            str(tmp_path / f"{organisation}__{name}.ini"),
+            real.Format.IniFormat,
+        )
+
+    monkeypatch.setattr(QtCore, "QSettings", scratch)
+    return scratch
 
 
 def test_the_answer_reaches_the_strip_and_the_choice(
-    qt_app, monkeypatch
+    qt_app, monkeypatch, scratch_registry
 ) -> None:
     # And when it lands, it is said: the strip stops looking and the
     # renderer choice appears, because a checkbox for a package nobody
@@ -334,3 +363,134 @@ def test_a_caller_that_already_knows_never_asks(qt_app, monkeypatch) -> None:
     monkeypatch.setattr(selector, "detect_docs", _refuse)
     window = selector.build_window([], backend=Backend(), language="en")
     assert not any("looking for" in text for text in _labels(window))
+
+
+def test_the_last_answer_is_used_at_once(qt_app, monkeypatch) -> None:
+    """A machine does not change between one launch and the next.
+
+    Measured on the installed bundle: the answer takes about half a
+    minute to arrive, because the `python` on this user's PATH takes
+    ten seconds to say it has no ePy Docs and then `py` is asked too.
+    A launch inside that window waited for a question already answered
+    the last time the selector ran.
+    """
+    from pathlib import Path
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    seen = Backend(python=Path("C:/py/python.exe"), version="1.4", quarto="q")
+    monkeypatch.setattr(selector, "remembered_backend", lambda: seen)
+    monkeypatch.setattr(selector, "detect_docs", lambda: Backend())
+    window = selector.build_window([], language="en")
+    try:
+        # Shown straight away, not "looking".
+        assert any("1.4" in text for text in _labels(window))
+        assert not any("looking for" in text for text in _labels(window))
+        # And the choice is offered, because we know there is one.
+        assert any("ePy Docs" in text for text in _checkboxes(window))
+    finally:
+        window.close()
+
+
+def test_a_launch_never_waits_for_an_answer_we_already_have(
+    qt_app, monkeypatch, tmp_path
+) -> None:
+    # The point of remembering. Waiting here is what the first version
+    # did, and on a real machine that was half a minute after a click.
+    import time
+    from pathlib import Path
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    seen = Backend(python=Path("C:/py/python.exe"), version="1.4")
+    monkeypatch.setattr(selector, "remembered_backend", lambda: seen)
+
+    def _slow() -> Backend:
+        time.sleep(5)
+        return Backend()
+
+    monkeypatch.setattr(selector, "detect_docs", _slow)
+    monkeypatch.setattr(selector.subprocess, "Popen", lambda *a, **k: None)
+    window = selector.build_window([], language="en")
+    try:
+        started = time.perf_counter()
+        window._launch(tmp_path / "epy_reports.exe")
+        assert time.perf_counter() - started < 2.0
+    finally:
+        window.close()
+
+
+def test_an_interpreter_that_is_gone_is_not_remembered(
+    qt_app, monkeypatch, tmp_path
+) -> None:
+    # The answer names a python. If that python was uninstalled, the
+    # answer is not stale, it is wrong -- and offering a renderer that
+    # cannot be reached is worse than asking again.
+    from PySide6 import QtCore
+
+    from epy_studio._ui import selector
+
+    real = QtCore.QSettings
+    store = tmp_path / "scratch.ini"
+
+    def scratch(org: str, name: str) -> QtCore.QSettings:
+        return real(str(store), real.Format.IniFormat)
+
+    monkeypatch.setattr(QtCore, "QSettings", scratch)
+    scratch("x", "y").setValue(
+        selector.REMEMBERED_KEY, f"{tmp_path / 'gone.exe'}|1.4|q"
+    )
+    assert selector.remembered_backend() is None
+
+
+def test_an_answer_we_were_handed_is_not_asked_for_again(
+    qt_app, monkeypatch, tmp_path
+) -> None:
+    """The language switch rebuilds the window with the answer it has.
+
+    Treating that as unanswered made every launch after a language
+    change wait the full budget for a question nobody had asked --
+    measured as a 60-second test that had been a 5-second one.
+    """
+    import time
+    from pathlib import Path
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    monkeypatch.setattr(selector.subprocess, "Popen", lambda *a, **k: None)
+    known = Backend(python=Path("C:/py/python.exe"), version="1.4")
+    window = selector.build_window([], backend=known, language="en")
+    try:
+        started = time.perf_counter()
+        window._launch(tmp_path / "epy_reports.exe")
+        assert time.perf_counter() - started < 2.0
+    finally:
+        window.close()
+
+
+def test_what_the_machine_answered_is_remembered(
+    qt_app, monkeypatch, scratch_registry
+) -> None:
+    # So the next launch does not pay for the question again. Measured
+    # on a real machine: about half a minute, because the `python` on
+    # that PATH takes ten seconds to say it has no ePy Docs.
+    from pathlib import Path
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    monkeypatch.setattr(selector, "detect_docs", lambda: Backend())
+    window = selector.build_window([], language="en")
+    try:
+        found = Backend(
+            python=Path(selector.__file__), version="9.9", quarto="q"
+        )
+        window._on_detected(found)
+        again = selector.remembered_backend()
+        assert again is not None
+        assert again.version == "9.9"
+    finally:
+        window.close()

@@ -64,6 +64,19 @@ SHIPPED_FIXES = (
     # longer freezes the window while LaTeX runs.
     ("epy_studio", "epy_studio._core.winreg_assoc", "is_registered"),
     ("epy_papers", "epy_papers.app", "_run_off_thread"),
+    # The reader's own cover and annex PDFs (epy_reports 0.7.1): the
+    # generated divider's title in both document languages, the two
+    # front-matter keys, and the joining in the shared engine. The
+    # window's message carries the REASON a join refused, which is the
+    # only thing that tells a reader which of their paths is wrong.
+    ("epy_reports", "epy_reports._core.renderer", "Annexes"),
+    ("epy_reports", "epy_reports._core.renderer", "Anexos"),
+    ("epy_reports", "epy_reports._core.snippets", "cover-pdf"),
+    (
+        "epy_reports",
+        "epy_export._core._pdf_stamp",
+        "PDF pages to join were not found: ",
+    ),
 )
 
 

@@ -273,7 +273,7 @@ def test_the_choice_reaches_the_launched_application(
 
 
 def test_the_window_does_not_wait_for_the_machine_to_answer(
-    qt_app, monkeypatch
+    qt_app, monkeypatch, scratch_registry
 ) -> None:
     """Measured on the installed 0.8.0 bundle: 45 seconds to a window.
 
@@ -283,6 +283,16 @@ def test_the_window_does_not_wait_for_the_machine_to_answer(
     Two of them hit the timeout. Shortening that timeout would trade a
     slow answer for a wrong one, and a wrong one withdraws the feature
     without saying so, so the window opens first instead.
+
+    ``scratch_registry`` is not optional here, it is what makes the
+    test mean anything. Without it the selector reads the REAL machine,
+    and once this machine has run the installed application it holds a
+    remembered answer -- so the window skips looking, the label never
+    appears, and the test fails for a reason that has nothing to do
+    with waiting. Measured on 2026-09-08: green in CI and on a fresh
+    machine, red here, with
+    ``HKCU\\Software\\ANM Ingenieria\\epy_studio\\backends\\docs_seen``
+    set by the reinstall this suite is meant to be independent of.
     """
     import time
 

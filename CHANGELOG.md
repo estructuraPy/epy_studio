@@ -4,6 +4,24 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.3] — 2026-09-08
+
+Nothing in the launcher changed. This release exists because the
+applications it carries did, and the installer is named by THIS
+version: rebuilding 0.8.2 with a different ePy Reports inside would
+make two different artifacts share one filename.
+
+### Changed
+
+- Carries **ePy Reports 0.7.1**, which adds the reader's own cover PDF
+  and annex PDFs, and **ePy Export 0.4.0**, which does the joining.
+
+### Added
+
+- A test that the three files declaring this version agree, so a stale
+  number is caught by the gate rather than by the installer pipeline
+  after the tag is pushed.
+
 ## [0.8.2] — 2026-09-08
 
 Everything 0.8.0 shipped, plus what installing it and watching it

@@ -203,6 +203,20 @@ def test_an_absent_required_application_refuses_the_build(
         _catalog.for_build(suite)
 
 
+def test_install_dir_is_the_launchers_own_folder_when_frozen(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Frozen, every tool shares the launcher executable's own folder --
+    # the branch a source checkout (every other test in this file) never
+    # takes, because building from source has no executables to share.
+    import sys
+
+    exe = tmp_path / "epy_studio.exe"
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", str(exe))
+    assert _catalog.install_dir() == tmp_path
+
+
 def test_the_public_editors_alone_are_a_buildable_bundle(
     tmp_path: Path,
 ) -> None:

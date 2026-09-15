@@ -59,6 +59,18 @@ def test_a_caller_that_names_a_language_is_not_overridden(qt_app) -> None:
     assert english != spanish
 
 
+def test_a_document_argument_names_itself_in_the_subtitle(qt_app) -> None:
+    # Handed a document (opened via the file association), the window
+    # says which document rather than asking generically which editor.
+    from epy_studio._ui.selector import build_window
+
+    texts = _labels(
+        build_window(["report.md"], backend=Backend(), language="en")
+    )
+    assert any("report.md" in t for t in texts)
+    assert "Choose the editor for your document:" not in texts
+
+
 def test_every_required_application_gets_a_row(qt_app) -> None:
     # From a source checkout nothing is installed, so every required
     # application is offered greyed: that is a custom install the user
@@ -173,6 +185,36 @@ def test_nothing_stored_falls_back_to_the_system_language(
     assert selector.preferred_language() == "en"
 
 
+def test_nothing_stored_falls_back_to_a_spanish_system_language(
+    qt_app, tmp_path, monkeypatch
+) -> None:
+    # The other half of the fallback: ini_settings pins the system
+    # locale to English so the stored-language tests above mean
+    # something -- this test is the one that proves the Spanish branch
+    # of that same fallback still works, with its own locale.
+    from PySide6 import QtCore
+
+    from epy_studio._ui import selector
+
+    real = QtCore.QSettings
+
+    def scratch(organisation: str, name: str) -> object:
+        return real(
+            str(tmp_path / f"{organisation}__{name}.ini"),
+            real.Format.IniFormat,
+        )
+
+    monkeypatch.setattr(QtCore, "QSettings", scratch)
+    monkeypatch.setattr(
+        QtCore.QLocale,
+        "system",
+        staticmethod(
+            lambda: QtCore.QLocale(QtCore.QLocale.Language.Spanish)
+        ),
+    )
+    assert selector.preferred_language() == "es"
+
+
 def test_the_organisation_is_not_spelt_inline() -> None:
     # The whole point: one constant, imported, so the five programs
     # cannot drift into two registry trees again.
@@ -215,6 +257,17 @@ def test_the_renderer_choice_appears_only_when_there_is_one(qt_app) -> None:
     found = Backend(python=Path("C:/py/python.exe"), version="1.4")
     present = build_window([], backend=found, language="en")
     assert any("ePy Docs" in text for text in _checkboxes(present))
+
+
+def test_the_choice_can_be_stored_and_read_back(qt_app, ini_settings) -> None:
+    # set_docs_offered is the write side of docs_offered; nothing had
+    # exercised it directly, only through the checkbox it backs.
+    from epy_studio._ui import selector
+
+    selector.set_docs_offered(False)
+    assert selector.docs_offered() is False
+    selector.set_docs_offered(True)
+    assert selector.docs_offered() is True
 
 
 def test_the_choice_defaults_to_offering_it(monkeypatch) -> None:
@@ -479,6 +532,80 @@ def test_an_answer_we_were_handed_is_not_asked_for_again(
         assert time.perf_counter() - started < 2.0
     finally:
         window.close()
+
+
+def test_a_launch_waits_for_a_pending_answer_it_was_not_handed(
+    qt_app, monkeypatch, tmp_path
+) -> None:
+    """The case none of the tests above cover.
+
+    No backend handed in and nothing remembered, so a launch that fires
+    before detection settles must actually WAIT for it. The real
+    ``_Detector`` delivers its answer through a queued Qt signal, which
+    needs a running event loop to dispatch -- exactly what a test has
+    none of, since nothing here calls ``app.exec()`` -- so the settling
+    is simulated directly on a plain thread, the way ``_on_detected``
+    would run once that loop actually pumped it. Proven by the handed-
+    over environment carrying what detection eventually found, not the
+    empty backend that was there before it settled.
+    """
+    import threading
+    import time
+    from pathlib import Path
+
+    from epy_studio._core._backends import ENV_PYTHON, Backend
+    from epy_studio._ui import selector
+
+    real = Backend(python=Path("C:/py/python.exe"), version="9.9")
+
+    monkeypatch.setattr(selector, "remembered_backend", lambda: None)
+    monkeypatch.setattr(selector, "detect_docs", lambda: Backend())
+    monkeypatch.setattr(selector, "docs_offered", lambda: True)
+
+    handed: dict[str, str] = {}
+
+    def fake_popen(_args, **kwargs):
+        handed.update(kwargs.get("env", {}))
+
+        class _Started:
+            pass
+
+        return _Started()
+
+    monkeypatch.setattr(selector.subprocess, "Popen", fake_popen)
+    window = selector.build_window([], language="en")
+    try:
+        def _settle_later() -> None:
+            # Only the plain-Python state _settled_backend() reads --
+            # never a Qt widget call (setText/setVisible) from off the
+            # GUI thread, which PySide6 does not support and which is
+            # what made this test pathologically slow under coverage
+            # tracing when it called _on_detected() directly instead.
+            time.sleep(0.3)
+            window._backend = real
+            window._answered = True
+            window._settled.set()
+
+        threading.Thread(target=_settle_later, daemon=True).start()
+        window._launch(tmp_path / "epy_reports.exe")
+        assert handed.get(ENV_PYTHON) == str(real.python)
+    finally:
+        window.close()
+
+
+def test_choosing_a_language_stores_it_and_rebuilds_the_window(
+    qt_app, ini_settings
+) -> None:
+    # Rebuilt rather than relabelled -- the property that matters is
+    # that the choice survives into the replacement, so it is read back
+    # through preferred_language() rather than through the (closed)
+    # window itself.
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    window = selector.build_window([], backend=Backend(), language="en")
+    window._set_language("es")
+    assert selector.preferred_language() == "es"
 
 
 def test_what_the_machine_answered_is_remembered(

@@ -135,3 +135,104 @@ def test_a_hanging_interpreter_does_not_hang_the_selector(
 
     monkeypatch.setattr(subprocess, "run", _hang)
     assert not _backends.detect_docs().present
+
+
+# ------------------------------------------- _candidates itself
+
+
+def test_candidates_list_every_source_in_priority_order(
+    monkeypatch, tmp_path
+) -> None:
+    # The tests above all replace _candidates() wholesale; nothing had
+    # ever exercised the real function, which is what assembles the
+    # named override, the per-user install, PATH and this interpreter
+    # into the list detect_docs walks.
+    monkeypatch.setenv(_backends.ENV_PYTHON, str(tmp_path / "named.exe"))
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+    monkeypatch.setattr(
+        _backends.shutil, "which", lambda name: str(tmp_path / f"{name}.exe")
+    )
+    monkeypatch.setattr(_backends.sys, "frozen", False, raising=False)
+    monkeypatch.setattr(
+        _backends.sys, "executable", str(tmp_path / "this.exe")
+    )
+    assert _backends._candidates() == [
+        tmp_path / "named.exe",
+        tmp_path / "Programs" / "epy_docs" / "python.exe",
+        tmp_path / "python.exe",
+        tmp_path / "py.exe",
+        tmp_path / "this.exe",
+    ]
+
+
+def test_candidates_are_deduplicated_and_frozen_skips_this_interpreter(
+    monkeypatch, tmp_path
+) -> None:
+    # Inside a frozen bundle this process is never a candidate -- probing
+    # it would mean asking the installed launcher about itself. And
+    # `python` and `py` resolving to the same file must not queue it
+    # twice, which is what the case-insensitive dedup below is for.
+    monkeypatch.delenv(_backends.ENV_PYTHON, raising=False)
+    monkeypatch.delenv("LOCALAPPDATA", raising=False)
+    same = tmp_path / "SAME.exe"
+    monkeypatch.setattr(_backends.shutil, "which", lambda _name: str(same))
+    monkeypatch.setattr(_backends.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(
+        _backends.sys, "executable", str(tmp_path / "not_used.exe")
+    )
+    assert _backends._candidates() == [same]
+
+
+def test_a_missing_candidate_does_not_stop_the_search(
+    monkeypatch, tmp_path
+) -> None:
+    # A candidate path that is not even a file (nothing installed there)
+    # must be skipped, not raise -- and the search must still reach the
+    # next one.
+    missing = tmp_path / "missing.exe"
+    real = tmp_path / "python.exe"
+    real.write_text("", encoding="utf-8")
+    monkeypatch.setattr(_backends, "_candidates", lambda: [missing, real])
+
+    def _answer(*_a, **_k):
+        return subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="1.4.2\nTrue\nC:/quarto/quarto.exe\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", _answer)
+    found = _backends.detect_docs()
+    assert found.present
+    assert found.python == real
+
+
+def test_a_nonzero_returncode_is_skipped_for_the_next_candidate(
+    monkeypatch, tmp_path
+) -> None:
+    # A candidate that runs but answers with an error (wrong Python,
+    # crashed probe) must not be treated as "nothing found" -- the
+    # search keeps going.
+    bad = tmp_path / "bad.exe"
+    good = tmp_path / "good.exe"
+    for path in (bad, good):
+        path.write_text("", encoding="utf-8")
+    monkeypatch.setattr(_backends, "_candidates", lambda: [bad, good])
+
+    def _answer(args, **_k):
+        if args[0] == str(bad):
+            return subprocess.CompletedProcess(
+                args=args, returncode=1, stdout="", stderr="boom"
+            )
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout="1.4.2\nTrue\nC:/quarto/quarto.exe\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", _answer)
+    found = _backends.detect_docs()
+    assert found.present
+    assert found.python == good

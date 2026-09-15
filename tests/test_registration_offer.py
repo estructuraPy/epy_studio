@@ -293,3 +293,37 @@ def test_the_siblings_are_asked_to_register_themselves(
     )
     assert launcher._register_siblings() == [ids[0]]
     assert started[0][1] == "--register"
+
+
+def test_a_sibling_that_fails_to_start_does_not_stop_the_others(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Any
+) -> None:
+    # One failing sibling (permissions, antivirus, a half-installed exe)
+    # must not stop the rest from being asked -- an installer step that
+    # aborts on the first failure is worse than one that reports fewer
+    # started than installed.
+    from epy_studio._core import _catalog
+
+    ids = [app.app_id for app in _catalog.apps()]
+    assert len(ids) >= 2, "need at least two applications to prove this"
+    for app_id in ids[:2]:
+        (tmp_path / f"{app_id}.exe").write_bytes(b"MZ")
+    monkeypatch.setattr(_catalog, "install_dir", lambda: tmp_path)
+
+    import subprocess
+
+    attempted: list[str] = []
+
+    def flaky_popen(cmd: list[str], **_k: object) -> None:
+        attempted.append(cmd[0])
+        if cmd[0].endswith(f"{ids[0]}.exe"):
+            raise OSError("blocked by policy")
+        return None
+
+    monkeypatch.setattr(subprocess, "Popen", flaky_popen)
+
+    started = launcher._register_siblings()
+
+    assert ids[0] not in started
+    assert ids[1] in started
+    assert len(attempted) == 2

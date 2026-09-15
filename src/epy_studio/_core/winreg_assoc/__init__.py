@@ -223,6 +223,29 @@ def unregister() -> list[str]:
                 changes.append(f"Removed OpenWithProgids entry for {ext}")
         except FileNotFoundError:
             pass
+        # The LEGACY default, which register(make_default=True) writes at
+        # Software\\Classes\\<ext> as the key's own "" value. unregister()
+        # used to walk only the APP_KEY / PROGID / APP_NAME trees and the
+        # OpenWithProgids values, so this one survived: after an uninstall
+        # every .md/.markdown/.qmd still named PROGID as its default handler
+        # and Windows opened them with an application that is gone.
+        #
+        # Deleted only when it still names OUR progid. Another application may
+        # have taken the default since, and removing someone else's
+        # association is a worse bug than leaving ours behind.
+        try:
+            with winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                f"Software\\Classes\\{ext}",
+                0,
+                winreg.KEY_SET_VALUE | winreg.KEY_QUERY_VALUE,
+            ) as k:
+                current, _kind = winreg.QueryValueEx(k, "")
+                if current == PROGID:
+                    winreg.DeleteValue(k, "")
+                    changes.append(f"Removed legacy default for {ext}")
+        except (FileNotFoundError, OSError):
+            pass
     return changes
 
 

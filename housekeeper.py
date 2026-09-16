@@ -144,7 +144,7 @@ def _is_mirror_exempt(rel: str) -> bool:
     # canonical one is ``_adapters/``; the census belongs in
     # STRUCTURE_STANDARD.md 2.6, not in this comment, which said six and
     # five when the disk said fifteen and five. What the clause hid was
-    # the one adapter nobody tests: ``_export_estrulab.py``,
+    # the one adapter nobody tests: ``_export_virtual_test.py``,
     # byte-identical in seven repos.
     if "/_packaging/" in rel or name in (
         "download_wheels.py",
@@ -977,6 +977,164 @@ else:  # pragma: no cover - only when the tooling repo is absent
         for v in violations:
             print(f"    - {v}")
 
+def audit_display_side_effects(lib_root: Path) -> list[str]:
+    """A display switch in library ``src/`` must default to OFF.
+
+    The rule is narrow on purpose. It does not ask whether a module opens a
+    browser, a viewer or a window -- a desktop app must show its window, and
+    a function called ``open_default_apps_settings`` is doing exactly what it
+    says. What it refuses is the shape that actually burned the suite: a
+    function that already HAS a switch for display and defaults it to
+    ``True``, so the side effect reaches every caller who never asked.
+
+    Measured on 2026-09-15: ``ProjectDashboard.show()`` in epy_project took
+    ``in_browser: bool = True`` and opened a tab through ``webbrowser.open``
+    on every call -- from a script, a re-run notebook cell, a Blender operator
+    or a loop -- until a session had an unmanageable number of them. The
+    suite's existing Rule 14 check could not see it twice over: it reads
+    ``<receiver>.show()`` calls, not ``webbrowser.open``, and it exempts any
+    function NAMED ``show``, which is what this one was called.
+
+    Flagged calls: ``webbrowser.open`` / ``open_new`` / ``open_new_tab``,
+    ``os.startfile``, and ``<receiver>.show()`` where the receiver is not
+    ``plt``. A call counts as default-on only when an enclosing ``if`` tests a
+    parameter of the enclosing function whose default is literal ``True``.
+    Unconditional calls are NOT flagged here -- they are the honest shape, and
+    the existing Rule 14 check already covers the figure case where it applies.
+
+    A function whose body is NOTHING BUT that guarded display call is exempt:
+    it is a pure display entrypoint, so calling it IS the request to display,
+    and the switch is only there for callers that want to suppress it.
+    ``PlotlyContext.show(show_plot=True)`` in ePy_plotter is that shape. What
+    the epy_project defect had, and what makes the difference, is a second job:
+    its ``show`` also wrote the HTML and returned the path, so a caller who
+    wanted the file got a browser tab it never asked for.
+    """
+    import ast
+
+    src_dir = lib_root / "src"
+    if not src_dir.is_dir():
+        return []
+
+    openers = {
+        ("webbrowser", "open"), ("webbrowser", "open_new"),
+        ("webbrowser", "open_new_tab"), ("os", "startfile"),
+    }
+    violations: list[str] = []
+
+    def _defaults_to_true(name: str, func) -> bool:
+        """True when ``name`` is a parameter defaulting to ``True``."""
+        if not isinstance(func, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return False
+        a = func.args
+        positional = list(a.posonlyargs) + list(a.args)
+        pos_defaults = list(a.defaults)
+        pad = len(positional) - len(pos_defaults)
+        for i, arg in enumerate(positional):
+            if arg.arg == name and i >= pad:
+                d = pos_defaults[i - pad]
+                return isinstance(d, ast.Constant) and d.value is True
+        for arg, d in zip(a.kwonlyargs, a.kw_defaults, strict=True):
+            if arg.arg == name and d is not None:
+                return isinstance(d, ast.Constant) and d.value is True
+        return False
+
+    def _is_pure_display_entrypoint(func, guard) -> bool:
+        """True when ``func`` does nothing except the guarded display call.
+
+        Body compared after dropping a leading docstring. Anything else in the
+        body -- a save, a return value, a second side effect -- means callers
+        have a reason to call this function other than display, and the switch
+        must then default to off.
+        """
+        if not isinstance(func, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return False
+        body = list(func.body)
+        if (body and isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)):
+            body = body[1:]
+        return len(body) == 1 and body[0] is guard
+
+    def _test_is_default_on(test, func) -> bool:
+        if isinstance(test, ast.Name):
+            return _defaults_to_true(test.id, func)
+        if isinstance(test, ast.BoolOp):
+            return any(_test_is_default_on(v, func) for v in test.values)
+        return False
+
+    for py_file in sorted(src_dir.rglob("*.py")):
+        if "__pycache__" in py_file.parts:
+            continue
+        try:
+            tree = ast.parse(py_file.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError):
+            continue
+        rel = py_file.relative_to(lib_root).as_posix()
+
+        parents: dict = {}
+        for node in ast.walk(tree):
+            for child in ast.iter_child_nodes(node):
+                parents[child] = node
+
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            f = node.func
+            if not isinstance(f, ast.Attribute):
+                continue
+            is_name = isinstance(f.value, ast.Name)
+            if is_name and (f.value.id, f.attr) in openers:
+                what = f"{f.value.id}.{f.attr}(...)"
+            elif f.attr == "show" and not (is_name and f.value.id == "plt"):
+                what = ".show()"
+            else:
+                continue
+
+            enclosing = None
+            guards = []
+            cursor = node
+            while cursor in parents:
+                parent = parents[cursor]
+                if isinstance(parent, ast.If) and cursor in parent.body:
+                    guards.append(parent)
+                elif isinstance(parent, (ast.FunctionDef,
+                                         ast.AsyncFunctionDef)):
+                    enclosing = parent
+                    break
+                cursor = parent
+
+            on_by_default = [g for g in guards
+                             if _test_is_default_on(g.test, enclosing)]
+            if not on_by_default:
+                continue
+            if any(_is_pure_display_entrypoint(enclosing, g)
+                   for g in on_by_default):
+                continue
+
+            name = enclosing.name if enclosing is not None else "<module>"
+            violations.append(
+                f"{rel}:{node.lineno}: `{name}` has a display switch that "
+                f"defaults to True, so `{what}` fires for every caller that "
+                f"never asked for it. Default the switch to False -- display "
+                f"is opt-in (Rule 14)."
+            )
+    return violations
+
+
+def report_display_side_effects(violations: list[str]) -> None:
+    """Print the display side-effect audit."""
+    print()
+    print("=" * 70)
+    print("  DISPLAY SWITCHES (a display switch defaults to OFF)")
+    print("=" * 70)
+    if not violations:
+        print("  OK - no src module turns display on by default.")
+        return
+    print(f"  DEFAULT-ON DISPLAY ({len(violations)} total):")
+    for v in violations:
+        print(f"    [!] {v}")
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="ePy Suite Minimal Housekeeper")
     parser.add_argument("--apply", action="store_true", help="Delete temp/cache files")
@@ -1064,6 +1222,11 @@ def main() -> None:
     v_selfcomparison_violations = audit_v_selfcomparison(LIB_ROOT)
     report_v_selfcomparison(v_selfcomparison_violations)
 
+    # A display switch must default to OFF: a library opens nothing
+    # the caller did not ask for (Rule 14, browser-tab family).
+    display_violations = audit_display_side_effects(LIB_ROOT)
+    report_display_side_effects(display_violations)
+
     if args.strict and (
         module_mirror_violations or tutorials_layout_violations
         or skip_violations
@@ -1071,6 +1234,7 @@ def main() -> None:
         or source_ids_violations
         or suite_manual_violations
         or v_selfcomparison_violations
+        or display_violations
     ):
         sys.exit(1)
 

@@ -4,6 +4,30 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.4] — 2026-09-17
+
+The installed bundle was eight days behind: four fixes were in git and
+in nobody's hands. The installer is NAMED by this version, so carrying
+different applications is itself a reason to cut one.
+
+### Fixed
+
+- **Unregistering left behind the legacy default it had written**, so a
+  machine that had ever registered the file types kept a stale handler
+  after the association was removed.
+
+### Changed
+
+Carries, none of which was in the 0.8.3 bundle:
+
+- **ePy Reports** — every SVG figure was silently dropped from Word
+  exports.
+- **ePy Papers** — every inserted figure was labelled `fig-1`, so the
+  second one onwards collided; plus the repository's own coverage gate.
+- **ePy Draft** — two guards were written against the wrong exception
+  type, so neither could fire.
+- **ePy Slides** — its coverage gate.
+
 ## [0.8.3] — 2026-09-08
 
 Nothing in the launcher changed. This release exists because the

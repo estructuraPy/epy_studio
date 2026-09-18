@@ -77,6 +77,19 @@ SHIPPED_FIXES = (
         "epy_export._core._pdf_stamp",
         "PDF pages to join were not found: ",
     ),
+    # QImage.save takes the format as a str, not bytes: the bytes form
+    # raises ValueError on PySide6 6.11.1, the rasteriser caught its own
+    # ValueError and returned the match unchanged, and every SVG figure
+    # was left as a raw .svg that Pandoc's DOCX writer silently drops
+    # (epy_reports 1e70338). Before the fix the constant was b"PNG",
+    # which is not a str constant -- so this row cannot pass on the old
+    # code; measured on both.
+    ("epy_reports", "epy_reports._core.renderer", "PNG"),
+    # A figure label carries attributes after its number, so a pattern
+    # demanding "}" right after the digits matched none of them and every
+    # inserted figure came back labelled fig-1, breaking every cross
+    # reference to a figure (epy_papers a0b6bb4).
+    ("epy_papers", "epy_papers._ui.tab", r")-(\d+)[^}]*\}"),
 )
 
 

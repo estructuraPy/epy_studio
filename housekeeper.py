@@ -1135,6 +1135,49 @@ def report_display_side_effects(violations: list[str]) -> None:
     for v in violations:
         print(f"    [!] {v}")
 
+
+
+# --- unit suffixes: a magnitude names its unit -------------------------------
+# Imported from the ONE canonical source rather than copied, so the exclusion
+# list (presentation paths, bibliographic blocks, known unit suffixes) is fixed
+# in one place for all 31 repos. Owner directive 2026-09-23.
+def _load_unit_suffix_block():
+    import importlib.util
+
+    block = (LIB_ROOT.parent / "_packaging" / "_tooling" / "unit_suffix_block.py")
+    if not block.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("_epy_unit_suffix_block", block)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_UNIT_SUFFIX_BLOCK = _load_unit_suffix_block()
+
+
+def audit_unit_suffixes(lib_root):
+    """Physical-catalogue keys holding a magnitude without naming its unit."""
+    if _UNIT_SUFFIX_BLOCK is None:
+        return [
+            "unit-suffixes: _packaging/_tooling/unit_suffix_block.py is missing, "
+            "so catalogue units were NOT checked. A silently skipped rule is "
+            "worse than none."
+        ]
+    return _UNIT_SUFFIX_BLOCK.audit_unit_suffixes(lib_root)
+
+
+def report_unit_suffixes(violations):
+    if _UNIT_SUFFIX_BLOCK is None:
+        print("\n" + "=" * 70)
+        print("  UNIT SUFFIXES (a magnitude names its unit)")
+        print("=" * 70)
+        for v in violations:
+            print(f"    [!] {v}")
+        return
+    _UNIT_SUFFIX_BLOCK.report_unit_suffixes(violations)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="ePy Suite Minimal Housekeeper")
     parser.add_argument("--apply", action="store_true", help="Delete temp/cache files")
@@ -1227,6 +1270,10 @@ def main() -> None:
     display_violations = audit_display_side_effects(LIB_ROOT)
     report_display_side_effects(display_violations)
 
+    # A magnitude names its unit in its key (owner directive 2026-09-23).
+    unit_suffix_violations = audit_unit_suffixes(LIB_ROOT)
+    report_unit_suffixes(unit_suffix_violations)
+
     if args.strict and (
         module_mirror_violations or tutorials_layout_violations
         or skip_violations
@@ -1235,6 +1282,7 @@ def main() -> None:
         or suite_manual_violations
         or v_selfcomparison_violations
         or display_violations
+        or unit_suffix_violations
     ):
         sys.exit(1)
 

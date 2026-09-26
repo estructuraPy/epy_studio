@@ -1,0 +1,14 @@
+# One WITHDRAWN standard series per line, id-shaped, WITHOUT the edition year.
+#
+# Written by the WITHDRAWAL ACT itself, exactly like a baseline: growth is
+# deliberate and reviewable in one diff. This is NOT a denylist. A line here
+# supplies only the human-spelling VOCABULARY the id-shape rule cannot derive;
+# the CATALOG remains the arbiter. Every entry is dropped at load time if any
+# library in the suite currently carries a catalog file for that series, so
+# the day the documents arrive and the catalog returns, the rule goes quiet
+# with NO edit here. Encoding "CSA is forbidden" would have made the ban
+# permanent, which is not what a withdrawal for want of a source means.
+csa_a23_3    # withdrawn 2026-08-12 - no primary source on this machine
+csa_s16      # withdrawn 2026-08-12
+csa_o86      # withdrawn 2026-08-12
+csa_s304     # withdrawn 2026-08-12

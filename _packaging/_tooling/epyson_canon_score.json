@@ -1,0 +1,1991 @@
+[
+  {
+    "lib": "epy_analysis",
+    "n_epyson": 92,
+    "families": [
+      "combinations_id",
+      "config_id",
+      "dead_loads_id",
+      "layout_id",
+      "loads_id",
+      "map_id",
+      "material_id",
+      "protocol_id",
+      "reduction_id",
+      "spectra_catalog_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 5,
+      "R1.6": 2,
+      "R2.1": 3,
+      "R2.2": 3,
+      "R2.3": 1,
+      "R2.4": 3,
+      "R2.5": 1,
+      "R2.6": 2,
+      "R3.1": 1,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 5,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 5,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 1,
+      "R5.1": 5,
+      "R5.2": 1,
+      "R5.3": 5,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "asce_7_2022.epyson",
+          [
+            "metadata.or_semantics",
+            "description"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "metadata.asd_note",
+            "metadata.complement_note",
+            "description"
+          ]
+        ],
+        [
+          "cscr_2014.epyson",
+          [
+            "metadata.source_section",
+            "metadata.asd_note",
+            "description"
+          ]
+        ],
+        [
+          "ldvcr_2023.epyson",
+          [
+            "name",
+            "metadata.scope_note",
+            "description"
+          ]
+        ],
+        [
+          "nsr_2010.epyson",
+          [
+            "lrfd.name",
+            "asd.name",
+            "asd.name"
+          ]
+        ],
+        [
+          "asce_7_2022.epyson",
+          [
+            "metadata.E_definition_per_12_4",
+            "metadata.overstrength_alternative",
+            "description"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "name",
+            "metadata.sign_convention",
+            "metadata.fR_reference"
+          ]
+        ],
+        [
+          "cscr_2014.epyson",
+          [
+            "name",
+            "metadata.source_section",
+            "description"
+          ]
+        ],
+        [
+          "nsr_2010.epyson",
+          [
+            "name",
+            "asd.name",
+            "metadata.E_definition"
+          ]
+        ],
+        [
+          "asce_7_2022.epyson",
+          [
+            "metadata.WT_definition",
+            "metadata.W_WT_disjunction"
+          ]
+        ],
+        [
+          "ldvcr_2023.epyson",
+          [
+            "metadata.load_kinds_definition.CP",
+            "metadata.load_kinds_definition.CT",
+            "metadata.load_kinds_definition.CT_red"
+          ]
+        ],
+        [
+          "nsr_2010.epyson",
+          [
+            "lrfd.name",
+            "lrfd.name",
+            "asd.name"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "structural_densities_kN_m3.comment",
+            "superimposed_dead_loads_kPa.comment"
+          ]
+        ],
+        [
+          "cscr_2014.epyson",
+          [
+            "structural_densities_kN_m3.comment",
+            "superimposed_dead_loads_kPa.comment",
+            "audit_notes"
+          ]
+        ],
+        [
+          "nbcc_2020.epyson",
+          [
+            "superseded_edition_note"
+          ]
+        ],
+        [
+          "nsr_2010.epyson",
+          [
+            "superimposed_dead_loads_kPa.comment",
+            "description"
+          ]
+        ],
+        [
+          "cscr_2002_design_spectra.epyson",
+          [
+            "units_correction_2026_08_07",
+            "key_template_note"
+          ]
+        ],
+        [
+          "cscr_2010_design_spectra.epyson",
+          [
+            "provenance_correction_2026_08_07",
+            "verification_note",
+            "plateau_rule_note"
+          ]
+        ],
+        [
+          "asce_7_2022.epyson",
+          [
+            "description",
+            "audit_notes",
+            "properties.wind_provisions.velocity_pressure_coefficient_note"
+          ]
+        ],
+        [
+          "ldvcr_2023.epyson",
+          [
+            "description",
+            "audit_notes",
+            "properties.wind_provisions.basic_wind_speed_definition"
+          ]
+        ],
+        [
+          "nbcc_2025.epyson",
+          [
+            "description",
+            "audit_notes",
+            "coverage_note"
+          ]
+        ],
+        [
+          "nsr_2010.epyson",
+          [
+            "description",
+            "audit_notes",
+            "properties.wind_provisions.description"
+          ]
+        ],
+        [
+          "dcr_bands.epyson",
+          [
+            "bands.es",
+            "bands.es"
+          ]
+        ],
+        [
+          "asce_7_2022.epyson",
+          [
+            "description",
+            "properties.design_response_spectrum_formula_per_11_4_5.comment",
+            "properties.seismic_provisions.description"
+          ]
+        ],
+        [
+          "cfia_seismic_bridge.epyson",
+          [
+            "description",
+            "audit_notes",
+            "seismic.response_modification_factors_pending"
+          ]
+        ],
+        [
+          "cmmdse_2026.epyson",
+          [
+            "description",
+            "audit_notes",
+            "properties.importance_groups_per_1_5_1.comment"
+          ]
+        ],
+        [
+          "cscr_2002.epyson",
+          [
+            "description",
+            "audit_notes",
+            "coverage_note"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "description",
+            "audit_notes",
+            "metadata.source_sections_referenced"
+          ]
+        ],
+        [
+          "cscr_2014.epyson",
+          [
+            "description",
+            "audit_notes",
+            "metadata.rev_2014_seismic_changes"
+          ]
+        ],
+        [
+          "cscr_2025.epyson",
+          [
+            "audit_notes",
+            "draft_source",
+            "performance_levels.SV.description"
+          ]
+        ],
+        [
+          "en_1998_1_2004.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "fema_306_1998_infill_struts.epyson",
+          [
+            "audit_notes",
+            "metadata.note"
+          ]
+        ],
+        [
+          "ldsp_cfia_2013.epyson",
+          [
+            "description",
+            "supersedes_in_scope._article",
+            "base_document._article"
+          ]
+        ],
+        [
+          "nsr_2010.epyson",
+          [
+            "description",
+            "audit_notes",
+            "properties.design_response_spectrum_formula_per_A_2_6.comment"
+          ]
+        ]
+      ]
+    },
+    "raw": 102,
+    "score_100": 68.0
+  },
+  {
+    "lib": "epy_bridges",
+    "n_epyson": 36,
+    "families": [
+      "layout_id",
+      "policy_id",
+      "section_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 4,
+      "R1.2": 4,
+      "R1.3": 4,
+      "R1.4": 4,
+      "R1.5": 5,
+      "R1.6": 3,
+      "R2.1": 3,
+      "R2.2": 4,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 2,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 1,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 2,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "cfia_lineamientos_2012.epyson",
+          [
+            "description",
+            "audit_notes",
+            "name"
+          ]
+        ],
+        [
+          "lanammeucr_manual_puentes_2016.epyson",
+          [
+            "references.geometric_manual"
+          ]
+        ],
+        [
+          "nsr_2010.epyson",
+          [
+            "live_loads.design_truck_Colombia.note"
+          ]
+        ],
+        [
+          "sieca_2011_geometrico.epyson",
+          [
+            "description",
+            "name",
+            "references.primary"
+          ]
+        ]
+      ]
+    },
+    "raw": 96,
+    "score_100": 64.0
+  },
+  {
+    "lib": "epy_buildings",
+    "n_epyson": 66,
+    "families": [
+      "config_id",
+      "layout_id",
+      "section_id",
+      "spectrum_id",
+      "standard_id",
+      "typed_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 5,
+      "R1.6": 3,
+      "R2.1": 3,
+      "R2.2": 5,
+      "R2.3": 5,
+      "R2.4": 3,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 2,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 1,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "asce_7_2022.epyson",
+          [
+            "wind_parameters.kz_floor_height_note",
+            "wind_parameters.velocity_pressure_coefficient_note"
+          ]
+        ],
+        [
+          "cmmdse_2026.epyson",
+          [
+            "description",
+            "audit_notes",
+            "importance_classification.note"
+          ]
+        ],
+        [
+          "cscr_1974.epyson",
+          [
+            "description",
+            "audit_notes",
+            "capabilities.seismic.note"
+          ]
+        ],
+        [
+          "cscr_1986.epyson",
+          [
+            "audit_notes",
+            "load_combinations.note",
+            "seismic_parameters.note_zonification"
+          ]
+        ],
+        [
+          "cscr_2002.epyson",
+          [
+            "audit_notes",
+            "capabilities.seismic.note",
+            "drift_limits.note"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "capabilities.wind.note",
+            "drift_limits.note",
+            "load_combinations.notation.CU"
+          ]
+        ],
+        [
+          "cscr_2014.epyson",
+          [
+            "capabilities.wind.note",
+            "load_combinations.notation.CU",
+            "load_combinations.notation.CT"
+          ]
+        ],
+        [
+          "en_1998_3_2005.epyson",
+          [
+            "audit_notes",
+            "methodology.note",
+            "chord_rotation_capacity.plastic_hinge_length_eq_A5"
+          ]
+        ],
+        [
+          "fema_356.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "fema_440.epyson",
+          [
+            "audit_notes",
+            "equivalent_linearization.madrs_modification_factor_M.note",
+            "equivalent_linearization.approximate_madrs_factor.bound"
+          ]
+        ],
+        [
+          "ldvcr_2023.epyson",
+          [
+            "description",
+            "metadata.notes",
+            "wind_loads.note"
+          ]
+        ],
+        [
+          "nbcc_2020_part4.epyson",
+          [
+            "superseded_note"
+          ]
+        ]
+      ]
+    },
+    "raw": 102,
+    "score_100": 68.0
+  },
+  {
+    "lib": "epy_compose",
+    "n_epyson": 38,
+    "families": [
+      "config_id",
+      "constitutive_id",
+      "layout_id",
+      "material_id",
+      "protocol_id",
+      "section_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 5,
+      "R1.6": 3,
+      "R2.1": 3,
+      "R2.2": 4,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 2,
+      "R3.2": 3,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 5,
+      "R4.6": 1,
+      "R5.1": 5,
+      "R5.2": 1,
+      "R5.3": 5,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "cscr_1974.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "cscr_1986.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "cscr_2002.epyson",
+          [
+            "description",
+            "audit_notes"
+          ]
+        ],
+        [
+          "cmmdse_2026.epyson",
+          [
+            "audit_notes"
+          ]
+        ]
+      ]
+    },
+    "raw": 105,
+    "score_100": 70.0
+  },
+  {
+    "lib": "epy_concrete",
+    "n_epyson": 130,
+    "families": [
+      "alignment_id",
+      "config_id",
+      "constitutive_id",
+      "layout_id",
+      "material_id",
+      "protocol_id",
+      "section_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 5,
+      "R1.6": 4,
+      "R2.1": 2,
+      "R2.2": 4,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 2,
+      "R3.1": 5,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 5,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 3,
+      "R4.3": 5,
+      "R4.4": 1,
+      "R4.5": 5,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 3,
+      "R5.3": 5,
+      "R5.4": 5,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "cscr_1974.epyson",
+          [
+            "audit_notes",
+            "development_length.lap_splice_table_reference"
+          ]
+        ],
+        [
+          "cscr_1986.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "cscr_2002.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "development_length.hook_anchorage_reference",
+            "detailing.lap_splices.seismic_default_class_reference",
+            "detailing.lap_splices.alternating_spacing_reference"
+          ]
+        ],
+        [
+          "cmmdse_2026.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "aci_318_2014.epyson",
+          [
+            "design_parameters.concrete_modulus_reference"
+          ]
+        ],
+        [
+          "aci_318_2025.epyson",
+          [
+            "audit_notes"
+          ]
+        ]
+      ]
+    },
+    "raw": 130,
+    "score_100": 86.7
+  },
+  {
+    "lib": "epy_connections",
+    "n_epyson": 41,
+    "families": [
+      "catalog_id",
+      "config_id",
+      "layout_id",
+      "material_id",
+      "protocol_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 3,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 4,
+      "R1.5": 5,
+      "R1.6": 4,
+      "R2.1": 2,
+      "R2.2": 4,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 1,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 1,
+      "R5.3": 1,
+      "R5.4": 5,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "vega_bolt_capacity.epyson",
+          [
+            "metadata.table_title"
+          ]
+        ],
+        [
+          "cmmdse_2026.epyson",
+          [
+            "description",
+            "audit_notes",
+            "importance_classification.note"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "anchor_bolt_simplified.note",
+            "name",
+            "notes"
+          ]
+        ]
+      ]
+    },
+    "raw": 103,
+    "score_100": 68.7
+  },
+  {
+    "lib": "epy_geotechnical",
+    "n_epyson": 41,
+    "families": [
+      "config_id",
+      "constitutive_id",
+      "layout_id",
+      "material_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 5,
+      "R1.6": 2,
+      "R2.1": 4,
+      "R2.2": 4,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 2,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 2,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "colors.epyson",
+          [
+            "dcr_scale.description",
+            "foundation_types.isolated_footing.name",
+            "foundation_types.mat_foundation.name"
+          ]
+        ],
+        [
+          "CH.epyson",
+          [
+            "unit_weight_pair_audit.verdict"
+          ]
+        ],
+        [
+          "GC.epyson",
+          [
+            "unit_weight_pair_audit.verdict"
+          ]
+        ],
+        [
+          "GM.epyson",
+          [
+            "unit_weight_pair_audit.verdict"
+          ]
+        ],
+        [
+          "GP.epyson",
+          [
+            "unit_weight_pair_audit.dual_symbol_evidence"
+          ]
+        ],
+        [
+          "MH.epyson",
+          [
+            "unit_weight_pair_audit.verdict"
+          ]
+        ],
+        [
+          "ML.epyson",
+          [
+            "moisture_provenance.classification_contested"
+          ]
+        ],
+        [
+          "SC.epyson",
+          [
+            "unit_weight_pair_audit.verdict"
+          ]
+        ],
+        [
+          "SM.epyson",
+          [
+            "unit_weight_pair_audit.verdict"
+          ]
+        ],
+        [
+          "aashto_lrfd_2020.epyson",
+          [
+            "geometry_requirements.audit_note"
+          ]
+        ],
+        [
+          "acg_2009.epyson",
+          [
+            "design_philosophy.asd.note",
+            "design_philosophy.lrfd.note",
+            "design_philosophy.note"
+          ]
+        ],
+        [
+          "aci_318_2025.epyson",
+          [
+            "design_philosophy.lrfd.description"
+          ]
+        ],
+        [
+          "cmmdse_2026.epyson",
+          [
+            "description",
+            "importance_classification.note",
+            "seismic_parameters.design_spectrum.parameter_defs.a0"
+          ]
+        ],
+        [
+          "codigo_geotecnico_cr_2024.epyson",
+          [
+            "edition_label",
+            "description",
+            "audit_notes"
+          ]
+        ],
+        [
+          "ntc_cdmx_2023.epyson",
+          [
+            "description",
+            "design_philosophy.lrfd.description",
+            "design_philosophy.lrfd.applies_to"
+          ]
+        ]
+      ]
+    },
+    "raw": 104,
+    "score_100": 69.3
+  },
+  {
+    "lib": "epy_houses",
+    "n_epyson": 29,
+    "families": [
+      "layout_id",
+      "map_id",
+      "standard_id",
+      "typology_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 4,
+      "R1.6": 2,
+      "R2.1": 3,
+      "R2.2": 5,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 2,
+      "R3.1": 3,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 1,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "cmmdse_2026.epyson",
+          [
+            "description",
+            "audit_notes",
+            "importance_classification.note"
+          ]
+        ],
+        [
+          "cscr_1974.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "cscr_1986.epyson",
+          [
+            "drift_limits.note",
+            "seismic_parameters.dynamic_amplification_factor_FAD_gap"
+          ]
+        ],
+        [
+          "cscr_2002.epyson",
+          [
+            "audit_notes",
+            "drift_limits.note",
+            "seismic_parameters.load_combinations_note"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "seismic_parameters.importance_default_note",
+            "confined_masonry_simplified.metadata.source_section",
+            "base_shear_formula.formula_note"
+          ]
+        ],
+        [
+          "cscr_2014.epyson",
+          [
+            "base_shear_formula.namespace_note",
+            "base_shear_formula.formula_note"
+          ]
+        ],
+        [
+          "en_1990_1991_2002.epyson",
+          [
+            "wind_parameters.coverage_note",
+            "wind_parameters.air_density_note",
+            "wind_parameters.directionality_factor_note"
+          ]
+        ],
+        [
+          "irc_2021.epyson",
+          [
+            "base_shear_formula.namespace_note",
+            "base_shear_formula.formula_note"
+          ]
+        ],
+        [
+          "ldvcr_2023.epyson",
+          [
+            "description",
+            "audit_notes",
+            "wind_loads.note"
+          ]
+        ],
+        [
+          "nbcc_2020_part9.epyson",
+          [
+            "superseded_note",
+            "wind_parameters.coverage_note",
+            "wind_parameters.exposure_categories.A.description"
+          ]
+        ],
+        [
+          "nsr_2010.epyson",
+          [
+            "base_shear_formula.namespace_note",
+            "base_shear_formula.formula_note"
+          ]
+        ],
+        [
+          "joist_systems_catalog.epyson",
+          [
+            "joist_systems.cr_pc_prestressed_joists.reference_pdf",
+            "joist_systems.cr_eqcon_prestressed_joists.reference_pdf",
+            "joist_systems.cr_htbt_prestressed_joists.reference_pdf"
+          ]
+        ],
+        [
+          "wall_masonry_catalog.epyson",
+          [
+            "blocks.cr_econoblock_12.reference_pdf",
+            "blocks.cr_superblock_15.reference_pdf",
+            "blocks.cr_pedregal_estandar_12.product_line"
+          ]
+        ],
+        [
+          "wall_systems_catalog.epyson",
+          [
+            "metadata.notes",
+            "wall_systems.cr_usg_durock.reference_pdf",
+            "wall_systems.cr_pretensados_nacionales_panels.reference_pdf"
+          ]
+        ]
+      ]
+    },
+    "raw": 104,
+    "score_100": 69.3
+  },
+  {
+    "lib": "epy_masonry",
+    "n_epyson": 70,
+    "families": [
+      "alignment_id",
+      "config_id",
+      "constitutive_id",
+      "layout_id",
+      "material_id",
+      "protocol_id",
+      "section_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 5,
+      "R1.6": 4,
+      "R2.1": 2,
+      "R2.2": 4,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 2,
+      "R3.1": 5,
+      "R3.2": 3,
+      "R3.3": 5,
+      "R3.4": 5,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 5,
+      "R4.4": 1,
+      "R4.5": 5,
+      "R4.6": 1,
+      "R5.1": 5,
+      "R5.2": 2,
+      "R5.3": 5,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "cscr_2010.epyson",
+          [
+            "audit_notes",
+            "properties.system_factors.FED_muros_mamposteria_confinada.SR_correction_2026_09_16",
+            "properties.drift_limits.inelastic.description"
+          ]
+        ],
+        [
+          "cscr_2014.epyson",
+          [
+            "audit_notes",
+            "metadata.key_changes_cap_9"
+          ]
+        ],
+        [
+          "nte_e070_2006.epyson",
+          [
+            "description",
+            "audit_notes",
+            "stiffness_modifiers_removed_2026_09_17"
+          ]
+        ]
+      ]
+    },
+    "raw": 117,
+    "score_100": 78.0
+  },
+  {
+    "lib": "ePy_plotter",
+    "n_epyson": 52,
+    "families": [
+      "config_id",
+      "layout_id",
+      "style_id",
+      "title_block_id"
+    ],
+    "scores": {
+      "R1.1": 3,
+      "R1.2": 4,
+      "R1.3": 4,
+      "R1.4": 4,
+      "R1.5": 5,
+      "R1.6": 3,
+      "R2.1": 2,
+      "R2.2": 3,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 2,
+      "R3.1": 2,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 1,
+      "R3.6": 5,
+      "R4.1": 1,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 1,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 3,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "wind_comparison.epyson",
+          [
+            "selection_notes.ldvcr_2023"
+          ]
+        ],
+        [
+          "viewport_layouts.epyson",
+          [
+            "layouts.2v-plan-section.description",
+            "layouts.2v-plan-section.viewports.label"
+          ]
+        ],
+        [
+          "colors.epyson",
+          [
+            "dcr_scale.description",
+            "layout_authority.note"
+          ]
+        ],
+        [
+          "corporate.epyson",
+          [
+            "zones.label"
+          ]
+        ],
+        [
+          "manifest.epyson",
+          [
+            "source_citation",
+            "legal_notice_substrings"
+          ]
+        ],
+        [
+          "structural_ifc.epyson",
+          [
+            "mappings.ConcreteBeam.gubimclass_title",
+            "mappings.ContinuousBeam.gubimclass_title",
+            "mappings.Corbel.gubimclass_title"
+          ]
+        ]
+      ]
+    },
+    "raw": 87,
+    "score_100": 58.0
+  },
+  {
+    "lib": "epy_steel",
+    "n_epyson": 197,
+    "families": [
+      "config_id",
+      "constitutive_id",
+      "layout_id",
+      "material_id",
+      "protocol_id",
+      "section_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 5,
+      "R1.6": 4,
+      "R2.1": 3,
+      "R2.2": 4,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 3,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 5,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 2,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "astm_a36.epyson",
+          [
+            "audit_notes",
+            "properties.Fu_range_MPa.why_the_min_is_published_as_Fu"
+          ]
+        ],
+        [
+          "astm_a992.epyson",
+          [
+            "audit_notes",
+            "properties.Fy_range_MPa.why_the_min_is_published_as_Fy",
+            "properties.yield_to_tensile_ratio_max.why_it_matters"
+          ]
+        ],
+        [
+          "cscr_1974.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "cscr_1986.epyson",
+          [
+            "description",
+            "audit_notes",
+            "seismic_design.height_limitations.note"
+          ]
+        ],
+        [
+          "cscr_2002.epyson",
+          [
+            "description",
+            "audit_notes",
+            "steel_chapter.omf_ocbf_global_ductility_override.note"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "audit_notes",
+            "seismic_system_types.note"
+          ]
+        ]
+      ]
+    },
+    "raw": 110,
+    "score_100": 73.3
+  },
+  {
+    "lib": "epy_structure",
+    "n_epyson": 16,
+    "families": [
+      "layout_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 5,
+      "R1.6": 3,
+      "R2.1": 3,
+      "R2.2": 5,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 5,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 5,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "cmmdse_2026.epyson",
+          [
+            "description",
+            "audit_notes",
+            "importance_classification.note"
+          ]
+        ],
+        [
+          "nbcc_2020.epyson",
+          [
+            "superseded_note"
+          ]
+        ]
+      ]
+    },
+    "raw": 111,
+    "score_100": 74.0
+  },
+  {
+    "lib": "epy_tall",
+    "n_epyson": 17,
+    "families": [
+      "layout_id",
+      "map_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 4,
+      "R1.6": 3,
+      "R2.1": 4,
+      "R2.2": 5,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 2,
+      "R3.1": 1,
+      "R3.2": 3,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 1,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "asce_7_2022.epyson",
+          [
+            "wind.kz_floor_height_note",
+            "audit_notes"
+          ]
+        ],
+        [
+          "cmmdse_2026.epyson",
+          [
+            "description",
+            "audit_notes",
+            "importance_classification.note"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "name",
+            "references.primary",
+            "references.sections.seismic"
+          ]
+        ],
+        [
+          "nbcc_2020_part4.epyson",
+          [
+            "superseded_note"
+          ]
+        ]
+      ]
+    },
+    "raw": 102,
+    "score_100": 68.0
+  },
+  {
+    "lib": "epy_tanks",
+    "n_epyson": 28,
+    "families": [
+      "layout_id",
+      "map_id",
+      "material_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 4,
+      "R1.6": 3,
+      "R2.1": 4,
+      "R2.2": 4,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 3,
+      "R3.2": 3,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 1,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 1,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 3,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "asce_7_2022.epyson",
+          [
+            "wind_parameters.velocity_pressure_coefficient_note",
+            "wind_parameters.kz_floor_height_note"
+          ]
+        ],
+        [
+          "cmmdse_2026.epyson",
+          [
+            "description",
+            "audit_notes",
+            "importance_classification.note"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "description",
+            "properties.tank_importance_factors_note",
+            "wind_parameters.velocity_pressure_coefficient_note"
+          ]
+        ],
+        [
+          "ldvcr_2023.epyson",
+          [
+            "description",
+            "name",
+            "wind_loads_cylinder.Cf_table.note"
+          ]
+        ],
+        [
+          "ntc_cdmx_2023.epyson",
+          [
+            "description",
+            "audit_notes"
+          ]
+        ]
+      ]
+    },
+    "raw": 96,
+    "score_100": 64.0
+  },
+  {
+    "lib": "epy_timber",
+    "n_epyson": 180,
+    "families": [
+      "alignment_id",
+      "catalog_id",
+      "config_id",
+      "constitutive_id",
+      "fastener_id",
+      "layout_id",
+      "material_id",
+      "protocol_id",
+      "section_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 4,
+      "R1.5": 5,
+      "R1.6": 3,
+      "R2.1": 3,
+      "R2.2": 4,
+      "R2.3": 5,
+      "R2.4": 3,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 3,
+      "R3.2": 3,
+      "R3.3": 5,
+      "R3.4": 5,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 5,
+      "R4.2": 1,
+      "R4.3": 5,
+      "R4.4": 1,
+      "R4.5": 5,
+      "R4.6": 1,
+      "R5.1": 5,
+      "R5.2": 2,
+      "R5.3": 5,
+      "R5.4": 5,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "acacia_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "acacia_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "acacia_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "acacia_structural.epyson",
+          [
+            "audit_notes"
+          ]
+        ],
+        [
+          "amarillon_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "amarillon_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "amarillon_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "botarrama_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "botarrama_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "botarrama_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "chancho_blanco_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "chancho_blanco_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "chancho_blanco_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "cipres_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "cipres_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "cipres_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "gavilan_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "gavilan_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "gavilan_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "jaul_bosque_natural_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "jaul_bosque_natural_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "jaul_bosque_natural_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "jaul_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "jaul_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "jaul_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "laurel_inte_g1.epyson",
+          [
+            "audit_notes",
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "laurel_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "laurel_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "melina_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "melina_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "melina_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "pilon_g1.epyson",
+          [
+            "audit_notes",
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "pilon_g2.epyson",
+          [
+            "audit_notes",
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "pilon_g3.epyson",
+          [
+            "audit_notes",
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "pochote_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "pochote_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "pochote_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "roble_coral_inte_g1.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "roble_coral_inte_g2.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "roble_coral_inte_g3.epyson",
+          [
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "teca_inte_g1.epyson",
+          [
+            "audit_notes",
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "teca_inte_g2.epyson",
+          [
+            "audit_notes",
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "teca_inte_g3.epyson",
+          [
+            "audit_notes",
+            "specific_gravity_basis_source"
+          ]
+        ],
+        [
+          "nch_1198_1991.epyson",
+          [
+            "audit_notes",
+            "asd_basis.text",
+            "modification_factors.lateral_stability.symbol"
+          ]
+        ],
+        [
+          "cscr_1974.epyson",
+          [
+            "seismic_design.seismic_zonation"
+          ]
+        ],
+        [
+          "cscr_1986.epyson",
+          [
+            "description",
+            "audit_notes",
+            "metadata.notes"
+          ]
+        ],
+        [
+          "cscr_2002.epyson",
+          [
+            "description",
+            "audit_notes",
+            "metadata.notes"
+          ]
+        ]
+      ]
+    },
+    "raw": 115,
+    "score_100": 76.7
+  },
+  {
+    "lib": "epy_towers",
+    "n_epyson": 18,
+    "families": [
+      "layout_id",
+      "standard_id"
+    ],
+    "scores": {
+      "R1.1": 5,
+      "R1.2": 5,
+      "R1.3": 5,
+      "R1.4": 5,
+      "R1.5": 5,
+      "R1.6": 3,
+      "R2.1": 3,
+      "R2.2": 5,
+      "R2.3": 5,
+      "R2.4": 5,
+      "R2.5": 1,
+      "R2.6": 1,
+      "R3.1": 5,
+      "R3.2": 5,
+      "R3.3": 5,
+      "R3.4": 2,
+      "R3.5": 5,
+      "R3.6": 5,
+      "R4.1": 1,
+      "R4.2": 1,
+      "R4.3": 1,
+      "R4.4": 1,
+      "R4.5": 1,
+      "R4.6": 5,
+      "R5.1": 5,
+      "R5.2": 5,
+      "R5.3": 1,
+      "R5.4": 1,
+      "R5.5": 5,
+      "R5.6": 5
+    },
+    "notes": {
+      "R1.6": [
+        [
+          "cmmdse_2026.epyson",
+          [
+            "description",
+            "audit_notes",
+            "importance_classification.note"
+          ]
+        ],
+        [
+          "cscr_2010.epyson",
+          [
+            "applicability",
+            "importance_factors.description",
+            "importance_factors.essential.label"
+          ]
+        ],
+        [
+          "ldvcr_2023.epyson",
+          [
+            "description",
+            "audit_notes",
+            "exposure_categories.C.description"
+          ]
+        ],
+        [
+          "nsr_2010.epyson",
+          [
+            "importance_factors_seismic.group_II.label",
+            "importance_factors_seismic.group_III.label",
+            "importance_factors_seismic.group_IV.label"
+          ]
+        ]
+      ]
+    },
+    "raw": 107,
+    "score_100": 71.3
+  }
+]

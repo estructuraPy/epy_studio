@@ -1,0 +1,204 @@
+# === BEGIN standards_helpers_block ===
+
+# References — standards cataloged in `_config/{{STANDARDS_DIR_NAME}}/` ({{REFERENCES_COUNT}} entries).
+# Derived from each file's `standard_id` / `description` / `audit_status` — never hand-typed.
+# Regenerate via: python scripts/sync_standards_helpers.py --write
+{{REFERENCES_BLOCK}}
+
+from pathlib import Path as _PathSH  # noqa: E402
+from typing import Any as _AnySH  # noqa: E402
+
+_DIFF_SKIP_KEYS_SH: frozenset[str] = frozenset(
+    {
+        "audit_status",
+        "audit_notes",
+        "metadata",
+        "description",
+    }
+)
+
+
+def _walk_diff_sh(
+    a: _AnySH,
+    b: _AnySH,
+    only_in_a: dict[str, _AnySH],
+    only_in_b: dict[str, _AnySH],
+    changed: dict[str, tuple[_AnySH, _AnySH]],
+    path: str,
+) -> None:
+    """Recursively walk two JSON-like structures and record divergences.
+
+    Parameters
+    ----------
+    a : _AnySH
+        Input parameter.
+    b : _AnySH
+        Input parameter.
+    only_in_a : dict[str, _AnySH]
+        Input parameter.
+    only_in_b : dict[str, _AnySH]
+        Input parameter.
+    changed : dict[str, tuple[_AnySH, _AnySH]]
+        Input parameter.
+    path : str
+        Input parameter.
+    """
+    if isinstance(a, dict) and isinstance(b, dict):
+        keys_a = set(a.keys()) - _DIFF_SKIP_KEYS_SH
+        keys_b = set(b.keys()) - _DIFF_SKIP_KEYS_SH
+        for k in sorted(keys_a - keys_b):
+            only_in_a[f"{path}.{k}" if path else k] = a[k]
+        for k in sorted(keys_b - keys_a):
+            only_in_b[f"{path}.{k}" if path else k] = b[k]
+        for k in sorted(keys_a & keys_b):
+            sub_path = f"{path}.{k}" if path else k
+            _walk_diff_sh(a[k], b[k], only_in_a, only_in_b, changed, sub_path)
+        return
+    if a != b:
+        changed[path] = (a, b)
+
+
+def _standards_dir_sh() -> _PathSH:
+    """Locate `_config/{{STANDARDS_DIR_NAME}}/` relative to this module.
+
+    Returns
+    -------
+    _PathSH
+        Absolute path to this lib's standards catalog directory. Callers must
+        check `.exists()` before globbing — the directory always ships with
+        the package, but the guard also lets tests simulate a missing catalog
+        by monkeypatching this function.
+    """
+    return _PathSH(__file__).parent / "{{STANDARDS_DIR_NAME}}"
+
+
+def _resolve_complement_value_sh(standard_id: str, *keys: str) -> _AnySH:
+    """Resolve a nested-key path through the complement_with chain.
+
+    Parameters
+    ----------
+    standard_id : str
+        Input parameter.
+
+    Returns
+    -------
+    _AnySH
+        The resolved value at the given key path — either the raw value or,
+        if the terminal node is a `{"value": x}` wrapper, the unwrapped `x`.
+    """
+    final: object = None  # initialize for pyright; overwritten when resolved
+    visited: list[str] = []
+    current_id: str | None = standard_id
+    last_exc: Exception | None = None
+    while current_id is not None and current_id not in visited:
+        visited.append(current_id)
+        try:
+            data = load_standard(current_id)
+        except (FileNotFoundError, KeyError, ValueError) as exc:
+            last_exc = exc
+            current_id = None
+            break
+        # Try resolving the key path from two roots: the top-level data dict
+        # and (if present) the inner `properties` block. This handles both
+        # schema styles used cross-suite (epyson with or without `properties`
+        # wrapper) without forcing one shape.
+        roots = [data]
+        if isinstance(data.get("properties"), dict):
+            roots.append(data["properties"])
+        resolved = False
+        for root in roots:
+            val: _AnySH = root
+            missing = False
+            for key in keys:
+                if isinstance(val, dict) and key in val:
+                    val = val[key]
+                else:
+                    missing = True
+                    break
+            if not missing:
+                resolved = True
+                final = val["value"] if isinstance(val, dict) and "value" in val else val
+                break
+        if resolved:
+            return final
+        last_exc = KeyError(f"Key path {keys!r} not found at top-level or properties.")
+        current_id = data.get("complement_with")
+    raise KeyError(
+        f"Key path {keys!r} not resolvable in standard {standard_id!r}"
+        + (f" nor in complement chain {visited[1:]}" if len(visited) > 1 else "")
+        + (f": {last_exc}" if last_exc else "")
+    )
+
+
+def list_supported_standards() -> list[dict[str, _AnySH]]:
+    """Return every standard available in this lib with its audit status."""
+    entries: list[dict[str, _AnySH]] = []
+    sdir = _standards_dir_sh()
+    if not sdir.exists():
+        return entries
+    standard_ids = sorted(p.stem for p in sdir.glob("*.epyson"))
+    for standard_id in standard_ids:
+        try:
+            data = load_standard(standard_id)
+        except (FileNotFoundError, KeyError, ValueError):
+            continue
+        entries.append(
+            {
+                "standard_id": str(data.get("standard_id", standard_id)),
+                "audit_status": str(data.get("audit_status", "needs_source_verification")),
+                "description": str(data.get("description", "")),
+                "complement_with": data.get("complement_with"),
+            }
+        )
+    return entries
+
+
+def diff_standards(standard_a: str, standard_b: str) -> dict[str, _AnySH]:
+    """Return per-key differences between two standards' normative content.
+
+    Parameters
+    ----------
+    standard_a : str
+        Input parameter.
+    standard_b : str
+        Input parameter.
+    """
+    data_a = load_standard(standard_a)
+    data_b = load_standard(standard_b)
+    only_in_a: dict[str, _AnySH] = {}
+    only_in_b: dict[str, _AnySH] = {}
+    changed: dict[str, tuple[_AnySH, _AnySH]] = {}
+    _walk_diff_sh(data_a, data_b, only_in_a, only_in_b, changed, path="")
+    return {"only_in_a": only_in_a, "only_in_b": only_in_b, "changed": changed}
+
+
+def compare_standards(standard_a: str, standard_b: str, *keys: str) -> dict[str, _AnySH]:
+    """Compare a single nested-key path across two standards (resolves complement_with).
+
+    Parameters
+    ----------
+    standard_a : str
+        Input parameter.
+    standard_b : str
+        Input parameter.
+    """
+    if not keys:
+        raise KeyError("compare_standards requires at least one key path component")
+    value_a = _resolve_complement_value_sh(standard_a, *keys)
+    value_b = _resolve_complement_value_sh(standard_b, *keys)
+    result: dict[str, _AnySH] = {
+        "a": value_a,
+        "b": value_b,
+        "equal": value_a == value_b,
+    }
+    if (
+        isinstance(value_a, (int, float))  # noqa: UP038
+        and isinstance(value_b, (int, float))  # noqa: UP038
+        and not isinstance(value_a, bool)
+        and not isinstance(value_b, bool)
+    ):
+        result["delta"] = value_b - value_a
+    return result
+
+
+# === END standards_helpers_block ===

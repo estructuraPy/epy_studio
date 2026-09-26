@@ -30,7 +30,7 @@ def _find_pkg_dir(lib_root: Path) -> Path | None:
 # ── Quality check (shared module) ─────────────────────────────────────
 _QUALITY_CHECK_AVAILABLE = False
 try:
-    _repo_root = LIB_ROOT.parent
+    _repo_root = LIB_ROOT
     _qc_path = _repo_root / "_packaging" / "quality_check.py"
     if _qc_path.is_file():
         import importlib.util
@@ -834,7 +834,7 @@ def report_tutorials_layout(violations: list[str]) -> None:
 # that resolves to something looks exactly like an id that resolves to the
 # right thing until the two are checked against each other.
 _SUITE_TOOLING = (
-    Path(__file__).resolve().parent.parent / "_packaging" / "_tooling"
+    Path(__file__).resolve().parent / "_packaging" / "_tooling"
 )
 """The suite's private half, which is OPTIONAL exactly like epy_docs.
 
@@ -850,7 +850,7 @@ failure, because a silently skipped rule is worse than none.
 
 
 _SOURCE_IDS_BLOCK = (
-    Path(__file__).resolve().parent.parent / "_packaging" / "_tooling"
+    Path(__file__).resolve().parent / "_packaging" / "_tooling"
     / "source_ids_block.py"
 )
 if _SOURCE_IDS_BLOCK.exists():
@@ -896,7 +896,7 @@ else:  # pragma: no cover - only when the tooling repo is absent
 # suite document inside a library repo always drifts, because that repo is
 # where the person editing that library is looking.
 _SUITE_MANUAL_BLOCK = (
-    Path(__file__).resolve().parent.parent / "_packaging" / "_tooling"
+    Path(__file__).resolve().parent / "_packaging" / "_tooling"
     / "suite_manual_block.py"
 )
 if _SUITE_MANUAL_BLOCK.exists():
@@ -943,7 +943,7 @@ else:  # pragma: no cover - only when the tooling repo is absent
 # certified by a fixture under tests/_benchmarks/ are exempt, because there the
 # two numbers come from the clause and from the library inside one test.
 _V_SELFCMP_BLOCK = (
-    Path(__file__).resolve().parent.parent / "_packaging" / "_tooling"
+    Path(__file__).resolve().parent / "_packaging" / "_tooling"
     / "v_selfcomparison_block.py"
 )
 if _V_SELFCMP_BLOCK.exists():
@@ -1144,7 +1144,7 @@ def report_display_side_effects(violations: list[str]) -> None:
 def _load_unit_suffix_block():
     import importlib.util
 
-    block = (LIB_ROOT.parent / "_packaging" / "_tooling" / "unit_suffix_block.py")
+    block = (LIB_ROOT / "_packaging" / "_tooling" / "unit_suffix_block.py")
     if not block.is_file():
         return None
     spec = importlib.util.spec_from_file_location("_epy_unit_suffix_block", block)

@@ -97,18 +97,23 @@ def _register_siblings() -> list[str]:
     """
     import subprocess  # noqa: PLC0415
 
-    from ._core._catalog import apps, install_dir  # noqa: PLC0415
+    from ._core._catalog import apps, installed_exe  # noqa: PLC0415
 
     started: list[str] = []
-    folder = install_dir()
     for app in apps():
-        exe = folder / f"{app.app_id}.exe"
-        if not exe.is_file():
+        # An application that ships on its own lives in its own folder, so
+        # the path is resolved rather than assembled from ours -- and it is
+        # launched from ITS directory, because a frozen application reads its
+        # bundled data relative to where it sits.
+        if not app.registers:
+            continue
+        exe = installed_exe(app)
+        if exe is None:
             continue
         try:
-            subprocess.Popen(  # noqa: S603 — fixed path in our install dir
+            subprocess.Popen(  # noqa: S603 — a path our own catalog resolved
                 [str(exe), "--register"],
-                cwd=str(folder),
+                cwd=str(exe.parent),
                 creationflags=0x08000000,  # CREATE_NO_WINDOW
             )
         except OSError:

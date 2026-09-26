@@ -33,7 +33,7 @@ from .._core._backends import (
     detect_docs,
     handoff_env,
 )
-from .._core._catalog import App, apps, install_dir
+from .._core._catalog import App, apps, install_dir, installed_exe
 
 __all__ = ["APP_NAME", "build_window", "manual_path"]
 
@@ -313,7 +313,8 @@ def build_window(
 
             base = install_dir()
             for app in apps():
-                if app.optional and not (base / f"{app.app_id}.exe").is_file():
+                exe = installed_exe(app)
+                if app.optional and exe is None:
                     # An OPTIONAL application that is not installed
                     # is not offered at all -- not greyed. A greyed
                     # row says 'you could have this, re-run the
@@ -455,8 +456,13 @@ def build_window(
             self.close()
 
         def _tool_row(self, base: Path, app: App) -> Any:
-            """Build one launchable row."""
-            exe_path = base / f"{app.app_id}.exe"
+            """Build one launchable row.
+
+            ``base`` is where the applications Studio BUILDS live. One that
+            ships with its own installer is somewhere else entirely, so the
+            path is resolved by the catalog rather than assembled here.
+            """
+            exe_path = installed_exe(app) or base / f"{app.app_id}.exe"
             row = QFrame(self)
             row.setFrameShape(QFrame.Shape.StyledPanel)
             line = QHBoxLayout(row)
@@ -486,6 +492,11 @@ def build_window(
                     _i18n.tr(
                         "Not installed — re-run the installer to "
                         "add it."
+                    )
+                    if app.built_here
+                    else _i18n.tr(
+                        "Not installed — it ships on its own; install "
+                        "it and this row becomes available."
                     )
                 )
                 desc_label.setText(

@@ -110,8 +110,19 @@ def test_an_optional_application_with_its_exe_is_offered(
     from epy_studio._core._catalog import apps
     from epy_studio._ui import selector
 
+    # An application that ships on its own is put where its OWN installer
+    # would put it, not beside the launcher. Patching LOCALAPPDATA rather
+    # than installed_exe keeps the resolution itself under test: writing
+    # every executable into one folder would pass while the real lookup
+    # was broken.
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
     for app in apps():
-        (tmp_path / f"{app.app_id}.exe").write_bytes(b"MZ")
+        if app.built_here:
+            (tmp_path / f"{app.app_id}.exe").write_bytes(b"MZ")
+            continue
+        own = tmp_path / "Programs" / app.app_id
+        own.mkdir(parents=True, exist_ok=True)
+        (own / f"{app.app_id}.exe").write_bytes(b"MZ")
     monkeypatch.setattr(selector, "install_dir", lambda: tmp_path)
     monkeypatch.setattr(_catalog, "install_dir", lambda: tmp_path)
     window = selector.build_window([], backend=Backend(), language="en")

@@ -51,7 +51,10 @@ def test_every_optional_application_is_guarded_and_no_required_one_is(
     iss = (ROOT / "windows" / "epy_studio.iss").read_text(encoding="utf-8")
     guards = list(build._GUARD.finditer(iss))
     assert guards, "no #ifexist block at all"
-    optional = build._optional_ids()
+    # An application Studio does not BUILD is not guarded, because the
+    # installer does not name it at all: there is nothing to guard.
+    unbuilt = build._own_installer_ids()
+    optional = build._optional_ids() - unbuilt
     guarded_exes = {match.group("exe") for match in guards}
     assert guarded_exes == {f"{app_id}.exe" for app_id in optional}
 
@@ -59,6 +62,9 @@ def test_every_optional_application_is_guarded_and_no_required_one_is(
     for app in build._catalog_apps():
         app_id, component = str(app["id"]), str(app["component"])
         exe = f"{app_id}.exe"
+        if app_id in unbuilt:
+            assert exe not in iss, f"{exe} is not built and the .iss names it"
+            continue
         if app_id in optional:
             assert exe not in outside, f"{exe} names itself outside a guard"
             assert f"Components: {component}" not in outside, component
@@ -155,4 +161,9 @@ def test_a_required_application_missing_from_the_script_still_refuses(
 
 def test_the_optional_ids_come_from_the_catalog() -> None:
     # The private applications, and only those.
-    assert build._optional_ids() == frozenset({"epy_draft", "epy_quoting"})
+    assert build._optional_ids() == frozenset(
+        {"epy_draft", "epy_quoting", "epy_lab"}
+    )
+    # A separate axis: epy_lab may be absent from the bundle because
+    # Studio never builds it, not because its checkout might be missing.
+    assert build._own_installer_ids() == frozenset({"epy_lab"})

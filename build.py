@@ -226,6 +226,20 @@ def _optional_ids() -> frozenset[str]:
     )
 
 
+def _own_installer_ids() -> frozenset[str]:
+    """Return the ids Studio OFFERS and does not build.
+
+    A separate question from ``optional``, which asks whether the sibling
+    checkout may be absent at build time. These are never built here at
+    all, so the installer names them nowhere and no probe of ours can
+    look inside an executable this repository does not produce.
+    """
+    return frozenset(
+        str(app["id"]) for app in _catalog_apps()
+        if str(app.get("ships", "studio")) != "studio"
+    )
+
+
 _GUARD = re.compile(
     r"#ifexist[^\n]*?\b(?P<exe>[A-Za-z0-9_]+\.exe)\"[^\n]*\n(?P<body>.*?)#endif",
     re.S,
@@ -278,6 +292,17 @@ def _verify_manifest() -> None:
     for app in catalog["apps"]:
         exe = f"{app['id']}.exe"
         component = f"Name: \"{app['component']}\""
+        if app.get("ships", "studio") != "studio":
+            # Studio does not build it, so the installer has nothing to
+            # install and the .iss must NOT name it. Checked in the negative,
+            # because a stray line would try to copy an executable this build
+            # never produces.
+            if exe in iss or component in iss:
+                problems.append(
+                    f"{exe} ships with its own installer and the .iss names "
+                    f"it; Studio installs only what it builds"
+                )
+            continue
         if app.get("optional"):
             inside = guarded.get(exe, "")
             if exe not in inside:

@@ -47,6 +47,7 @@ def test_every_shipped_application_is_listed() -> None:
     ids = [app.app_id for app in _catalog.apps()]
     assert ids == [
         "epy_reports", "epy_slides", "epy_papers", "epy_draft", "epy_quoting",
+        "epy_lab",
     ]
 
 
@@ -64,7 +65,7 @@ def test_draft_advertises_open_with_and_never_claims_the_default() -> None:
 # The applications whose repositories are PRIVATE. Kept as a literal
 # rather than derived, because the fact lives on GitHub and a test that
 # asked the network would answer differently offline.
-PRIVATE = frozenset({"epy_draft", "epy_quoting"})
+PRIVATE = frozenset({"epy_draft", "epy_quoting", "epy_lab"})
 
 
 def test_an_application_is_optional_exactly_when_it_is_private() -> None:
@@ -109,8 +110,25 @@ def test_every_entry_is_complete() -> None:
     # an error, which is the kind of thing nobody notices in a picker.
     for app in _catalog.apps():
         assert app.app_id and app.display and app.description
-        assert app.component
         assert app.register in _catalog.REGISTER_MODES
+        assert app.ships in _catalog.SHIPS_MODES
+        if not app.built_here:
+            # The build-time columns are empty ON PURPOSE for an application
+            # Studio does not build: there is nothing to collect assets for,
+            # nothing to hide imports from, and no icon to give an executable
+            # this repository never produces. Asserting them would demand
+            # invented values, which is worse than a blank label.
+            assert not app.asset_packages
+            assert not app.hidden_imports
+            assert not app.icon
+            assert app.own_install_appid, f"{app.app_id} cannot be found"
+            # A component is an INSTALLER concept -- an entry in the .iss
+            # [Components] section. Studio installs only what it builds, so an
+            # application that ships on its own has none, and naming one would
+            # promise a checkbox the installer never draws.
+            assert not app.component
+            continue
+        assert app.component
         assert app.asset_packages, f"{app.app_id} bundles no assets"
         assert app.icon
 
@@ -176,20 +194,30 @@ def test_an_absent_optional_application_is_skipped_by_name(
     assert [app.app_id for app in built] == [
         "epy_reports", "epy_slides", "epy_papers", "epy_draft",
     ]
-    assert len(skipped) == 1
-    assert "epy_quoting" in skipped[0]
-    assert "SKIPPED optional" in skipped[0]
+    # Two lines, and they are DIFFERENT omissions: epy_quoting is absent
+    # from this suite, while epy_lab is never built here at all.
+    assert len(skipped) == 2
+    absent = next(line for line in skipped if "SKIPPED optional" in line)
+    assert "epy_quoting" in absent
+    unbuilt = next(line for line in skipped if "NOT BUILT HERE" in line)
+    assert "epy_lab" in unbuilt
 
 
 def test_a_present_optional_application_is_built(tmp_path: Path) -> None:
     # The entry point's EXISTENCE is the switch.
     suite = _suite_with(
         tmp_path, "epy_reports", "epy_slides", "epy_papers", "epy_draft",
-        "epy_quoting",
+        "epy_quoting", "epy_lab",
     )
     built, skipped = _catalog.for_build(suite)
     assert [app.app_id for app in built][-1] == "epy_quoting"
-    assert skipped == []
+    # epy_lab is present in the suite AND still not built: the switch for an
+    # application that ships on its own is the catalog, not the file. Checking
+    # the entry point would build it, because it has one.
+    assert (suite / "epy_lab" / "src" / "epy_lab" / "__main__.py").is_file()
+    assert "epy_lab" not in [app.app_id for app in built]
+    assert len(skipped) == 1
+    assert "NOT BUILT HERE" in skipped[0]
 
 
 def test_an_absent_required_application_refuses_the_build(
@@ -228,7 +256,9 @@ def test_the_public_editors_alone_are_a_buildable_bundle(
     assert [app.app_id for app in built] == [
         "epy_reports", "epy_slides", "epy_papers",
     ]
-    assert len(skipped) == 2
+    assert len(skipped) == 3
     assert {"epy_draft", "epy_quoting"} == {
         line.split()[3].rstrip(":") for line in skipped
+        if line.startswith("SKIPPED")
     }
+    assert sum("NOT BUILT HERE" in line for line in skipped) == 1

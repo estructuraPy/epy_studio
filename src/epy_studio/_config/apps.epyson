@@ -46,7 +46,19 @@
       "hidden_imports": [],
       "icon": "_core/_packaging/assets_build/epy_quoting.ico",
       "description": "Service offers — fee quotation for structural-engineering work"
+    },
+    {
+      "id": "epy_lab", "display": "ePy Lab", "component": "",
+      "register": "none", "optional": true,
+      "ships": "own_installer",
+      "own_install_appid": "{3C1F6B2E-9A74-4E0D-8B5A-6F2D1C0E7A91}",
+      "asset_packages": [],
+      "hidden_imports": [],
+      "icon": "",
+      "description": "Virtual structures laboratory — parametric experiments, exports interactive pages, animations and .kepy cases"
     }
   ],
+  "_ships_note": "ePy Lab is the first application Studio OFFERS without BUILDING. It is a front end over the design libraries rather than a self-contained editor: its own PyInstaller spec collects EIGHTEEN packages -- itself plus epy_analysis, epy_plotter, epy_units and fourteen design libraries -- together with the openseespy and Pynite engines. Studio's _app_analysis gives each application pathex=[its own src] and one _config tree, so bundling this one would mean teaching the spec to carry a dependency closure, and the bundle already stands at 6.7 GB / 12,840 files. So it keeps its own installer and its own folder, the selector finds it through installed_exe(), and a machine without it simply does not see the row. 'optional' and 'ships' are independent axes: optional says the sibling checkout may be absent at BUILD time, ships says Studio never builds it at all. Because it is not built here it needs no .iss lines, no icon in this repo and no hidden imports -- which is why those three are empty rather than guessed.",
+  "_lab_association_note": "ePy Lab claims no file association, so register is 'none'. That is not an oversight: .kepy is shared. An epy_lab experiment (format epy_lab.experiment/1) and an ePy Draft project are BOTH .kepy files, and Studio's installer already points .kepy at epy_draft.exe, which refuses a foreign one by its required tables {documents, chunks, memory, runs}. Two producers and one extension means whoever owns the association has to DISPATCH on what the file declares, and until that exists a second claimant would only take the association away from the one that has it. An experiment is opened from ePy Lab's own window or with epy_lab.exe --experiment <file>.",
   "_register_note": "'openwith' advertises an Open-with entry and never claims the default. ePy Draft consumes Markdown and text as batch INPUT and authors neither, so claiming the default would hand it documents it does not edit. That rule lived as a prose comment in the .iss, which is exactly what gets lost when a fifth application is added. 'none' claims nothing: no --register, no [Run] line, no [UninstallRun] line."
 }

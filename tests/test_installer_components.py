@@ -27,8 +27,13 @@ def _script() -> str:
 
 def _apps() -> list[dict[str, str]]:
     data = json.loads(CATALOG.read_text(encoding="utf-8"))
+    # ``ships`` is carried, not projected away. It was dropped here at
+    # first and every filter written against it silently matched
+    # everything -- a guard that reads a key the helper never returns
+    # measures nothing and passes.
     return [
-        {"id": str(app["id"]), "component": str(app["component"])}
+        {"id": str(app["id"]), "component": str(app["component"]),
+         "ships": str(app.get("ships", "studio"))}
         for app in data["apps"]
     ]
 
@@ -49,7 +54,19 @@ def test_every_application_is_its_own_component() -> None:
     # without the other.
     script = _script()
     components = set(re.findall(r'^Name: "(\w+)"; Description:', script, re.M))
-    assert {app["component"] for app in _apps()} <= components
+    # Only what the installer installs. A component is an installer
+    # concept, so an application that ships with its own installer
+    # declares none -- and demanding one would promise a checkbox this
+    # installer never draws.
+    declared = {
+        str(app["component"]) for app in _apps()
+        if str(app.get("ships", "studio")) == "studio"
+    }
+    assert declared <= components
+    assert all(
+        not str(app["component"]) for app in _apps()
+        if str(app.get("ships", "studio")) != "studio"
+    )
 
 
 def test_the_installer_offers_a_choice_at_all() -> None:

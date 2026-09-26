@@ -81,6 +81,14 @@ _ES: dict[str, str] = {
     "Service offers — fee quotation for structural-engineering work":
         "Ofertas de servicios — cotización de honorarios para trabajos "
         "de ingeniería estructural",
+    "Virtual structures laboratory — parametric experiments, exports "
+    "interactive pages, animations and .kepy cases":
+        "Laboratorio virtual de estructuras — experimentos paramétricos, "
+        "exporta páginas interactivas, animaciones y casos .kepy",
+    "Not installed — it ships on its own; install it and this row "
+    "becomes available.":
+        "No instalado — se distribuye por separado; instálelo y esta fila "
+        "queda disponible.",
     # --- the export backend strip -------------------------------------
     "ePy Docs not installed — commercial add-on":
         "ePy Docs no instalado — complemento comercial",

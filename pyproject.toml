@@ -35,6 +35,7 @@ epy_studio = "epy_studio.launcher:main"
 packages = ["src/epy_studio"]
 
 [tool.ruff]
+extend-exclude = ["src/*/epy_suite_connect/_packaging", ".claude"]
 line-length = 79
 target-version = "py310"
 src = ["src", "tests"]
@@ -63,4 +64,4 @@ addopts = "-ra -q --strict-markers --strict-config --cov --cov-report=term-missi
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["*/tests/*", "*/__pycache__/*", "*/.venv/*", "*/_archive/*"]
+omit = ["*/tests/*", "*/__pycache__/*", "*/.venv/*", "*/_archive/*", "*/epy_suite_connect/_packaging/*"]

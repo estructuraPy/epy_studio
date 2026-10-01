@@ -48,10 +48,14 @@ ignore = ["D203", "D213"]
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-# housekeeper.py is generated from _packaging/_tooling/templates/
-# housekeeper_minimal.py. Upstream owns its formatting: reformatting
-# here forks the template, and the next sync either reverts the
-# change or conflicts with it.
+# housekeeper.py is the suite's shared gate, carried as one file per repo and
+# kept byte-identical to its siblings except for the package name inside its
+# own paths. Reformatting this copy forks it from the others, and the next
+# time one is synced the change is reverted or conflicts with it, so its
+# formatting is not this repository's to set. (This comment used to credit a
+# template at _packaging/_tooling/templates/housekeeper_minimal.py. No such
+# file or directory exists in any of the thirty-four repos: there is no
+# generator, each repo carries its own copy.)
 "housekeeper.py" = ["E501", "D103"]
 "tests/*" = ["D"]
 "epy_studio.spec" = ["D", "F821", "E501"]

@@ -47,7 +47,7 @@ All are argparse CLIs with a `--check` / `--dry-run` mode; run those first.
 | `standards_helpers_block.py.tmpl` | The single source of truth that script renders. |
 | `sync_tests_layout_rule.py` | Splices the canonical `audit_tests_layout()` / `report_tests_layout()` pair into every in-scope `housekeeper.py` (STRUCTURE_STANDARD.md 2.4). |
 | `score_epyson_canon.py` | Scores every `.epyson` and its loader against the 5-rubric epyson canon (150 raw, normalised to 100). |
-| `migrate_epyson_canon_xsuite.py` | Migrates `.epyson` files toward that canon. |
+| `migrate_epyson_canon_xsuite.py` | **DO NOT RUN.** Dry-run reports what it would change; `--apply` REFUSES by name. Two hazards: it re-serialized with `json.dumps(indent=2)`, which the data-layout rule forbids (a leaf object belongs on one line), so one run reflows the whole catalogue; and until 2026-09-30 it carried a word-by-word Spanish-to-English map that rewrote 108 citations across 36 files in 18 repos. And it normalises `audit_status` against a set that lacks `unsourced`, downgrading entries that cite NO document to `needs_source_verification` (a source named but unchecked) -- a false provenance claim that also disarms `refuse_if_unsourced`, so 15 entries in epy_timber alone become designable again. The map is gone; the serializer and the audit set are not fixed. |
 | `add_hk_loader_only_xsuite.py` | Adds the loader-only audit rule to each housekeeper. |
 | `add_hk_rule13_xsuite.py` | Adds housekeeper rule 13 across the suite. |
 | `rule8_skip_block.py` | The ONE canonical Rule 8 block (no skipped tests): `_skip_violations_in_source` + `audit_no_skipped_tests` + `report_skipped_tests`. Self-contained — the only name it needs from its host is `Path`. |

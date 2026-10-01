@@ -14,8 +14,13 @@ hand or by Phase B of the per-lib playbook.
 
 Usage:
   python migrate_epyson_canon_xsuite.py            # dry-run, all 16 libs
-  python migrate_epyson_canon_xsuite.py --apply    # actually write
-  python migrate_epyson_canon_xsuite.py --apply --lib epy_steel
+  python migrate_epyson_canon_xsuite.py --apply    # REFUSES -- see main()
+  python migrate_epyson_canon_xsuite.py --lib epy_steel   # dry-run, one lib
+
+DO NOT RUN with --apply. It refuses by name and exits 1: the write call
+re-serializes with json.dumps(indent=2), which the suite data-layout rule
+forbids, and the audit_status set below lacks the fifth state `unsourced`,
+so applying it would downgrade entries that cite no document at all.
 """
 from __future__ import annotations
 
@@ -291,7 +296,50 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--lib", help="run on a single lib (default: all 16 non-concrete)")
+    ap.add_argument(
+        "--the-serializer-now-honours-the-leaf-layout-rule",
+        action="store_true",
+        help=(
+            "Unlocks --apply. Named after what must be TRUE, not after an "
+            "override: the write call must emit leaf objects on one line before "
+            "this tool may touch the catalogue."
+        ),
+    )
     args = ap.parse_args()
+
+    if args.apply and not args.the_serializer_now_honours_the_leaf_layout_rule:
+        raise SystemExit(
+            "REFUSED: --apply would rewrite every .epyson in the suite with\n"
+            "`json.dumps(new_data, indent=2)` (see the write call below), and that\n"
+            "is the serialization the suite's data-layout rule forbids by name: a\n"
+            "leaf object -- a dict whose values are all short scalars -- belongs on\n"
+            "ONE line. indent=2 expands every level, so one run reflows the whole\n"
+            "catalogue and buries any real change inside a diff of pure formatting.\n"
+            "\n"
+            "This is the SECOND hazard found in this tool. The first was a word-by-\n"
+            "word Spanish-to-English map that rewrote 108 citations across 36 files\n"
+            "in 18 repos (Codigo Sismico de Costa Rica -> Code Sismico; the NSR-10's\n"
+            "TITULO A -> Title A); it was removed 2026-09-30 and the removal note\n"
+            "above this function records what it cost. The standing instruction\n"
+            "since then is not to run this tool.\n"
+            "\n"
+            "And a THIRD, measured 2026-10-01 and the most concrete of the three:\n"
+            "VALID_AUDIT above does not carry `unsourced`, the fifth audit state\n"
+            "added when the catalogue gained entries that cite NO document at all --\n"
+            "not an edition, not a table, not a page. This tool normalises anything\n"
+            "outside its set to `needs_source_verification`, which means a source IS\n"
+            "named and merely unchecked. That is not a relabel, it is a false claim\n"
+            "about provenance, and it DISARMS a guard: MaterialConfig.refuse_if_unsourced\n"
+            "compares against the exact string `unsourced`, so a downgraded entry\n"
+            "becomes designable again with nothing behind its numbers. A dry run on\n"
+            "epy_timber alone reports 15 such entries -- every one the campaign marked.\n"
+            "\n"
+            "The dry run is unaffected and still worth having -- it reports what it\n"
+            "WOULD change without touching a byte. To write, the serializer has to\n"
+            "emit the leaf layout first; the flag that unlocks --apply is named\n"
+            "after that precondition rather than --force, so it cannot be passed\n"
+            "out of habit."
+        )
 
     libs = [args.lib] if args.lib else LIBS
     grand_changed = grand_skipped = grand_errors = grand_orphans = 0

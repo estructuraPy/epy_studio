@@ -365,6 +365,36 @@ def _doc_ref_suite_root(lib_root: Path) -> Path:
     return lib_root.resolve().parent
 
 
+def doc_ref_declared_series() -> set[str]:
+    """Series the WITHDRAWAL ACT declared, whether or not a catalog carries them.
+
+    ``doc_ref_withdrawn_series`` DROPS a declared series the moment some library
+    catalogs it again, because for the PROSE rule the catalog is the arbiter of
+    what is active. The ID-shape rule needs the opposite reading: a family whose
+    catalogs were ELIMINATED is still a family, and its ids are still ids.
+
+    Without this the rule goes blind to exactly the ids a withdrawal removed.
+    Measured 2026-10-01 on epy_compose: 200 catalogued ids across 79 families,
+    and once the last CSA catalog was gone ``csa`` was not among them, so
+    ``_doc_ref_looks_like_id('csa_s16_2019')`` answered False and a backticked
+    ``csa_s16_2019`` in any ``.md`` passed the id gate in silence. The ledger
+    addition repaired the prose half; this repairs the id half.
+
+    This does NOT widen the rule the way a looser family heuristic would: the
+    vocabulary grows only by lines a withdrawal act wrote, five of them today,
+    and ``is_repetitive`` still has no declared family.
+    """
+    path = Path(__file__).resolve().parent / "withdrawn_standard_series.txt"
+    if not path.exists():
+        return set()
+    declared = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        entry = line.split("#", 1)[0].strip()
+        if entry:
+            declared.add(entry)
+    return declared
+
+
 def doc_ref_catalogued_ids(lib_root: Path) -> set[str]:
     """Every standard id any library in the suite catalogs, plus declared aliases.
 
@@ -398,7 +428,10 @@ def audit_doc_standard_refs(lib_root: Path) -> list[str]:
             "suite. Refusing to report every documented id as unknown -- fix the "
             "catalog layout or this rule's discovery, not the docs."
         ]
-    families = {sid.split("_")[0] for sid in catalogued}
+    # The id rule's vocabulary is the catalogs PLUS the series a withdrawal act
+    # declared: eliminating a family's catalogs must not make its ids invisible.
+    known = catalogued | doc_ref_declared_series()
+    families = {sid.split("_")[0] for sid in known}
 
     violations: list[str] = []
     for path in safe_rglob(lib_root):
@@ -424,7 +457,7 @@ def audit_doc_standard_refs(lib_root: Path) -> list[str]:
             for token in _DOC_REF_TOKEN.findall(line):
                 if token in catalogued:
                     continue
-                if not _doc_ref_looks_like_id(token, families, catalogued):
+                if not _doc_ref_looks_like_id(token, families, known):
                     continue
                 if _doc_ref_is_negative_example(token, line):
                     continue
@@ -547,7 +580,8 @@ def _self_test() -> int:
     if not catalogued:
         print("FAIL: catalog discovery returned nothing")
         return 1
-    families = {sid.split("_")[0] for sid in catalogued}
+    known = catalogued | doc_ref_declared_series()
+    families = {sid.split("_")[0] for sid in known}
 
     # Must be REJECTED: these are not standards, and each one shares only its
     # family word with something catalogued.
@@ -558,10 +592,10 @@ def _self_test() -> int:
 
     failures = []
     for token in reject:
-        if _doc_ref_looks_like_id(token, families, catalogued):
+        if _doc_ref_looks_like_id(token, families, known):
             failures.append(f"{token!r} should NOT be flagged")
     for token in catch:
-        if not _doc_ref_looks_like_id(token, families, catalogued):
+        if not _doc_ref_looks_like_id(token, families, known):
             failures.append(f"{token!r} SHOULD be flagged")
     # Every catalogued id must pass its own rule, or the rule contradicts the
     # catalog it is checking against.
@@ -616,8 +650,12 @@ def _self_test() -> int:
     patterns, hygiene = doc_ref_withdrawn_series(lib)
     if "csa_a23_3" not in patterns:
         failures.append("'csa_a23_3' (withdrawn, zero catalogs) must survive the filter")
-    if "csa_s6" in patterns:
-        failures.append("'csa_s6' must be dropped -- epy_bridges catalogs csa_s6_2019")
+    if "csa_s6" not in patterns:
+        # Until 2026-09-17 epy_bridges catalogued csa_s6_2019, so this series had
+        # to be DROPPED from the prose patterns while the catalog carried it. That
+        # withdrawal removed the last catalog, the ledger gained the line on
+        # 2026-10-01, and the series must now survive the filter like the rest.
+        failures.append("'csa_s6' (withdrawn, zero catalogs) must survive the filter")
 
     # (C) Must-CATCH prose spellings of a withdrawn series.
     pat = _doc_ref_prose_pattern("csa_a23_3")

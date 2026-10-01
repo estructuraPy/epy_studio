@@ -115,12 +115,18 @@ _DOC_REF_YEAR = re.compile(r"_(?:18|19|20)\d{2}$")
 #:   among them, so the gap is live rather than cosmetic. Repairing it means
 #:   RENAMING catalog ids, which breaks every citation that already names them,
 #:   so it belongs to the owner and has to move the callers in the same change.
-#: * TWO cannot be repaired at all yet: ``aya_normas_tecnicas`` and
-#:   ``codigo_electrico_cr``, both in epy_quoting, carry no ``edition_year``, no
-#:   ``source_reference`` and no ``audit_notes`` -- only a description. Appending
-#:   a year would be INVENTING one, which the no-hardcode rule forbids, so the
-#:   missing edition is part of their source gap and not a naming problem. They
-#:   stay until a document supplies it.
+#: * TWO cannot be repaired yet, and their records SAY SO rather than being
+#:   neglected: ``aya_normas_tecnicas`` and ``codigo_electrico_cr``, both in
+#:   epy_quoting, have ``edition_year: null`` on purpose. Each carries a
+#:   ``references.primary`` citation ending "Edición vigente, sin declarar en la
+#:   oferta firmada", a ``references.note`` recording a DATED references.db
+#:   search with the patterns it used, and a description explaining that the
+#:   signed offer and the subcontract both cite the code WITHOUT an edition, so
+#:   registering one would be inventing it. Appending a year to the id would be
+#:   the same invention. They stay until a document supplies the edition, and
+#:   their audit statuses differ for a measured reason: codigo_electrico_cr is
+#:   ``partial`` because that search LOCATED a candidate, aya_normas_tecnicas is
+#:   ``needs_source_verification`` because it returned nothing relevant.
 #: * ONE is correct by design and must NOT be renamed: ``nec_se_hm_15`` is a
 #:   declared ALIAS of ``nec_se_hm_2015`` (epy_concrete, ``edition_year`` 2015),
 #:   and ``doc_ref_catalogued_ids`` adds aliases deliberately because a document

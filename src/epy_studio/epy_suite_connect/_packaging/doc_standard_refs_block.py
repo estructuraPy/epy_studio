@@ -137,9 +137,12 @@ def _doc_ref_is_withdrawal_record(token: str, line: str) -> bool:
 # ---------------------------------------------------------------------------
 # Human-spelling prose rule. The id rule above sees `csa_a23_3_2019`; this one
 # sees "CSA A23.3-19". The discriminator is the SERIES (the id minus its
-# edition year): `csa_s6` is carried by epy_bridges and must never flag, while
-# `csa_a23_3` has zero catalog files and must. Same family, opposite verdicts,
-# so the family can never be the unit of withdrawal.
+# edition year). Until 2026-09-17 `csa_s6` was carried by epy_bridges and had to
+# stay silent while `csa_a23_3` flagged -- same family, opposite verdicts, which is
+# why the family can never be the unit of withdrawal. That withdrawal removed the
+# last catalog carrying it, so `csa_s6` flags like the rest now and the ledger
+# supplies its human spelling. The CATALOG decides and the ledger only supplies
+# vocabulary, so this comment goes stale the day a catalog moves: re-read it then.
 # ---------------------------------------------------------------------------
 
 _DOC_REF_RUN = re.compile(r"[a-z]+|[0-9]+")

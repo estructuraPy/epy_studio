@@ -6,9 +6,16 @@
 # the CATALOG remains the arbiter. Every entry is dropped at load time if any
 # library in the suite currently carries a catalog file for that series, so
 # the day the documents arrive and the catalog returns, the rule goes quiet
-# with NO edit here. Encoding "CSA is forbidden" would have made the ban
-# permanent, which is not what a withdrawal for want of a source means.
+# with NO edit here, which is what a withdrawal for want of a source means.
+#
+# CSA IS THE EXCEPTION, and it is the owner's standing instruction (confirmed
+# 2026-10-01): the CSA standards are ELIMINATED from this suite, not pending
+# documents. No CSA catalog is to return, so every CSA series belongs on this
+# list and the catalog-arbiter escape above must never be read as an invitation.
 csa_a23_3    # withdrawn 2026-08-12 - no primary source on this machine
 csa_s16      # withdrawn 2026-08-12
 csa_o86      # withdrawn 2026-08-12
 csa_s304     # withdrawn 2026-08-12
+csa_s6       # withdrawn 2026-09-17 - no CSA S6 edition was ever on file, only
+             # the 2006-edition S6.1-06 commentary, which cannot substantiate
+             # 2019-edition clauses

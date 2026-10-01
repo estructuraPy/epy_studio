@@ -48,6 +48,7 @@ import json
 import re
 from pathlib import Path
 
+
 # The ONE tree walk, live-loaded from the canonical file next door rather than
 # copied: a walk that dies on a dangling junction takes the whole audit with it,
 # and four call sites drifting apart is how the rule became four rules.
@@ -95,6 +96,33 @@ _DOC_REF_TOKEN = re.compile(r"`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`")
 
 #: Ends in a four-digit year -- the suite's declared id convention.
 _DOC_REF_YEAR = re.compile(r"_(?:18|19|20)\d{2}$")
+
+#: How many catalogued ids the id-shape rule cannot see as ids: 14 of 200,
+#: measured 2026-10-01. Not a tolerance and not a target -- a pin, so the
+#: fifteenth is a failure. The number is suite-wide rather than per-library,
+#: because ``doc_ref_catalogued_ids`` discovers across every sibling checkout,
+#: and it is identical in all 32 copies of this block.
+#:
+#: It is TWO populations, and which one an id belongs to decides its repair:
+#:
+#: * TWELVE are real standards whose edition is not last -- ``nbcc_2020_part4``,
+#:   ``nbcc_2020_part9``, ``aashto_lrfd_2020_bearings``, ``en_1995_1_1_2023_tcc``,
+#:   ``fema_306_1998_infill_struts``, ``iso_9001_2015_clause_8_3`` and
+#:   ``sieca_2011_geometrico`` -- or absent: ``aashto_lrfd_seismic_bridge``,
+#:   ``cfia_seismic_bridge``, ``aya_normas_tecnicas``, ``codigo_electrico_cr``,
+#:   and ``nec_se_hm_15``, whose ``_15`` is a two-digit edition. These fail only
+#:   the year test. Each is a standard no document is audited for, the Canadian
+#:   building code's two parts among them, so the gap is live rather than
+#:   cosmetic. Repairing it means RENAMING catalog ids, which breaks every
+#:   citation that already names them, so it belongs to the owner and has to
+#:   move the citations in the same change.
+#: * TWO are not ids at all, and fail ``_doc_ref_shares_a_stem`` as well as the
+#:   year test: ``defaults``, the stem of a ``defaults.epyson`` sitting inside a
+#:   standards directory, and ``EN 1996-1-1:2022``, an alias that is a human
+#:   spelling with spaces, dots and a colon. These are DISCOVERY defects --
+#:   renaming them would be the wrong repair, because neither belongs in the
+#:   catalogued set at all.
+_DOC_REF_UNCOVERED_IDS = 14
 
 
 #: A negative EXAMPLE of the naming convention, not a citation: the twelve
@@ -599,9 +627,39 @@ def _self_test() -> int:
             failures.append(f"{token!r} SHOULD be flagged")
     # Every catalogued id must pass its own rule, or the rule contradicts the
     # catalog it is checking against.
-    for sid in sorted(catalogued):
-        if sid not in catalogued:
-            failures.append(f"catalogued {sid!r} fails its own check")
+    #
+    # This loop used to read `for sid in sorted(catalogued): if sid not in
+    # catalogued`, which is false by construction: it never ran. Repaired to
+    # call the rule, it reports 14 of 200 catalogued ids the rule cannot see as
+    # ids -- and none of them is a bug in the rule. _DOC_REF_YEAR is anchored at
+    # the END, so the declared convention is that an id ENDS in _YYYY. See
+    # _DOC_REF_UNCOVERED_IDS above for the split that decides the repair: twelve
+    # are real standards outside the convention and want RENAMING together with
+    # their citations, and two are not ids at all and want removing from
+    # discovery.
+    #
+    # So this neither widens the rule -- that is the `is_repetitive` trap the
+    # family check exists to avoid -- nor drops the expectation, which would be
+    # making the fixture agree with the rule by lowering it. It PRINTS the
+    # measurement and fails only on a REGRESSION past the count measured on
+    # 2026-10-01, the same way the prose synthesizer below prints its ratio and
+    # holds a floor. Fixing the 14 means renaming catalog ids, which breaks
+    # every citation already naming them, so it is the owner's change and it has
+    # to move the citations with it.
+    uncovered = [
+        sid for sid in sorted(catalogued)
+        if not _doc_ref_looks_like_id(sid, families, known)
+    ]
+    print(f"catalogued ids passing their own rule: "
+          f"{len(catalogued) - len(uncovered)}/{len(catalogued)}; "
+          f"outside the audit: {uncovered}")
+    if len(uncovered) > _DOC_REF_UNCOVERED_IDS:
+        failures.append(
+            f"{len(uncovered)} catalogued ids fail their own check, up from "
+            f"{_DOC_REF_UNCOVERED_IDS} measured 2026-10-01 -- a catalog id that "
+            f"the rule cannot see is an id no document is audited for: "
+            f"{sorted(set(uncovered))}"
+        )
 
     # ------------------------------------------------------------------
     # Prose rule (human spelling), both directions.
@@ -672,7 +730,28 @@ def _self_test() -> int:
     prefix_pat = _doc_ref_prose_pattern("csa_a23")
     if prefix_pat is not None and prefix_pat.search("CSA A23.3"):
         failures.append("prefix trap: a csa_a23 pattern must NOT match 'CSA A23.3'")
+    # csa_s6's own pattern was synthesized here and never asserted: the line
+    # testing `pat` below is the csa_a23_3 cross-family pin, a different and
+    # also necessary check, so the POSITIVE half was missing -- the series the
+    # 2026-09-17 withdrawal added to the ledger had no pin proving its own
+    # prose is caught, in the one function that pins this rule.
     s6_pat = _doc_ref_prose_pattern("csa_s6")
+    if s6_pat is None:
+        failures.append("'csa_s6' must synthesize a prose pattern")
+    else:
+        for prose in ("CSA S6-19", "CSA S6", "CSA-S6-2019", "csa s6"):
+            if not s6_pat.search(prose):
+                failures.append(f"prose {prose!r} SHOULD match csa_s6")
+        # The discrimination that matters most: S6.1-06 is the COMMENTARY, a
+        # different document, and the ledger's own line says it "cannot
+        # substantiate 2019-edition clauses" -- it is the only CSA S6 artifact
+        # on this machine. A pattern that swallowed it would flag a citation
+        # of the one thing that IS on file.
+        if s6_pat.search("CSA S6.1-06"):
+            failures.append(
+                "'CSA S6.1-06' is the commentary, not the standard, and must "
+                "NOT match csa_s6"
+            )
     if pat.search("CSA S6-19"):
         failures.append("'CSA S6-19' must NOT match csa_a23_3")
     # The Spanish-prose minefield: word-series never synthesize a pattern, so

@@ -114,6 +114,26 @@ def _doc_ref_is_negative_example(token: str, line: str) -> bool:
     return re.search(pattern, line, re.IGNORECASE) is not None
 
 
+#: A WITHDRAWAL RECORD names the id it retires -- that is what the record is
+#: FOR. This rule's own message says the text "still advertises it", so its
+#: subject is an advertisement, and a record is the opposite of one. Kept as
+#: narrow as the counter-example test above: a withdrawal marker on the SAME
+#: line as the token. The case this exists for is epy_bridges' STANDARDS.md
+#: ("**WITHDRAWN 2026-09-17** -- `csa_s6_2019` ... Retired suite-wide"), which
+#: had kept that repo's housekeeper red since the very commit that performed
+#: the withdrawal.
+_DOC_REF_WITHDRAWAL = re.compile(
+    r"\b(?:withdrawn|retired|retirad[oa])\b", re.IGNORECASE
+)
+
+
+def _doc_ref_is_withdrawal_record(token: str, line: str) -> bool:
+    """Whether ``line`` records ``token``'s withdrawal instead of advertising it."""
+    if token not in line:
+        return False
+    return _DOC_REF_WITHDRAWAL.search(line) is not None
+
+
 # ---------------------------------------------------------------------------
 # Human-spelling prose rule. The id rule above sees `csa_a23_3_2019`; this one
 # sees "CSA A23.3-19". The discriminator is the SERIES (the id minus its
@@ -383,6 +403,13 @@ def audit_doc_standard_refs(lib_root: Path) -> list[str]:
             continue
         if any(part in _DOC_REF_SKIP for part in path.parts):
             continue
+        # The PROSE rule has exempted CHANGELOG since it landed, for the
+        # reason stated at _DOC_REF_PROSE_EXEMPT_NAMES: a changelog is
+        # history and "Removed CSA A23.3 support" MUST name it. The ID rule
+        # never applied the same exemption, so one half of one audit treated
+        # the same file as history and the other as an advertisement.
+        if any(path.name.lower().startswith(n) for n in _DOC_REF_PROSE_EXEMPT_NAMES):
+            continue
         if any(frag in path.as_posix() for frag in ("docs/validations/",)):
             continue
         try:
@@ -397,6 +424,8 @@ def audit_doc_standard_refs(lib_root: Path) -> list[str]:
                 if not _doc_ref_looks_like_id(token, families, catalogued):
                     continue
                 if _doc_ref_is_negative_example(token, line):
+                    continue
+                if _doc_ref_is_withdrawal_record(token, line):
                     continue
                 seen.setdefault(token, lineno)
         rel = path.relative_to(lib_root).as_posix()
@@ -493,10 +522,23 @@ def _self_test() -> int:
     that decides what the whole suite's documentation may say should not be the
     one unverified thing in the chain.
     """
-    here = Path(__file__).resolve().parent.parent.parent
-    lib = next((d for d in here.iterdir() if (d / "src").is_dir()), None)
+    # The library is an ANCESTOR now: this block lives at
+    # <repo>/src/<pkg>/epy_suite_connect/_packaging/. Until 2026-09 the
+    # blocks sat in a shared _packaging/_tooling/ at the suite root, where
+    # the libraries were SIBLINGS -- so the old lookup walked three levels
+    # up and scanned children. After the relocation it found nothing and
+    # returned 1 WITHOUT RUNNING A SINGLE CHECK, which is why the stale
+    # rationale below went unnoticed. Both layouts are handled.
+    here = Path(__file__).resolve()
+    lib = next((d for d in here.parents if (d / "src").is_dir()), None)
     if lib is None:
-        print("FAIL: no library checkout found next to _packaging")
+        beside = here.parent.parent.parent
+        lib = next(
+            (d for d in beside.iterdir() if d.is_dir() and (d / "src").is_dir()),
+            None,
+        )
+    if lib is None:
+        print("FAIL: no library checkout found above or beside _packaging")
         return 1
     catalogued = doc_ref_catalogued_ids(lib)
     if not catalogued:

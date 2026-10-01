@@ -49,43 +49,33 @@ CANONICAL_FIRST = (
 )
 
 # Conservative Spanish→English dictionary — only unambiguous safe replacements
-SPANISH_TO_ENGLISH = {
-    "vivienda": "residential", "concreto": "concrete", "acero": "steel",
-    "viga": "beam", "columna": "column", "muro": "wall", "losa": "slab",
-    "cimentación": "foundation", "Análisis": "Analysis", "análisis": "analysis",
-    "cálculo": "calculation", "Cálculo": "Calculation",
-    "diseño": "design", "Diseño": "Design", "para": "for", "Para": "For",
-    "por": "per", "Por": "Per", "que": "that", "los": "the", "las": "the",
-    "del": "of the", "sin": "without", "Sin": "Without",
-    "techo": "roof", "piso": "floor", "pared": "wall",
-    "conexión": "connection", "Conexión": "Connection",
-    "construcción": "construction", "Construcción": "Construction",
-    "Hormigón": "Concrete", "hormigón": "concrete",
-    "Armado": "Reinforced", "armado": "reinforced",
-    "Norma": "Standard", "norma": "standard",
-    "Estructuras": "Structures", "estructuras": "structures",
-    "Estructura": "Structure", "estructura": "structure",
-    "Codigo": "Code", "Código": "Code", "codigo": "code", "código": "code",
-    "historico": "historical", "histórico": "historical",
-    "evaluacion": "evaluation", "evaluación": "evaluation",
-    "existentes": "existing", "construidas": "built", "construido": "built",
-    "bajo": "under", "nuevo": "new", "nueva": "new", "apto": "suitable",
-    "maximo": "maximum", "máximo": "maximum",
-    "distincion": "distinction", "distinción": "distinction",
-    "diametro": "diameter", "diámetro": "diameter",
-    "barra": "bar", "barras": "bars",
-    "deformacion": "strain", "deformación": "strain",
-    "Deformacion": "Strain", "Deformación": "Strain",
-    "unitaria": "unit", "ultima": "ultimate", "última": "ultimate",
-    "Gancho": "Hook", "gancho": "hook",
-    "sismico": "seismic", "sísmico": "seismic", "sísmica": "seismic", "sismica": "seismic",
-    "estribos": "stirrups", "Estribos": "Stirrups",
-    "porticos": "frames", "pórticos": "frames",
-    "especiales": "special", "detallado": "detailing",
-    "mejorado": "improved", "sobre": "over",
-    "Título": "Title", "Titulo": "Title",
-    "básico": "basic", "Básico": "Basic", "basico": "basic",
-}
+# REMOVED 2026-09-30 -- a Spanish->English word map and the recursive
+# function that applied it to EVERY string of EVERY epyson.
+#
+# The comment here called the replacements "only unambiguous safe", and they
+# were not. A regex substitution over data values cannot tell a proper noun
+# or a CITATION from free prose, so it rewrote the names of codes:
+#
+#     "Codigo" -> "Code"          Codigo Sismico de Costa Rica became
+#                                  Code Sismico de Costa Rica
+#     "Titulo" -> "Title"         the NSR-10's own divisions; references.db
+#                                  id 7037 page 1 prints TITULO A
+#     "estribos" -> "stirrups"    inside a Spanish sentence
+#     "Construccion" -> "Construction"
+#
+# Half-translated, because the map carried "Codigo" and not capitalised
+# "Sismico". 108 occurrences measured across 36 files in 18 repos, and that
+# was a floor: it also carried Hormigon->Concrete, conexion->connection,
+# Norma->Standard, barra->bar, deformacion->strain, Gancho->Hook.
+#
+# This tool's declared job, per its own module docstring, is id / version /
+# description / audit_status / unit_system canonicalisation. Translating
+# content was never part of it. NOT narrowed to a field allowlist, because
+# such a list is a guess about field names that do not exist yet; a
+# canonicaliser that renames content is a different tool.
+#
+# Inventory and the restored citations: _coordination b13e392 and
+# plans/WORKORDER_epyson_citation_corruption_2026-09-30.md.
 
 
 def detect_id_field(data: dict) -> tuple[str | None, str | None]:
@@ -216,30 +206,6 @@ def normalize_audit_status(value: Any) -> str:
     return "needs_source_verification"
 
 
-def fix_spanish_strings(obj: Any) -> tuple[Any, int]:
-    fixes = 0
-    if isinstance(obj, dict):
-        new = {}
-        for k, v in obj.items():
-            new_v, f = fix_spanish_strings(v)
-            fixes += f
-            new[k] = new_v
-        return new, fixes
-    if isinstance(obj, list):
-        out = []
-        for v in obj:
-            new_v, f = fix_spanish_strings(v)
-            fixes += f
-            out.append(new_v)
-        return out, fixes
-    if isinstance(obj, str):
-        original = obj
-        for es, en in SPANISH_TO_ENGLISH.items():
-            obj = re.sub(rf"\b{re.escape(es)}\b", en, obj)
-        if obj != original:
-            fixes += 1
-        return obj, fixes
-    return obj, fixes
 
 
 def canonical_order(data: dict) -> "OrderedDict[str, Any]":
@@ -295,10 +261,6 @@ def migrate_file(path: Path, lib: str) -> tuple[dict | None, list[str]]:
         if re.search(r":\s*-?\d", text_body):
             data["unit_system"] = infer_unit_system(data)
             notes.append(f"add unit_system={data['unit_system']}")
-
-    data, fixes = fix_spanish_strings(data)
-    if fixes:
-        notes.append(f"english strings fixed ({fixes})")
 
     if family == "standard_id":
         if "country" not in data:

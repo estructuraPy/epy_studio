@@ -105,17 +105,28 @@ _DOC_REF_YEAR = re.compile(r"_(?:18|19|20)\d{2}$")
 #:
 #: It is TWO populations, and which one an id belongs to decides its repair:
 #:
-#: * TWELVE are real standards whose edition is not last -- ``nbcc_2020_part4``,
+#: * NINE are real standards whose edition is not last -- ``nbcc_2020_part4``,
 #:   ``nbcc_2020_part9``, ``aashto_lrfd_2020_bearings``, ``en_1995_1_1_2023_tcc``,
 #:   ``fema_306_1998_infill_struts``, ``iso_9001_2015_clause_8_3`` and
-#:   ``sieca_2011_geometrico`` -- or absent: ``aashto_lrfd_seismic_bridge``,
-#:   ``cfia_seismic_bridge``, ``aya_normas_tecnicas``, ``codigo_electrico_cr``,
-#:   and ``nec_se_hm_15``, whose ``_15`` is a two-digit edition. These fail only
-#:   the year test. Each is a standard no document is audited for, the Canadian
-#:   building code's two parts among them, so the gap is live rather than
-#:   cosmetic. Repairing it means RENAMING catalog ids, which breaks every
-#:   citation that already names them, so it belongs to the owner and has to
-#:   move the citations in the same change.
+#:   ``sieca_2011_geometrico`` -- or absent: ``aashto_lrfd_seismic_bridge`` and
+#:   ``cfia_seismic_bridge``. These fail only the year test, and each declares
+#:   the year its own record needs, so the repair invents nothing. Each is a
+#:   standard no document is audited for, the Canadian building code's two parts
+#:   among them, so the gap is live rather than cosmetic. Repairing it means
+#:   RENAMING catalog ids, which breaks every citation that already names them,
+#:   so it belongs to the owner and has to move the callers in the same change.
+#: * TWO cannot be repaired at all yet: ``aya_normas_tecnicas`` and
+#:   ``codigo_electrico_cr``, both in epy_quoting, carry no ``edition_year``, no
+#:   ``source_reference`` and no ``audit_notes`` -- only a description. Appending
+#:   a year would be INVENTING one, which the no-hardcode rule forbids, so the
+#:   missing edition is part of their source gap and not a naming problem. They
+#:   stay until a document supplies it.
+#: * ONE is correct by design and must NOT be renamed: ``nec_se_hm_15`` is a
+#:   declared ALIAS of ``nec_se_hm_2015`` (epy_concrete, ``edition_year`` 2015),
+#:   and ``doc_ref_catalogued_ids`` adds aliases deliberately because a document
+#:   citing one names a real file. The rule simply cannot shape-check a
+#:   two-digit-edition alias. Renaming it would break the spelling the loader
+#:   itself accepts.
 #: * TWO are not ids at all, and fail ``_doc_ref_shares_a_stem`` as well as the
 #:   year test: ``defaults``, the stem of a ``defaults.epyson`` sitting inside a
 #:   standards directory, and ``EN 1996-1-1:2022``, an alias that is a human

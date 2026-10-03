@@ -97,49 +97,56 @@ _DOC_REF_TOKEN = re.compile(r"`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`")
 #: Ends in a four-digit year -- the suite's declared id convention.
 _DOC_REF_YEAR = re.compile(r"_(?:18|19|20)\d{2}$")
 
-#: How many catalogued ids the id-shape rule cannot see as ids: 14 of 200,
-#: measured 2026-10-01. Not a tolerance and not a target -- a pin, so the
-#: fifteenth is a failure. The number is suite-wide rather than per-library,
-#: because ``doc_ref_catalogued_ids`` discovers across every sibling checkout,
-#: and it is identical in all 32 copies of this block.
+#: How many catalogued ids the id-shape rule cannot see as ids: 6 of 200,
+#: measured 2026-10-02 by this file's own self-test ("catalogued ids passing
+#: their own rule: 194/200"), down from 14 on 2026-10-01. Not a tolerance and
+#: not a target -- a pin, so the SEVENTH is a failure. The number is suite-wide
+#: rather than per-library, because ``doc_ref_catalogued_ids`` discovers across
+#: every sibling checkout, and it is identical in all 32 copies of this block.
 #:
-#: It is TWO populations, and which one an id belongs to decides its repair:
+#: EIGHT were repaired on 2026-10-02, with all 828 of their citations moved in
+#: the same change: ``nbcc_part4_2020``, ``nbcc_part9_2020``,
+#: ``aashto_lrfd_bearings_2020``, ``fema_306_infill_struts_1998``,
+#: ``sieca_geometrico_2011``, ``aashto_lrfd_seismic_bridge_2011``,
+#: ``cfia_seismic_bridge_2012`` and ``en_1995_1_1_tcc_2004``. Every year came
+#: from the record's own data, never from the renamer: seven from their
+#: ``edition_year``, and the last from the document ON FILE. That one is the
+#: instructive case -- its ``reference`` named a 2023 edition, while its own
+#: ``audit_notes`` said that edition is not held and the reference index
+#: confirmed it under eleven spellings, so the year came from the printing that
+#: IS held (EN 1995-1-1:2004+A1, June 2008) and three further fields were
+#: corrected to name it. Fixing an id's FORM while leaving its CLAIM false is
+#: not a repair.
 #:
-#: * NINE are real standards whose edition is not last -- ``nbcc_2020_part4``,
-#:   ``nbcc_2020_part9``, ``aashto_lrfd_2020_bearings``, ``en_1995_1_1_2023_tcc``,
-#:   ``fema_306_1998_infill_struts``, ``iso_9001_2015_clause_8_3`` and
-#:   ``sieca_2011_geometrico`` -- or absent: ``aashto_lrfd_seismic_bridge`` and
-#:   ``cfia_seismic_bridge``. These fail only the year test, and each declares
-#:   the year its own record needs, so the repair invents nothing. Each is a
-#:   standard no document is audited for, the Canadian building code's two parts
-#:   among them, so the gap is live rather than cosmetic. Repairing it means
-#:   RENAMING catalog ids, which breaks every citation that already names them,
-#:   so it belongs to the owner and has to move the callers in the same change.
-#: * TWO cannot be repaired yet, and their records SAY SO rather than being
-#:   neglected: ``aya_normas_tecnicas`` and ``codigo_electrico_cr``, both in
-#:   epy_quoting, have ``edition_year: null`` on purpose. Each carries a
-#:   ``references.primary`` citation ending "Edición vigente, sin declarar en la
-#:   oferta firmada", a ``references.note`` recording a DATED references.db
-#:   search with the patterns it used, and a description explaining that the
-#:   signed offer and the subcontract both cite the code WITHOUT an edition, so
-#:   registering one would be inventing it. Appending a year to the id would be
-#:   the same invention. They stay until a document supplies the edition, and
-#:   their audit statuses differ for a measured reason: codigo_electrico_cr is
-#:   ``partial`` because that search LOCATED a candidate, aya_normas_tecnicas is
-#:   ``needs_source_verification`` because it returned nothing relevant.
+#: What REMAINS is three populations, and which one an id belongs to decides
+#: whether it can be repaired at all:
+#:
+#: * THREE want the same rename and cannot have it yet, all in epy_quoting.
+#:   ``iso_9001_2015_clause_8_3`` is resolved by LIVE code, in a file that
+#:   currently carries another thread's uncommitted edits -- renaming it there
+#:   would mix the two changes. ``aya_normas_tecnicas`` and
+#:   ``codigo_electrico_cr`` have ``edition_year: null`` on purpose: each
+#:   carries a ``references.primary`` citation ending "Edicion vigente, sin
+#:   declarar en la oferta firmada" and a ``references.note`` recording a DATED
+#:   references.db search with the patterns it used, because the signed offer
+#:   and the subcontract both cite the code WITHOUT an edition, so registering
+#:   one would be inventing it. Their audit statuses differ for a measured
+#:   reason: codigo_electrico_cr is ``partial`` because that search LOCATED a
+#:   candidate, aya_normas_tecnicas is ``needs_source_verification`` because it
+#:   returned nothing relevant.
 #: * ONE is correct by design and must NOT be renamed: ``nec_se_hm_15`` is a
-#:   declared ALIAS of ``nec_se_hm_2015`` (epy_concrete, ``edition_year`` 2015),
-#:   and ``doc_ref_catalogued_ids`` adds aliases deliberately because a document
-#:   citing one names a real file. The rule simply cannot shape-check a
-#:   two-digit-edition alias. Renaming it would break the spelling the loader
-#:   itself accepts.
+#:   declared ALIAS of ``nec_se_hm_2015`` (epy_concrete, ``edition_year``
+#:   2015), and ``doc_ref_catalogued_ids`` adds aliases deliberately because a
+#:   document citing one names a real file. The rule simply cannot shape-check
+#:   a two-digit-edition alias. Renaming it would break the spelling the
+#:   loader itself accepts.
 #: * TWO are not ids at all, and fail ``_doc_ref_shares_a_stem`` as well as the
-#:   year test: ``defaults``, the stem of a ``defaults.epyson`` sitting inside a
-#:   standards directory, and ``EN 1996-1-1:2022``, an alias that is a human
+#:   year test: ``defaults``, the stem of a ``defaults.epyson`` sitting inside
+#:   a standards directory, and ``EN 1996-1-1:2022``, an alias that is a human
 #:   spelling with spaces, dots and a colon. These are DISCOVERY defects --
 #:   renaming them would be the wrong repair, because neither belongs in the
 #:   catalogued set at all.
-_DOC_REF_UNCOVERED_IDS = 14
+_DOC_REF_UNCOVERED_IDS = 6
 
 
 #: A negative EXAMPLE of the naming convention, not a citation: the twelve
@@ -647,22 +654,24 @@ def _self_test() -> int:
     #
     # This loop used to read `for sid in sorted(catalogued): if sid not in
     # catalogued`, which is false by construction: it never ran. Repaired to
-    # call the rule, it reports 14 of 200 catalogued ids the rule cannot see as
-    # ids -- and none of them is a bug in the rule. _DOC_REF_YEAR is anchored at
-    # the END, so the declared convention is that an id ENDS in _YYYY. See
-    # _DOC_REF_UNCOVERED_IDS above for the split that decides the repair: twelve
-    # are real standards outside the convention and want RENAMING together with
-    # their citations, and two are not ids at all and want removing from
-    # discovery.
+    # call the rule, it reported 14 of 200 catalogued ids the rule cannot see
+    # as ids -- and none of them was a bug in the rule. _DOC_REF_YEAR is
+    # anchored at the END, so the declared convention is that an id ENDS in
+    # _YYYY. Eight of those fourteen were renamed on 2026-10-02 together with
+    # their 828 citations, which is what a repair of this population costs and
+    # why it needed the owner's word; it now reports 6. See
+    # _DOC_REF_UNCOVERED_IDS above for the split that decides the remaining
+    # six: three are real standards blocked on a file another thread holds or
+    # on a document that declares no edition, one is a deliberate alias, and
+    # two are not ids at all and want removing from discovery.
     #
     # So this neither widens the rule -- that is the `is_repetitive` trap the
     # family check exists to avoid -- nor drops the expectation, which would be
     # making the fixture agree with the rule by lowering it. It PRINTS the
     # measurement and fails only on a REGRESSION past the count measured on
-    # 2026-10-01, the same way the prose synthesizer below prints its ratio and
-    # holds a floor. Fixing the 14 means renaming catalog ids, which breaks
-    # every citation already naming them, so it is the owner's change and it has
-    # to move the citations with it.
+    # 2026-10-02, the same way the prose synthesizer below prints its ratio and
+    # holds a floor. The pin moves DOWN as the population is repaired, because
+    # a ceiling left above the real count lets the repair regress in silence.
     uncovered = [
         sid for sid in sorted(catalogued)
         if not _doc_ref_looks_like_id(sid, families, known)

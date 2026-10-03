@@ -234,7 +234,7 @@
           ]
         ],
         [
-          "cfia_seismic_bridge.epyson",
+          "cfia_seismic_bridge_2012.epyson",
           [
             "description",
             "audit_notes",
@@ -288,7 +288,7 @@
           ]
         ],
         [
-          "fema_306_1998_infill_struts.epyson",
+          "fema_306_infill_struts_1998.epyson",
           [
             "audit_notes",
             "metadata.note"
@@ -379,7 +379,7 @@
           ]
         ],
         [
-          "sieca_2011_geometrico.epyson",
+          "sieca_geometrico_2011.epyson",
           [
             "description",
             "name",
@@ -522,7 +522,7 @@
           ]
         ],
         [
-          "nbcc_2020_part4.epyson",
+          "nbcc_part4_2020.epyson",
           [
             "superseded_note"
           ]
@@ -1037,7 +1037,7 @@
           ]
         ],
         [
-          "nbcc_2020_part9.epyson",
+          "nbcc_part9_2020.epyson",
           [
             "superseded_note",
             "wind_parameters.coverage_note",
@@ -1465,7 +1465,7 @@
           ]
         ],
         [
-          "nbcc_2020_part4.epyson",
+          "nbcc_part4_2020.epyson",
           [
             "superseded_note"
           ]

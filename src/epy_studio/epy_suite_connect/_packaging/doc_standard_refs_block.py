@@ -196,13 +196,46 @@ _DOC_REF_UNCOVERED_IDS = 6
 #: counter-example is exempt. The context test is deliberately narrow: the
 #: word "not"/"never"/"rechazado"/"rejected" adjacent to the backticked token.
 def _doc_ref_is_negative_example(token: str, line: str) -> bool:
-    """Whether ``line`` uses ``token`` as a naming-rule counter-example."""
+    """Whether ``line`` uses ``token`` as a naming-rule counter-example.
+
+    The negation must come AFTER the token and inside the SAME sentence; what
+    may sit between them is punctuation and further backticked tokens, which is
+    what a list of wrong spellings looks like. ``line`` may carry one wrap,
+    because prose wraps: the three real counter-examples in this suite were all
+    missed by a stricter reading, and each for a different reason --
+
+        Two-digit shorthand (`aci_318_25`, `aisc_360_22`) is rejected by ...
+          a closing PAREN sat between the token and the negation, and for the
+          first token a whole second token did;
+
+        ... `asce_10_2015` are accepted; `asce_10_15` is
+        rejected by `validate_standard_id`.
+          the negation landed on the NEXT line.
+
+    The span is cut at the first sentence terminator, so a negation that
+    belongs to a LATER sentence cannot exempt an id the earlier one advertises.
+    """
+    neg = r"(?:es\s+rechazad|is\s+reject|son\s+rechazad|are\s+reject)"
     quoted = re.escape(token)
-    pattern = (
-        r"(?:\bnot\s+`" + quoted + r"`|\bnever\s+`" + quoted + r"`"
-        r"|`" + quoted + r"`\s+(?:es\s+rechazad|is\s+reject))"
-    )
-    return re.search(pattern, line, re.IGNORECASE) is not None
+    antes = r"(?:\bnot\s+`" + quoted + r"`|\bnever\s+`" + quoted + r"`)"
+    if re.search(antes, line, re.IGNORECASE):
+        return True
+    m = re.search(r"`" + quoted + r"`", line)
+    if m is None:
+        return False
+    cola = line[m.end():]
+    corte = re.search(r"[.:;](?:\s|$)", cola)
+    if corte is not None:
+        # a wrapped sentence ends on the next line, so a terminator followed by
+        # a newline does NOT close it; anything else does.
+        if not cola[corte.start():].startswith((".\n", ":\n", ";\n")):
+            cola = cola[:corte.start()]
+    if not re.search(neg, cola, re.IGNORECASE):
+        return False
+    # only punctuation, whitespace and further backticked tokens may separate
+    # the token from its negation
+    entre = re.split(neg, cola, maxsplit=1, flags=re.IGNORECASE)[0]
+    return re.fullmatch(r"(?:\s|[(),;:/\u2014-]|`[^`]*`)*", entre) is not None
 
 
 #: A WITHDRAWAL RECORD names the id it retires -- that is what the record is

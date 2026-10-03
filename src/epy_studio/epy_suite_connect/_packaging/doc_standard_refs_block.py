@@ -445,6 +445,35 @@ def _doc_ref_looks_like_id(token: str, families: set[str], catalogued: set[str])
         return False
     if not (_DOC_REF_YEAR.search(token) or all(s.isdigit() for s in segments[1:])):
         return False
+    # A TWO-SEGMENT id has no segment to share but the year, so the
+    # shared-stem test below is unsatisfiable for that shape by construction:
+    # `nds_1899` fails it while `aci_318_1899` passes, purely on segment
+    # count. Found by PLANTING tokens, 2026-10-03, after the audit was wired
+    # into a library that held this block and called it zero times:
+    #
+    #     aci_318_1899  flagged     nds_1899   NOT flagged
+    #     aisc_360_1899 flagged     cscr_1899  NOT flagged
+    #
+    # Each of those is a wrong id in a catalogued family with a well-formed
+    # year, and 34 of the 200 catalogued ids live in the two-segment shape, so
+    # across a sixth of the catalog the rule could confirm a spelling it
+    # already knew and could not question a new one.
+    #
+    # The repair stays inside the vocabulary the catalogs define by using the
+    # SHAPE as the second signal -- the only thing this shape has. `nds` is
+    # catalogued as `nds_2018`, so `nds_1899` is recognisable; `asce` never
+    # uses the form (`asce_7_2022`, `asce_41_2017`), so `asce_1899` stays
+    # invisible, which is honest rather than convenient. It can only ADD True
+    # results, so the uncovered count can only shrink, and it cannot reach the
+    # `is_repetitive` trap: that token carries no digit and dies at the first
+    # test above.
+    if len(segments) == 2 and _DOC_REF_YEAR.search(token):
+        return any(
+            s.split("_")[0] == segments[0]
+            and len(s.split("_")) == 2
+            and _DOC_REF_YEAR.search(s)
+            for s in catalogued
+        )
     # Family alone is too weak: `fema` and `cfia` are catalogued families, so
     # `fema_461` (a loading protocol) and `cfia_cr_2024` (a title block) both
     # passed. Demand a SECOND shared segment with something catalogued.

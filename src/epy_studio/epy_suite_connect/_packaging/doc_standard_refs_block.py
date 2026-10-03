@@ -153,13 +153,12 @@ _DOC_REF_YEAR = re.compile(r"_(?:18|19|20)\d{2}$")
 #: tokens rather than reading the regex: ``aci_318_1899`` and ``aisc_360_1899``
 #: are flagged, while ``nds_1899``, ``cscr_1899``, ``en_1899`` and
 #: ``asce_1899`` are NOT, although each is a wrong id in a catalogued family
-#: with a
-#: well-formed year. A two-segment token is only recognised when the id itself
-#: is catalogued (``nds_2018`` True, ``nds_1899`` False), and 34 of the 200
-#: catalogued ids have that two-segment shape, so across a sixth of the catalog
-#: the rule can confirm a spelling it already knows and cannot question a new
-#: one. Widening the shape test is not the repair to reach for -- that is the
-#: ``is_repetitive`` trap the family check exists to avoid -- and the gap
+#: with a well-formed year. A two-segment token is only recognised when the id
+#: itself is catalogued (``nds_2018`` True, ``nds_1899`` False), and 34 of the
+#: 200 catalogued ids have that two-segment shape, so across a sixth of the
+#: catalog the rule can confirm a spelling it already knows and cannot question
+#: a new one. Widening the shape test is not the repair to reach for -- that is
+#: the ``is_repetitive`` trap the family check exists to avoid -- and the gap
 #: belongs to all 32 copies, so it wants its own unit. Found by planting, in
 #: epy_studio, after that library turned out to hold this block and call it
 #: zero times.

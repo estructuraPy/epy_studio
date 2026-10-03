@@ -852,6 +852,42 @@ failure, because a silently skipped rule is worse than none.
 """
 
 
+# --- documented standard ids (referential integrity) -------------------------
+# Vendored here like everywhere else and never invoked until 2026-10-02: this
+# housekeeper named the block ZERO times while epy_timber's and epy_bridges'
+# name it ten, so no standards-prose rule had ever run in this repo. A block
+# present is not a block called.
+_DOC_REFS_BLOCK = _SUITE_TOOLING / "doc_standard_refs_block.py"
+if _DOC_REFS_BLOCK.exists():
+    import importlib.util as _ilu_dr
+
+    _spec_dr = _ilu_dr.spec_from_file_location("_doc_standard_refs_block", _DOC_REFS_BLOCK)
+    _mod_dr = _ilu_dr.module_from_spec(_spec_dr)
+    _spec_dr.loader.exec_module(_mod_dr)
+    audit_doc_standard_refs_strict = _mod_dr.audit_doc_standard_refs_strict
+    report_doc_standard_refs = _mod_dr.report_doc_standard_refs
+else:  # pragma: no cover - only when the tooling repo is absent
+
+    def audit_doc_standard_refs_strict(lib_root):
+        if not _SUITE_TOOLING.is_dir():
+            return []
+        return [
+            "doc-standard-refs: doc_standard_refs_block.py is missing while the "
+            "rest of the tooling is present, so documented standard ids were NOT "
+            "checked. Loud on purpose: a silently skipped rule is worse than none."
+        ]
+
+    def report_doc_standard_refs(violations):
+        print("\n" + "=" * 70)
+        print("  DOCUMENTED STANDARD IDS (referential integrity)")
+        print("=" * 70)
+        if not violations:
+            print("  OK - every documented standard id names a catalogued document.")
+            return
+        for v in violations:
+            print(f"    - {v}")
+
+
 _SOURCE_IDS_BLOCK = (
     Path(__file__).resolve().parent / "src" / "epy_studio" / "epy_suite_connect" / "_packaging"
     / "source_ids_block.py"
@@ -1280,6 +1316,13 @@ def main() -> None:
     unit_suffix_violations = audit_unit_suffixes(LIB_ROOT)
     report_unit_suffixes(unit_suffix_violations)
 
+    # Documented standard ids must name a catalogued document, and prose must
+    # not cite a withdrawn series. Proven live here rather than assumed: with a
+    # probe markdown naming `aci_318_1899` the audit reports it, and with
+    # `CSA A23.3-19` it reports the withdrawn series by name.
+    doc_ref_violations = audit_doc_standard_refs_strict(LIB_ROOT)
+    report_doc_standard_refs(doc_ref_violations)
+
     if args.strict and (
         module_mirror_violations or tutorials_layout_violations
         or skip_violations
@@ -1289,6 +1332,7 @@ def main() -> None:
         or v_selfcomparison_violations
         or display_violations
         or unit_suffix_violations
+        or doc_ref_violations
     ):
         sys.exit(1)
 

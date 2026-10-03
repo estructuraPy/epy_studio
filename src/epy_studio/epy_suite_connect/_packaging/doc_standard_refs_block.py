@@ -118,14 +118,18 @@ _DOC_REF_YEAR = re.compile(r"_(?:18|19|20)\d{2}$")
 #: corrected to name it. Fixing an id's FORM while leaving its CLAIM false is
 #: not a repair.
 #:
-#: What REMAINS is three populations, and which one an id belongs to decides
-#: whether it can be repaired at all:
+#: What REMAINS on origin is three populations totalling FIVE, and which one an
+#: id belongs to decides whether it can be repaired at all:
 #:
-#: * THREE want the same rename and cannot have it yet, all in epy_quoting.
-#:   ``iso_9001_2015_clause_8_3`` is resolved by LIVE code, in a file that
-#:   currently carries another thread's uncommitted edits -- renaming it there
-#:   would mix the two changes. ``aya_normas_tecnicas`` and
-#:   ``codigo_electrico_cr`` have ``edition_year: null`` on purpose: each
+#: * TWO want the same rename and cannot have it, both in epy_quoting, and
+#:   their blocker is a DOCUMENT rather than a dirty file. Renaming either
+#:   would mean ADDING a year no document supplies, and an edition without a
+#:   source refuses like any other value without one: two sessions searched
+#:   the index independently, by title and several spellings, and ISO 9001 and
+#:   the AyA norms return nothing, while the only Costa Rican electrical-code
+#:   candidate names neither RTCR nor "Costa Rica" nor MEIC in any of its 1470
+#:   pages. ``aya_normas_tecnicas`` and ``codigo_electrico_cr`` have
+#:   ``edition_year: null`` on purpose: each
 #:   carries a ``references.primary`` citation ending "Edicion vigente, sin
 #:   declarar en la oferta firmada" and a ``references.note`` recording a DATED
 #:   references.db search with the patterns it used, because the signed offer
@@ -134,6 +138,13 @@ _DOC_REF_YEAR = re.compile(r"_(?:18|19|20)\d{2}$")
 #:   reason: codigo_electrico_cr is ``partial`` because that search LOCATED a
 #:   candidate, aya_normas_tecnicas is ``needs_source_verification`` because it
 #:   returned nothing relevant.
+#:   The THIRD of this group is gone: ``iso_9001_2015_clause_8_3`` became
+#:   ``iso_9001_clause_8_3_2015`` on 2026-10-03 (epy_quoting f2812aa), with
+#:   its callers moved in the same change, including the live one at
+#:   ``_core/_cuaderno/_builder.py``. ``ciccp_2007_2021`` -> ``ciccp_2007``
+#:   landed beside it but never touched this count: it ends in ``_2021``, so
+#:   the rule already saw it, and what it fixed was a false CLAIM in a name --
+#:   its trailing 2021 named an edition that does not exist.
 #: * ONE is correct by design and must NOT be renamed: ``nec_se_hm_15`` is a
 #:   declared ALIAS of ``nec_se_hm_2015`` (epy_concrete, ``edition_year``
 #:   2015), and ``doc_ref_catalogued_ids`` adds aliases deliberately because a
@@ -146,6 +157,18 @@ _DOC_REF_YEAR = re.compile(r"_(?:18|19|20)\d{2}$")
 #:   spelling with spaces, dots and a colon. These are DISCOVERY defects --
 #:   renaming them would be the wrong repair, because neither belongs in the
 #:   catalogued set at all.
+#:
+#: WHY THIS NUMBER IS 6 AND NOT 5. Those populations total five, and origin
+#: carries five. ``doc_ref_catalogued_ids`` discovers by walking sibling
+#: WORKING TREES, not branches, and epy_quoting's main checkout cannot
+#: fast-forward onto the rename: EVIDENCE.md, STANDARDS.md and _builder.py
+#: carry another thread's uncommitted work, so git refuses to overwrite them.
+#: On disk the old catalogue filename is therefore still discovered and still
+#: counted. Tightening the pin to 5 now would redden every gate run on this
+#: machine while origin is right, so it stays at 6 until the checkouts carry
+#: the rename -- and then it wants tightening in the same change, or it is a
+#: ceiling again. A published rename does not move this number; a synced
+#: checkout does.
 #:
 #: WHAT THIS NUMBER IS NOT. It counts ids whose SHAPE this rule cannot
 #: recognise -- not ids that are wrong, and not a coverage ratio. "6 of 200"

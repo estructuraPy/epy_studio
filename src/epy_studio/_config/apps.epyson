@@ -48,6 +48,14 @@
       "description": "Service offers — fee quotation for structural-engineering work"
     },
     {
+      "id": "epy_outreach", "display": "ePy Outreach", "component": "outreach",
+      "register": "none", "optional": true,
+      "asset_packages": ["prompts"],
+      "hidden_imports": [],
+      "icon": "_core/_packaging/assets_build/epy_outreach.ico",
+      "description": "Sales outreach — contact registry, client research and service-presentation letters"
+    },
+    {
       "id": "epy_lab", "display": "ePy Lab", "component": "",
       "register": "none", "optional": true,
       "ships": "own_installer",

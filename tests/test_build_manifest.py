@@ -162,7 +162,7 @@ def test_a_required_application_missing_from_the_script_still_refuses(
 def test_the_optional_ids_come_from_the_catalog() -> None:
     # The private applications, and only those.
     assert build._optional_ids() == frozenset(
-        {"epy_draft", "epy_quoting", "epy_lab"}
+        {"epy_draft", "epy_quoting", "epy_outreach", "epy_lab"}
     )
     # A separate axis: epy_lab may be absent from the bundle because
     # Studio never builds it, not because its checkout might be missing.

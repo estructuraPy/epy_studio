@@ -47,7 +47,7 @@ def test_every_shipped_application_is_listed() -> None:
     ids = [app.app_id for app in _catalog.apps()]
     assert ids == [
         "epy_reports", "epy_slides", "epy_papers", "epy_draft", "epy_quoting",
-        "epy_lab",
+        "epy_outreach", "epy_lab",
     ]
 
 
@@ -65,7 +65,9 @@ def test_draft_advertises_open_with_and_never_claims_the_default() -> None:
 # The applications whose repositories are PRIVATE. Kept as a literal
 # rather than derived, because the fact lives on GitHub and a test that
 # asked the network would answer differently offline.
-PRIVATE = frozenset({"epy_draft", "epy_quoting", "epy_lab"})
+PRIVATE = frozenset(
+    {"epy_draft", "epy_quoting", "epy_outreach", "epy_lab"}
+)
 
 
 def test_an_application_is_optional_exactly_when_it_is_private() -> None:
@@ -189,16 +191,18 @@ def test_an_absent_optional_application_is_skipped_by_name(
     # from the outside.
     suite = _suite_with(
         tmp_path, "epy_reports", "epy_slides", "epy_papers", "epy_draft"
-    )  # every optional one but epy_quoting
+    )  # every optional one but epy_quoting and epy_outreach
     built, skipped = _catalog.for_build(suite)
     assert [app.app_id for app in built] == [
         "epy_reports", "epy_slides", "epy_papers", "epy_draft",
     ]
-    # Two lines, and they are DIFFERENT omissions: epy_quoting is absent
-    # from this suite, while epy_lab is never built here at all.
-    assert len(skipped) == 2
-    absent = next(line for line in skipped if "SKIPPED optional" in line)
-    assert "epy_quoting" in absent
+    # Two kinds of omission, and they are DIFFERENT: epy_quoting and
+    # epy_outreach are absent from this suite, while epy_lab is never
+    # built here at all.
+    assert len(skipped) == 3
+    absent = {line.split()[3].rstrip(":") for line in skipped
+              if "SKIPPED optional" in line}
+    assert absent == {"epy_quoting", "epy_outreach"}
     unbuilt = next(line for line in skipped if "NOT BUILT HERE" in line)
     assert "epy_lab" in unbuilt
 
@@ -207,10 +211,10 @@ def test_a_present_optional_application_is_built(tmp_path: Path) -> None:
     # The entry point's EXISTENCE is the switch.
     suite = _suite_with(
         tmp_path, "epy_reports", "epy_slides", "epy_papers", "epy_draft",
-        "epy_quoting", "epy_lab",
+        "epy_quoting", "epy_outreach", "epy_lab",
     )
     built, skipped = _catalog.for_build(suite)
-    assert [app.app_id for app in built][-1] == "epy_quoting"
+    assert [app.app_id for app in built][-1] == "epy_outreach"
     # epy_lab is present in the suite AND still not built: the switch for an
     # application that ships on its own is the catalog, not the file. Checking
     # the entry point would build it, because it has one.
@@ -256,8 +260,8 @@ def test_the_public_editors_alone_are_a_buildable_bundle(
     assert [app.app_id for app in built] == [
         "epy_reports", "epy_slides", "epy_papers",
     ]
-    assert len(skipped) == 3
-    assert {"epy_draft", "epy_quoting"} == {
+    assert len(skipped) == 4
+    assert {"epy_draft", "epy_quoting", "epy_outreach"} == {
         line.split()[3].rstrip(":") for line in skipped
         if line.startswith("SKIPPED")
     }

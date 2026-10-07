@@ -74,6 +74,8 @@ english.CompCraft=ePy Draft — batch drafting over your reference library
 spanish.CompCraft=ePy Draft — redacción por lotes sobre su biblioteca de referencias
 english.CompQuoting=ePy Quoting — service offers and fee quotation
 spanish.CompQuoting=ePy Quoting — ofertas de servicios y cotización de honorarios
+english.CompOutreach=ePy Outreach — contacts, client research and outreach letters
+spanish.CompOutreach=ePy Outreach — contactos, investigación del cliente y cartas de prospección
 
 [Types]
 Name: "full"; Description: "{cm:TypeFull}"
@@ -97,6 +99,12 @@ Name: "craft"; Description: "{cm:CompCraft}"; Types: full custom
 #ifexist DistDir + "\epy_quoting.exe"
 Name: "quoting"; Description: "{cm:CompQuoting}"; Types: full custom
 #endif
+; An OPTIONAL application that authors no document type, so it claims
+; nothing in [Run]: the guard covers its component, its file and its
+; shortcut, and nothing else.
+#ifexist DistDir + "\epy_outreach.exe"
+Name: "outreach"; Description: "{cm:CompOutreach}"; Types: full custom
+#endif
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -117,6 +125,9 @@ Source: "{#DistDir}\epy_draft.exe"; DestDir: "{app}"; Flags: ignoreversion; Comp
 #ifexist DistDir + "\epy_quoting.exe"
 Source: "{#DistDir}\epy_quoting.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: quoting
 #endif
+#ifexist DistDir + "\epy_outreach.exe"
+Source: "{#DistDir}\epy_outreach.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: outreach
+#endif
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\epy_studio.exe"; IconFilename: "{app}\epy_studio.exe"
@@ -128,6 +139,9 @@ Name: "{autoprograms}\ePy Draft"; Filename: "{app}\epy_draft.exe"; IconFilename:
 #endif
 #ifexist DistDir + "\epy_quoting.exe"
 Name: "{autoprograms}\ePy Quoting"; Filename: "{app}\epy_quoting.exe"; IconFilename: "{app}\epy_quoting.exe"; Components: quoting
+#endif
+#ifexist DistDir + "\epy_outreach.exe"
+Name: "{autoprograms}\ePy Outreach"; Filename: "{app}\epy_outreach.exe"; IconFilename: "{app}\epy_outreach.exe"; Components: outreach
 #endif
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\epy_studio.exe"; IconFilename: "{app}\epy_studio.exe"; Tasks: desktopicon
 

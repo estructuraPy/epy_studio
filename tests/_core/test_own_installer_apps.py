@@ -185,7 +185,7 @@ class TestItIsSkippedByNameAtBuildTime:
         absent = [line for line in skipped if "SKIPPED optional" in line]
         assert len(unbuilt) == 1
         assert "own installer" in unbuilt[0]
-        assert {"epy_draft", "epy_quoting"} == {
+        assert {"epy_draft", "epy_quoting", "epy_outreach"} == {
             line.split()[3].rstrip(":") for line in absent}
 
     def test_it_never_refuses_the_build(self, tmp_path):

@@ -81,6 +81,10 @@ _ES: dict[str, str] = {
     "Service offers — fee quotation for structural-engineering work":
         "Ofertas de servicios — cotización de honorarios para trabajos "
         "de ingeniería estructural",
+    "Sales outreach — contact registry, client research and "
+    "service-presentation letters":
+        "Prospección comercial — registro de contactos, investigación del "
+        "cliente y cartas de presentación de servicios",
     "Virtual structures laboratory — parametric experiments, exports "
     "interactive pages, animations and .kepy cases":
         "Laboratorio virtual de estructuras — experimentos paramétricos, "

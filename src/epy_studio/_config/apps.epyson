@@ -1,6 +1,6 @@
 {
   "config_id": "apps",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Which applications this Studio bundle carries: the executable each ships, how it is presented in the selector, which installer component installs it, and whether it may register as the default document handler.",
   "audit_status": "verified",
   "_note": "One place, because the list was in five and three of them had already drifted -- launcher.py, epy_studio.spec (three sections), windows/epy_studio.iss (five sections), build.py and README, with the last two still saying 'three editors' after the fourth shipped. launcher.py reads this at run time and epy_studio.spec reads it at build time, so a fifth application is one entry here instead of nine edits. The .iss cannot read JSON; build.py refuses to build when the two disagree.",
@@ -64,9 +64,82 @@
       "hidden_imports": [],
       "icon": "",
       "description": "Virtual structures laboratory — parametric experiments, exports interactive pages, animations and .kepy cases"
+    },
+    {
+      "id": "cadcraft", "display": "ePy CAD", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/cadcraft — MIT OR Apache-2.0",
+      "description": "2D drafting and CAD — reads and writes DXF (R12–2018) and DWG; the drafting engine is ArtCraft's CADCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "photocraft", "display": "ePy Paint", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/photocraft — MIT OR Apache-2.0",
+      "description": "Raster image editor — layers, selections, PSD/PSB; the engine is ArtCraft's PhotoCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "lightcraft", "display": "ePy Photo", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/lightcraft — MIT OR Apache-2.0",
+      "description": "RAW photo catalog and develop — DNG/CR2/ARW/NEF and more; the engine is ArtCraft's LightCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "filmcraft", "display": "ePy Video", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/filmcraft — MIT OR Apache-2.0",
+      "description": "Video editor — H.264/HEVC/ProRes/AV1, MP4/MOV/WebM; the engine is ArtCraft's FilmCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "vectorcraft", "display": "ePy Vector", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/vectorcraft — MIT OR Apache-2.0",
+      "description": "Vector graphics — SVG/PDF/EPS export and DXF read; the engine is ArtCraft's VectorCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "pdfcraft", "display": "ePy PDF", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/pdfcraft — MIT OR Apache-2.0",
+      "description": "PDF authoring and batch — combine, split, extract, edit; the engine is ArtCraft's PDFCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "deckcraft", "display": "ePy Decks", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/deckcraft — MIT OR Apache-2.0",
+      "description": "Presentations — opens and saves .pptx, exports PDF; the engine is ArtCraft's DeckCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "gridcraft", "display": "ePy Sheets", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/gridcraft — MIT OR Apache-2.0",
+      "description": "Spreadsheets — native .xlsx, formulas, CSV/TSV; the engine is ArtCraft's GridCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "soundcraft", "display": "ePy Audio", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/soundcraft — MIT OR Apache-2.0",
+      "description": "Audio production — WAV/FLAC/AIFF, mixing and bounce; the engine is ArtCraft's SoundCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "wordcraft", "display": "ePy Write", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/wordcraft — MIT OR Apache-2.0",
+      "description": "Word processor — .docx/.odt/.rtf/.md, exports PDF; the engine is ArtCraft's WordCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "designcraft", "display": "ePy Layout", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/designcraft — MIT OR Apache-2.0",
+      "description": "Page layout and composition — IDML import/export; the engine is ArtCraft's DesignCraft (MIT/Apache-2.0)"
+    },
+    {
+      "id": "effectcraft", "display": "ePy Motion", "component": "", "register": "none",
+      "optional": true, "ships": "external",
+      "upstream": "github.com/storytold/effectcraft — MIT OR Apache-2.0",
+      "description": "Motion graphics and VFX — Lottie, H.264/ProRes; the engine is ArtCraft's EffectCraft (MIT/Apache-2.0)"
     }
   ],
   "_ships_note": "ePy Lab is the first application Studio OFFERS without BUILDING. It is a front end over the design libraries rather than a self-contained editor: its own PyInstaller spec collects EIGHTEEN packages -- itself plus epy_analysis, epy_plotter, epy_units and fourteen design libraries -- together with the openseespy and Pynite engines. Studio's _app_analysis gives each application pathex=[its own src] and one _config tree, so bundling this one would mean teaching the spec to carry a dependency closure, and the bundle already stands at 6.7 GB / 12,840 files. So it keeps its own installer and its own folder, the selector finds it through installed_exe(), and a machine without it simply does not see the row. 'optional' and 'ships' are independent axes: optional says the sibling checkout may be absent at BUILD time, ships says Studio never builds it at all. Because it is not built here it needs no .iss lines, no icon in this repo and no hidden imports -- which is why those three are empty rather than guessed.",
   "_lab_association_note": "ePy Lab claims no file association, so register is 'none'. That is not an oversight: .kepy is shared. An epy_lab experiment (format epy_lab.experiment/1) and an ePy Draft project are BOTH .kepy files, and Studio's installer already points .kepy at epy_draft.exe, which refuses a foreign one by its required tables {documents, chunks, memory, runs}. Two producers and one extension means whoever owns the association has to DISPATCH on what the file declares, and until that exists a second claimant would only take the association away from the one that has it. An experiment is opened from ePy Lab's own window or with epy_lab.exe --experiment <file>.",
-  "_register_note": "'openwith' advertises an Open-with entry and never claims the default. ePy Draft consumes Markdown and text as batch INPUT and authors neither, so claiming the default would hand it documents it does not edit. That rule lived as a prose comment in the .iss, which is exactly what gets lost when a fifth application is added. 'none' claims nothing: no --register, no [Run] line, no [UninstallRun] line."
+  "_register_note": "'openwith' advertises an Open-with entry and never claims the default. ePy Draft consumes Markdown and text as batch INPUT and authors neither, so claiming the default would hand it documents it does not edit. That rule lived as a prose comment in the .iss, which is exactly what gets lost when a fifth application is added. 'none' claims nothing: no --register, no [Run] line, no [UninstallRun] line.",
+  "_artcraft_note": "The twelve 'ePy <craft>' rows are ADOPTED applications: ArtCraft's Crafting Apps (github.com/storytold), pure-Rust clean-room reimplementations of Adobe / Microsoft / Autodesk tools, dual-licensed MIT OR Apache-2.0. They ship 'external' (see _catalog.SHIPS_EXTERNAL): Studio never builds them and never installs them, they carry their own upstream installers, and the selector locates each one by env var then PATH then the conventional install folder. Each carries its stated display under an ePy name and its real provenance in 'upstream'; the license (MIT/Apache-2.0) permits this with attribution, which the description and 'upstream' keep. THREE ArtCraft projects are deliberately NOT here: 'artcraft' (the flagship AI studio) and 'artcraft-services' use the non-OSI 'ArtCraft License (WIP)', a fair-source licence forbidding commercial resale and competing products, and 'artcraftx' carries no LICENSE file at all -- adapting any of them into a redistributable bundle would be the kind of claim this repository refuses to ship. The 'artcraft' engine is NOT a dependency of the twelve: each Crafting App is its own Cargo workspace with its own engine crates (verified against PhotoCraft's manifest). No app here is on crates.io and none publishes Python bindings; the Rust<->Python boundary is therefore the process boundary -- Studio launches each binary and never imports it."
 }

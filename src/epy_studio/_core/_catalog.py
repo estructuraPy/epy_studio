@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,12 +25,14 @@ from pathlib import Path
 __all__ = [
     "App",
     "REGISTER_MODES",
+    "SHIPS_EXTERNAL",
     "SHIPS_MODES",
     "SHIPS_OWN_INSTALLER",
     "SHIPS_WITH_STUDIO",
     "apps",
     "catalog_path",
     "entry_point",
+    "external_exe_env",
     "for_build",
     "install_dir",
     "installed_exe",
@@ -70,8 +73,59 @@ selector finds it through :func:`installed_exe` instead of assuming the
 executable sits beside the launcher.
 """
 
-SHIPS_MODES = frozenset({SHIPS_WITH_STUDIO, SHIPS_OWN_INSTALLER})
-"""The two ways an application can reach the user."""
+SHIPS_EXTERNAL = "external"
+"""A foreign application the family ADOPTS and Studio only OFFERS.
+
+The ArtCraft applications (``github.com/storytold``) live here. They are
+pure-Rust, Apache-2.0 clean-room reimplementations of Adobe / Microsoft
+/ Autodesk products -- Photoshop, Illustrator, Word, Excel, AutoCAD and
+the rest -- adopted into the ePy family as its own creative and CAD
+tools. They are not Python, so PyInstaller can never produce them, and
+they carry their own upstream installers, so this repository installs
+nothing and registers nothing on their behalf.
+
+Unlike :data:`SHIPS_OWN_INSTALLER`, there is no Inno AppId to read: an
+adopted application is located by a documented resolver instead -- an
+environment variable (:func:`external_exe_env`), then ``PATH``, then the
+conventional install folders. And unlike it, an adopted application
+MUST record its ``upstream`` URL: a foreign application the bundle
+offers without saying where it came from is exactly the kind of claim
+this repository refuses to ship.
+
+The three axes stay independent: ``optional`` says a sibling checkout
+may be absent at BUILD time; ``ships`` says which of the three routes
+the application reaches the user by; ``register`` says what it claims.
+An adopted application is always ``optional`` (most machines do not have
+it) and always ``register: "none"`` (it owns its own file types, and the
+ePy bundle must not claim a document type on a program it does not
+produce)."""
+
+
+SHIPS_MODES = frozenset(
+    {SHIPS_WITH_STUDIO, SHIPS_OWN_INSTALLER, SHIPS_EXTERNAL}
+)
+"""The three ways an application can reach the user."""
+
+_EXE_ENV_PREFIX = "EPY_"
+"""Prefix of the variable that points at an adopted application's exe.
+
+``EPY_CADCRAFT_EXE`` and the rest. The same convention the selector
+already uses to hand ePy Docs to the applications it launches, and the
+one a user who installed a tool somewhere unusual can set without a
+rebuild.
+"""
+
+
+def external_exe_env(app_id: str) -> str:
+    """Return the environment variable naming an adopted app's executable.
+
+    Args:
+        app_id: The catalog id, e.g. ``cadcraft``.
+
+    Returns:
+        ``EPY_<ID>_EXE`` in upper case, e.g. ``EPY_CADCRAFT_EXE``.
+    """
+    return f"{_EXE_ENV_PREFIX}{app_id.upper()}_EXE"
 
 
 @dataclass(frozen=True)
@@ -96,6 +150,11 @@ class App:
         hidden_imports: Whatever else it resolves at run time that
             static analysis misses -- entry-point plugins, backends.
         icon: The executable's icon, relative to the package root.
+        upstream: Where an ADOPTED application comes from -- its project
+            URL and license. Empty for an application of ours, which
+            needs no provenance because this repository IS one. For an
+            adopted one it is required: the selector shows a foreign
+            program, and the reader is owed the name of its source.
     """
 
     app_id: str
@@ -109,6 +168,7 @@ class App:
     icon: str = ""
     ships: str = SHIPS_WITH_STUDIO
     own_install_appid: str = ""
+    upstream: str = ""
 
     @property
     def claims_default(self) -> bool:
@@ -176,6 +236,14 @@ def apps() -> tuple[App, ...]:
                 f"selector can only guess at the default folder, and an "
                 f"application installed elsewhere reads as not installed."
             )
+        if ships == SHIPS_EXTERNAL and not item.get("upstream"):
+            raise ValueError(
+                f"{item['id']}: ships={ships!r} needs upstream, the project "
+                f"URL (and license) the adopted application comes from. An "
+                f"entry that offers a foreign program without naming its "
+                f"source is a bundle that lies, and this repository refuses "
+                f"to ship one."
+            )
         found.append(
             App(
                 app_id=str(item["id"]),
@@ -193,6 +261,7 @@ def apps() -> tuple[App, ...]:
                 icon=str(item.get("icon", "")),
                 ships=ships,
                 own_install_appid=str(item.get("own_install_appid", "")),
+                upstream=str(item.get("upstream", "")),
             )
         )
     return tuple(found)
@@ -241,13 +310,19 @@ def for_build(suite_root: Path) -> tuple[list[App], list[str]]:
     skipped: list[str] = []
     for app in apps():
         if not app.built_here:
-            # Said by name like every other omission. Its entry point very
-            # probably DOES exist in the sibling checkout -- epy_lab has one --
-            # so checking the file would build an application the catalog
-            # declares Studio does not build.
+            # Said by name like every other omission. An own-installer
+            # application's entry point very probably DOES exist in the
+            # sibling checkout -- epy_lab has one -- so checking the file
+            # would build an application the catalog declares Studio does
+            # not build; an adopted one is not even Python.
+            why = (
+                "ships with its own installer"
+                if app.ships == SHIPS_OWN_INSTALLER
+                else "is adopted upstream"
+            )
             skipped.append(
-                f"NOT BUILT HERE: {app.app_id} ships with its own installer "
-                f"({app.ships}); Studio offers it and does not bundle it"
+                f"NOT BUILT HERE: {app.app_id} {why} ({app.ships}); "
+                f"Studio offers it and does not bundle it"
             )
             continue
         script = entry_point(app, suite_root)
@@ -305,11 +380,65 @@ def installed_exe(app: App) -> Path | None:
     if app.built_here:
         candidate = install_dir() / f"{app.app_id}.exe"
         return candidate if candidate.is_file() else None
+    if app.ships == SHIPS_EXTERNAL:
+        return _external_exe(app)
     for folder in _own_install_dirs(app):
         candidate = folder / f"{app.app_id}.exe"
         if candidate.is_file():
             return candidate
     return None
+
+
+def _external_exe(app: App) -> Path | None:
+    r"""Locate an ADOPTED application, which installed itself somewhere.
+
+    Three routes, most specific first, because an adopted application is
+    a foreign program whose folder is not something this repository ever
+    chose:
+
+    1. The environment variable :func:`external_exe_env` names. A person
+       who installed it somewhere unusual can point at it without a
+       rebuild, and a test can point at a fixture.
+    2. ``PATH``. A per-user or machine install that put its launcher on
+       the path -- the common release case for all of these.
+    3. The conventional install folders (an ``<Name>`` folder under
+       ``%LOCALAPPDATA%\\Programs`` or ``%ProgramFiles%``).
+
+    Absence is the normal answer -- most machines do not have it -- so
+    every miss returns ``None`` rather than raising.
+
+    Args:
+        app: The catalog entry.
+
+    Returns:
+        The executable, or ``None`` when it is not installed.
+    """
+    named = os.environ.get(external_exe_env(app.app_id), "")
+    if named and Path(named).is_file():
+        return Path(named)
+    on_path = shutil.which(app.app_id)
+    if on_path:
+        return Path(on_path)
+    for folder in _external_dirs(app):
+        candidate = folder / f"{app.app_id}.exe"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _external_dirs(app: App) -> tuple[Path, ...]:
+    """Where an adopted application's conventional install folder may be."""
+    found: list[Path] = []
+    for base in ("LOCALAPPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)"):
+        root = os.environ.get(base)
+        if not root:
+            continue
+        # LOCALAPPDATA holds per-user installs under Programs\\, the two
+        # ProgramFiles roots hold machine installs directly.
+        folder = Path(root) / "Programs" / app.app_id \
+            if base == "LOCALAPPDATA" else Path(root) / app.app_id
+        found.append(folder)
+    return tuple(found)
 
 
 def _own_install_dirs(app: App) -> tuple[Path, ...]:

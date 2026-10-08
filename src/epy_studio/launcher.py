@@ -170,6 +170,9 @@ def main() -> int:
 
     files = [item for item in argv if not item.startswith("-")]
     app = QApplication(sys.argv)
+    from epy_export import apply_theme  # noqa: PLC0415
+
+    apply_theme(app, _theme_name())
     offer_registration()
     window = build_window(files)
     window.show()

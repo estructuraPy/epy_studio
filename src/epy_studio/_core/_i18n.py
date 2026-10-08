@@ -30,6 +30,7 @@ _ES: dict[str, str] = {
     "Open": "Abrir",
     "User manual": "Manual de usuario",
     "Language": "Idioma",
+    "Theme": "Tema",
     "looking for ePy Docs…": "buscando ePy Docs…",
     "Offer ePy Docs as a renderer":
         "Ofrecer ePy Docs como motor de composicion",
@@ -89,6 +90,62 @@ _ES: dict[str, str] = {
     "interactive pages, animations and .kepy cases":
         "Laboratorio virtual de estructuras — experimentos paramétricos, "
         "exporta páginas interactivas, animaciones y casos .kepy",
+    # --- adopted applications (ArtCraft Crafting Apps) ----------------
+    #
+    # Same one-sentence shape as the family's own apps: what the tool
+    # is, the formats at its edges, and -- because these are foreign
+    # programs the bundle offers rather than ones this repository
+    # builds -- the upstream project that actually made it. The ePy
+    # name is the display; the ArtCraft name in the sentence is the
+    # attribution the MIT/Apache-2.0 licence asks for.
+    "2D drafting and CAD — reads and writes DXF (R12–2018) and DWG; "
+    "the drafting engine is ArtCraft's CADCraft (MIT/Apache-2.0)":
+        "Dibujo 2D y CAD — lee y escribe DXF (R12–2018) y DWG; el motor "
+        "de dibujo es CADCraft de ArtCraft (MIT/Apache-2.0)",
+    "Raster image editor — layers, selections, PSD/PSB; the engine is "
+    "ArtCraft's PhotoCraft (MIT/Apache-2.0)":
+        "Editor de imágenes de mapa de bits — capas, selecciones, "
+        "PSD/PSB; el motor es PhotoCraft de ArtCraft (MIT/Apache-2.0)",
+    "RAW photo catalog and develop — DNG/CR2/ARW/NEF and more; the "
+    "engine is ArtCraft's LightCraft (MIT/Apache-2.0)":
+        "Catálogo y revelado de fotos RAW — DNG/CR2/ARW/NEF y más; el "
+        "motor es LightCraft de ArtCraft (MIT/Apache-2.0)",
+    "Video editor — H.264/HEVC/ProRes/AV1, MP4/MOV/WebM; the engine is "
+    "ArtCraft's FilmCraft (MIT/Apache-2.0)":
+        "Editor de video — H.264/HEVC/ProRes/AV1, MP4/MOV/WebM; el motor "
+        "es FilmCraft de ArtCraft (MIT/Apache-2.0)",
+    "Vector graphics — SVG/PDF/EPS export and DXF read; the engine is "
+    "ArtCraft's VectorCraft (MIT/Apache-2.0)":
+        "Gráficos vectoriales — exporta SVG/PDF/EPS y lee DXF; el motor "
+        "es VectorCraft de ArtCraft (MIT/Apache-2.0)",
+    "PDF authoring and batch — combine, split, extract, edit; the "
+    "engine is ArtCraft's PDFCraft (MIT/Apache-2.0)":
+        "Autoría y lote de PDF — combinar, dividir, extraer, editar; el "
+        "motor es PDFCraft de ArtCraft (MIT/Apache-2.0)",
+    "Presentations — opens and saves .pptx, exports PDF; the engine is "
+    "ArtCraft's DeckCraft (MIT/Apache-2.0)":
+        "Presentaciones — abre y guarda .pptx, exporta PDF; el motor es "
+        "DeckCraft de ArtCraft (MIT/Apache-2.0)",
+    "Spreadsheets — native .xlsx, formulas, CSV/TSV; the engine is "
+    "ArtCraft's GridCraft (MIT/Apache-2.0)":
+        "Hojas de cálculo — .xlsx nativo, fórmulas, CSV/TSV; el motor es "
+        "GridCraft de ArtCraft (MIT/Apache-2.0)",
+    "Audio production — WAV/FLAC/AIFF, mixing and bounce; the engine is "
+    "ArtCraft's SoundCraft (MIT/Apache-2.0)":
+        "Producción de audio — WAV/FLAC/AIFF, mezcla y bounce; el motor "
+        "es SoundCraft de ArtCraft (MIT/Apache-2.0)",
+    "Word processor — .docx/.odt/.rtf/.md, exports PDF; the engine is "
+    "ArtCraft's WordCraft (MIT/Apache-2.0)":
+        "Procesador de texto — .docx/.odt/.rtf/.md, exporta PDF; el "
+        "motor es WordCraft de ArtCraft (MIT/Apache-2.0)",
+    "Page layout and composition — IDML import/export; the engine is "
+    "ArtCraft's DesignCraft (MIT/Apache-2.0)":
+        "Maquetación y composición de páginas — importa/exporta IDML; "
+        "el motor es DesignCraft de ArtCraft (MIT/Apache-2.0)",
+    "Motion graphics and VFX — Lottie, H.264/ProRes; the engine is "
+    "ArtCraft's EffectCraft (MIT/Apache-2.0)":
+        "Gráficos en movimiento y VFX — Lottie, H.264/ProRes; el motor "
+        "es EffectCraft de ArtCraft (MIT/Apache-2.0)",
     "Not installed — it ships on its own; install it and this row "
     "becomes available.":
         "No instalado — se distribuye por separado; instálelo y esta fila "

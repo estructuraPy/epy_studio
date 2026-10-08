@@ -22,9 +22,12 @@ from pathlib import Path
 from typing import Any
 
 from epy_export import (
+    DEFAULT_THEME,
     LEGACY_ORGANIZATIONS,
     ORGANIZATION,
+    apply_theme,
     is_truthy,
+    theme_names,
 )
 
 from .._core import _i18n
@@ -193,6 +196,27 @@ def remember_backend(backend: Backend) -> None:
     QSettings(ORGANIZATION, "epy_studio").setValue(REMEMBERED_KEY, value)
 
 
+THEME_KEY = "theme"
+"""QSettings key remembering the reader's chosen palette."""
+
+
+def current_theme() -> str:
+    """Return the stored theme name, falling back to the default."""
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    stored = str(
+        QSettings(ORGANIZATION, "epy_studio").value(THEME_KEY, "")
+    )
+    return stored if stored in theme_names() else DEFAULT_THEME
+
+
+def remember_theme(name: str) -> None:
+    """Store the reader's chosen palette."""
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    QSettings(ORGANIZATION, "epy_studio").setValue(THEME_KEY, name)
+
+
 def build_window(
     files: list[str],
     *,
@@ -351,6 +375,17 @@ def build_window(
                 )
             language_btn.setMenu(language_menu)
             bottom.addWidget(language_btn)
+            theme_btn = QPushButton(_i18n.tr("Theme"), root)
+            theme_menu = QMenu(theme_btn)
+            for name in theme_names():
+                action = theme_menu.addAction(name.capitalize())
+                action.setCheckable(True)
+                action.setChecked(name == current_theme())
+                action.triggered.connect(
+                    lambda _checked=False, n=name: self._set_theme(n)
+                )
+            theme_btn.setMenu(theme_menu)
+            bottom.addWidget(theme_btn)
             # Offered only where there is something to offer: a
             # checkbox for a package nobody has is a question with
             # one answer, and the status strip already says so.
@@ -452,6 +487,16 @@ def build_window(
             replacement = build_window(
                 self._files, backend=self._backend, language=code
             )
+            replacement.show()
+            self.close()
+
+        def _set_theme(self, name: str) -> None:
+            """Apply a palette and rebuild the window under it."""
+            from PySide6.QtWidgets import QApplication  # noqa: PLC0415
+
+            apply_theme(QApplication.instance(), name)
+            remember_theme(name)
+            replacement = build_window(self._files, backend=self._backend)
             replacement.show()
             self.close()
 

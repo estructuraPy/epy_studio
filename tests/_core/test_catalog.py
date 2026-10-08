@@ -48,6 +48,12 @@ def test_every_shipped_application_is_listed() -> None:
     assert ids == [
         "epy_reports", "epy_slides", "epy_papers", "epy_draft", "epy_quoting",
         "epy_outreach", "epy_lab",
+        # The adopted ArtCraft Crafting Apps (MIT/Apache-2.0), in catalog
+        # order. Their ids are the UPSTREAM executable stems -- the name the
+        # resolver looks for -- while their `display` is the ePy name.
+        "cadcraft", "photocraft", "lightcraft", "filmcraft", "vectorcraft",
+        "pdfcraft", "deckcraft", "gridcraft", "soundcraft", "wordcraft",
+        "designcraft", "effectcraft",
     ]
 
 
@@ -70,14 +76,21 @@ PRIVATE = frozenset(
 )
 
 
-def test_an_application_is_optional_exactly_when_it_is_private() -> None:
+def test_an_application_is_optional_when_it_is_private_or_adopted() -> None:
     # Privacy is what decides whether a checkout may be ABSENT, so it is
     # what decides `optional`. epy_studio is public: a stranger who
     # clones it must be able to build the public editors, and before
     # this rule the build refused because ePy Draft was marked required
     # while its repository is private.
+    #
+    # An ADOPTED application is optional for the other reason: most
+    # machines do not have it, and a missing one is not an incomplete
+    # install -- so the row is absent, not greyed. The two reasons are
+    # different and the same flag answers both.
     for app in _catalog.apps():
-        assert app.optional == (app.app_id in PRIVATE), app.app_id
+        adopted = app.ships == _catalog.SHIPS_EXTERNAL
+        expected = app.app_id in PRIVATE or adopted
+        assert app.optional == expected, app.app_id
 
 
 def test_optional_and_register_are_independent_axes() -> None:
@@ -123,12 +136,21 @@ def test_every_entry_is_complete() -> None:
             assert not app.asset_packages
             assert not app.hidden_imports
             assert not app.icon
-            assert app.own_install_appid, f"{app.app_id} cannot be found"
             # A component is an INSTALLER concept -- an entry in the .iss
             # [Components] section. Studio installs only what it builds, so an
             # application that ships on its own has none, and naming one would
             # promise a checkbox the installer never draws.
             assert not app.component
+            if app.ships == _catalog.SHIPS_EXTERNAL:
+                # An adopted application has no Inno AppId -- our installer
+                # never installed it -- so the resolver finds it instead, and
+                # what must be present is its provenance. A foreign program
+                # offered without a source is exactly the lie this bundle
+                # refuses to ship.
+                assert not app.own_install_appid, app.app_id
+                assert app.upstream, f"adopted {app.app_id} names no source"
+            else:
+                assert app.own_install_appid, f"{app.app_id} cannot be found"
             continue
         assert app.component
         assert app.asset_packages, f"{app.app_id} bundles no assets"
@@ -184,6 +206,16 @@ def _suite_with(tmp_path: Path, *present: str) -> Path:
     return tmp_path
 
 
+def _unbuilt_ids() -> set[str]:
+    """Every application Studio never builds, by id.
+
+    The own-installer one (epy_lab) and the adopted ArtCraft ones are
+    different KINDS of omission but the same build decision, and a
+    hard-coded count in a test is what breaks the day another is adopted.
+    """
+    return {app.app_id for app in _catalog.apps() if not app.built_here}
+
+
 def test_an_absent_optional_application_is_skipped_by_name(
     tmp_path: Path,
 ) -> None:
@@ -197,14 +229,16 @@ def test_an_absent_optional_application_is_skipped_by_name(
         "epy_reports", "epy_slides", "epy_papers", "epy_draft",
     ]
     # Two kinds of omission, and they are DIFFERENT: epy_quoting and
-    # epy_outreach are absent from this suite, while epy_lab is never
-    # built here at all.
-    assert len(skipped) == 3
+    # epy_outreach are absent from this suite, while every application that
+    # reaches the user by another route is never built here at all.
     absent = {line.split()[3].rstrip(":") for line in skipped
               if "SKIPPED optional" in line}
     assert absent == {"epy_quoting", "epy_outreach"}
-    unbuilt = next(line for line in skipped if "NOT BUILT HERE" in line)
+    unbuilt = {line.split()[3].rstrip(":") for line in skipped
+               if "NOT BUILT HERE" in line}
+    assert unbuilt == _unbuilt_ids()
     assert "epy_lab" in unbuilt
+    assert {"cadcraft", "photocraft"} <= unbuilt
 
 
 def test_a_present_optional_application_is_built(tmp_path: Path) -> None:
@@ -220,8 +254,8 @@ def test_a_present_optional_application_is_built(tmp_path: Path) -> None:
     # the entry point would build it, because it has one.
     assert (suite / "epy_lab" / "src" / "epy_lab" / "__main__.py").is_file()
     assert "epy_lab" not in [app.app_id for app in built]
-    assert len(skipped) == 1
-    assert "NOT BUILT HERE" in skipped[0]
+    assert len(skipped) == len(_unbuilt_ids())
+    assert all("NOT BUILT HERE" in line for line in skipped)
 
 
 def test_an_absent_required_application_refuses_the_build(
@@ -260,9 +294,105 @@ def test_the_public_editors_alone_are_a_buildable_bundle(
     assert [app.app_id for app in built] == [
         "epy_reports", "epy_slides", "epy_papers",
     ]
-    assert len(skipped) == 4
+    assert len(skipped) == 3 + len(_unbuilt_ids())
     assert {"epy_draft", "epy_quoting", "epy_outreach"} == {
         line.split()[3].rstrip(":") for line in skipped
         if line.startswith("SKIPPED")
     }
-    assert sum("NOT BUILT HERE" in line for line in skipped) == 1
+    assert sum("NOT BUILT HERE" in line for line in skipped) == len(
+        _unbuilt_ids())
+
+
+# --- adopted (external) applications -----------------------------------
+
+
+def _cadcraft() -> _catalog.App:
+    return next(app for app in _catalog.apps() if app.app_id == "cadcraft")
+
+
+class TestTheAdoptedApplications:
+    def test_the_three_non_osi_artcraft_projects_are_not_here(self) -> None:
+        # artcraft (the flagship) and artcraft-services use a non-OSI
+        # fair-source licence forbidding commercial resale and competing
+        # products, and artcraftx carries no LICENSE file at all. Adapting
+        # any of them into a redistributable bundle is the kind of claim
+        # this repository refuses to ship.
+        ids = {app.app_id for app in _catalog.apps()}
+        assert "artcraft" not in ids
+        assert "artcraft-services" not in ids
+        assert "artcraftx" not in ids
+
+    def test_an_adopted_entry_without_upstream_is_refused(
+            self, monkeypatch, tmp_path):
+        data = json.loads(_catalog.catalog_path().read_text(encoding="utf-8"))
+        entry = next(item for item in data["apps"] if item["id"] == "cadcraft")
+        entry.pop("upstream")
+        path = tmp_path / "apps.epyson"
+        path.write_text(json.dumps(data), encoding="utf-8")
+        monkeypatch.setattr(_catalog, "catalog_path", lambda: path)
+        with pytest.raises(ValueError, match="needs upstream"):
+            _catalog.apps()
+
+    def test_every_adopted_entry_records_its_licence(self) -> None:
+        adopted = [app for app in _catalog.apps()
+                   if app.ships == _catalog.SHIPS_EXTERNAL]
+        assert adopted
+        for app in adopted:
+            assert app.upstream, app.app_id
+            assert "MIT OR Apache-2.0" in app.upstream, app.app_id
+
+    def test_the_env_var_name_is_the_documented_shape(self) -> None:
+        assert _catalog.external_exe_env("cadcraft") == "EPY_CADCRAFT_EXE"
+
+
+class TestFindingAnAdoptedApplication:
+    @staticmethod
+    def _no_env(monkeypatch) -> None:
+        monkeypatch.delenv("EPY_CADCRAFT_EXE", raising=False)
+        monkeypatch.setattr(_catalog.shutil, "which", lambda _name: None)
+
+    def test_the_environment_variable_wins(self, monkeypatch, tmp_path):
+        exe = tmp_path / "cadcraft.exe"
+        exe.write_bytes(b"MZ")
+        self._no_env(monkeypatch)
+        monkeypatch.setenv("EPY_CADCRAFT_EXE", str(exe))
+        assert _catalog.installed_exe(_cadcraft()) == exe
+
+    def test_then_path(self, monkeypatch, tmp_path):
+        exe = tmp_path / "cadcraft.exe"
+        exe.write_bytes(b"MZ")
+        self._no_env(monkeypatch)
+        monkeypatch.setattr(
+            _catalog.shutil, "which",
+            lambda name: str(exe) if name == "cadcraft" else None)
+        assert _catalog.installed_exe(_cadcraft()) == exe
+
+    def test_then_the_conventional_folder(self, monkeypatch, tmp_path):
+        self._no_env(monkeypatch)
+        monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+        folder = tmp_path / "Programs" / "cadcraft"
+        folder.mkdir(parents=True)
+        exe = folder / "cadcraft.exe"
+        exe.write_bytes(b"MZ")
+        assert _catalog.installed_exe(_cadcraft()) == exe
+
+    def test_an_absent_adopted_application_reads_as_not_installed(
+            self, monkeypatch, tmp_path):
+        # Absence is the NORMAL answer -- most machines do not have it -- so
+        # it comes back as None rather than raising.
+        self._no_env(monkeypatch)
+        monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+        monkeypatch.delenv("PROGRAMFILES", raising=False)
+        monkeypatch.delenv("PROGRAMFILES(X86)", raising=False)
+        assert _catalog.installed_exe(_cadcraft()) is None
+
+    def test_it_never_reads_the_registry(self, monkeypatch, tmp_path):
+        # An adopted application was not installed by OUR installer, so there
+        # is no Inno uninstall key to read -- reaching for one would ask the
+        # registry a question it can never answer.
+        self._no_env(monkeypatch)
+        monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+        monkeypatch.setattr(
+            _catalog, "_own_install_dirs",
+            lambda _app: pytest.fail("an adopted app read the registry"))
+        assert _catalog.installed_exe(_cadcraft()) is None

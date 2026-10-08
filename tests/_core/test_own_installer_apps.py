@@ -27,6 +27,7 @@ import pytest
 
 from epy_studio._core import _catalog
 from epy_studio._core._catalog import (
+    SHIPS_EXTERNAL,
     SHIPS_OWN_INSTALLER,
     SHIPS_WITH_STUDIO,
     App,
@@ -97,12 +98,16 @@ class TestTheAxesAreIndependent:
         assert not lab.built_here
         assert lab.ships == SHIPS_OWN_INSTALLER
 
-    def test_every_other_application_is_built_here(self):
+    def test_every_application_that_ships_here_is_built_here(self):
         """The default: adding one does not silently opt out."""
-        others = [app for app in apps() if app.app_id != "epy_lab"]
-        assert others
-        assert all(app.built_here for app in others)
-        assert all(app.ships == SHIPS_WITH_STUDIO for app in others)
+        here = [app for app in apps() if app.built_here]
+        assert here
+        assert all(app.ships == SHIPS_WITH_STUDIO for app in here)
+        # The two ways of NOT being built here are different, and both exist:
+        # one supplies itself, the other is adopted from upstream.
+        by_id = {app.app_id: app for app in apps()}
+        assert by_id["epy_lab"].ships == SHIPS_OWN_INSTALLER
+        assert by_id["cadcraft"].ships == SHIPS_EXTERNAL
 
     def test_an_optional_application_is_not_therefore_unbuilt(self):
         """ePy Draft and ePy Quoting are optional AND built here."""
@@ -116,7 +121,8 @@ class TestTheCatalogueRefusesAnIncompleteEntry:
     @staticmethod
     def _with(monkeypatch, tmp_path, **changes) -> None:
         data = json.loads(_catalog.catalog_path().read_text(encoding="utf-8"))
-        data["apps"][-1].update(changes)
+        lab = next(item for item in data["apps"] if item["id"] == "epy_lab")
+        lab.update(changes)
         path = tmp_path / "apps.epyson"
         path.write_text(json.dumps(data), encoding="utf-8")
         monkeypatch.setattr(_catalog, "catalog_path", lambda: path)
@@ -139,15 +145,17 @@ class TestTheCatalogueRefusesAnIncompleteEntry:
 
     def test_an_absent_ships_key_means_studio_builds_it(
             self, monkeypatch, tmp_path):
-        """The five that were here before this axis existed carry no key."""
+        """A studio application carries no ships key, and is built here."""
         data = json.loads(_catalog.catalog_path().read_text(encoding="utf-8"))
-        entry = data["apps"][-1]
-        entry.pop("ships")
-        entry.pop("own_install_appid")
+        entry = next(item for item in data["apps"]
+                     if item["id"] == "epy_reports")
+        entry.pop("ships", None)
+        entry.pop("own_install_appid", None)
         path = tmp_path / "apps.epyson"
         path.write_text(json.dumps(data), encoding="utf-8")
         monkeypatch.setattr(_catalog, "catalog_path", lambda: path)
-        assert _catalog.apps()[-1].built_here
+        by_id = {app.app_id: app for app in _catalog.apps()}
+        assert by_id["epy_reports"].built_here
 
 
 class TestItIsSkippedByNameAtBuildTime:
@@ -183,10 +191,12 @@ class TestItIsSkippedByNameAtBuildTime:
         _built, skipped = _catalog.for_build(suite)
         unbuilt = [line for line in skipped if "NOT BUILT HERE" in line]
         absent = [line for line in skipped if "SKIPPED optional" in line]
-        assert len(unbuilt) == 1
-        assert "own installer" in unbuilt[0]
         assert {"epy_draft", "epy_quoting", "epy_outreach"} == {
             line.split()[3].rstrip(":") for line in absent}
+        assert {line.split()[3].rstrip(":") for line in unbuilt} == {
+            app.app_id for app in apps() if not app.built_here}
+        lab_line = next(line for line in unbuilt if " epy_lab " in line)
+        assert "own installer" in lab_line
 
     def test_it_never_refuses_the_build(self, tmp_path):
         """A required application's absence refuses; this one's never does."""

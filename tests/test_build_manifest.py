@@ -160,10 +160,17 @@ def test_a_required_application_missing_from_the_script_still_refuses(
 
 
 def test_the_optional_ids_come_from_the_catalog() -> None:
-    # The private applications, and only those.
-    assert build._optional_ids() == frozenset(
+    # The private applications, plus the adopted ArtCraft ones: both may be
+    # absent from a bundle -- the first because its checkout may be missing,
+    # the second because it is a foreign program Studio never builds.
+    adopted = frozenset(
+        str(app["id"]) for app in build._catalog_apps()
+        if app.get("ships") == "external"
+    )
+    private = frozenset(
         {"epy_draft", "epy_quoting", "epy_outreach", "epy_lab"}
     )
-    # A separate axis: epy_lab may be absent from the bundle because
-    # Studio never builds it, not because its checkout might be missing.
-    assert build._own_installer_ids() == frozenset({"epy_lab"})
+    assert build._optional_ids() == private | adopted
+    # A separate axis: everything Studio OFFERS but never builds -- epy_lab
+    # supplies itself, the adopted ones come from upstream.
+    assert build._own_installer_ids() == frozenset({"epy_lab"}) | adopted

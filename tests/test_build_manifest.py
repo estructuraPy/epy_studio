@@ -174,3 +174,26 @@ def test_the_optional_ids_come_from_the_catalog() -> None:
     # A separate axis: everything Studio OFFERS but never builds -- epy_lab
     # supplies itself, the adopted ones come from upstream.
     assert build._own_installer_ids() == frozenset({"epy_lab"}) | adopted
+
+
+def test_the_adopted_applications_are_absent_from_the_installer() -> None:
+    # An adopted app is one Studio never installs, so the Inno script -- which
+    # cannot read JSON -- must NOT name its executable: a stray line would try
+    # to copy a binary this build never produces. Checked in the negative for
+    # every adopted row, against the REAL script.
+    adopted = [
+        str(app["id"]) for app in build._catalog_apps()
+        if app.get("ships") == "external"
+    ]
+    assert adopted
+    iss = (build.ROOT / "windows" / "epy_studio.iss").read_text(
+        encoding="utf-8", errors="replace")
+    for app_id in adopted:
+        assert f"{app_id}.exe" not in iss, app_id
+
+
+def test_the_real_manifest_still_agrees() -> None:
+    # The catalog gained twelve adopted rows this session; the installer
+    # contract must still hold. This runs the SAME refusal the build runs, so a
+    # drift between the catalog and the .iss fails here and not at ship time.
+    build._verify_manifest()

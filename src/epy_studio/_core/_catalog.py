@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import sys
 from dataclasses import dataclass
@@ -25,12 +26,15 @@ from pathlib import Path
 __all__ = [
     "App",
     "REGISTER_MODES",
-    "SHIPS_EXTERNAL",
+    "SHIPS_INSTALLED",
     "SHIPS_MODES",
     "SHIPS_OWN_INSTALLER",
     "SHIPS_WITH_STUDIO",
+    "adopted_cli_env",
     "apps",
     "catalog_path",
+    "craft_env",
+    "download_page",
     "entry_point",
     "external_exe_env",
     "for_build",
@@ -73,36 +77,39 @@ selector finds it through :func:`installed_exe` instead of assuming the
 executable sits beside the launcher.
 """
 
-SHIPS_EXTERNAL = "external"
-"""A foreign application the family ADOPTS and Studio only OFFERS.
+SHIPS_INSTALLED = "installed"
+"""A foreign application the family ADOPTS and Studio's INSTALLER installs.
 
-The ArtCraft applications (``github.com/storytold``) live here. They are
-pure-Rust, Apache-2.0 clean-room reimplementations of Adobe / Microsoft
-/ Autodesk products -- Photoshop, Illustrator, Word, Excel, AutoCAD and
-the rest -- adopted into the ePy family as its own creative and CAD
-tools. They are not Python, so PyInstaller can never produce them, and
-they carry their own upstream installers, so this repository installs
-nothing and registers nothing on their behalf.
+The ArtCraft applications (``github.com/storytold``) live here, renamed into
+the ePy family: ``epy_cadcraft``, ``epy_photocraft``, ``epy_wordcraft`` and
+the rest (owner directive 2026-10-07: "artcraft pasa a ser epy_artcraft, y
+asi todas, con el prefijo epy_"). They are pure-Rust, MIT OR Apache-2.0
+clean-room reimplementations of Adobe / Microsoft / Autodesk products.
 
-Unlike :data:`SHIPS_OWN_INSTALLER`, there is no Inno AppId to read: an
-adopted application is located by a documented resolver instead -- an
-environment variable (:func:`external_exe_env`), then ``PATH``, then the
-conventional install folders. And unlike it, an adopted application
-MUST record its ``upstream`` URL: a foreign application the bundle
-offers without saying where it came from is exactly the kind of claim
-this repository refuses to ship.
+They are not Python, so PyInstaller can never produce them, and Studio's
+BUILD never touches them -- but Studio's INSTALLER does: it copies the
+upstream tree the owner drops under ``dist/epy_studio/crafts/<binary>/`` into
+``{app}\\crafts\\<binary>\\``, behind ``#ifexist`` so the build still works
+when the tool was not staged. That is the difference from
+:data:`SHIPS_OWN_INSTALLER` (the application supplies its own installer) and
+from a plain foreign binary on ``PATH``: an installed one ships WITH this
+bundle.
 
-The three axes stay independent: ``optional`` says a sibling checkout
-may be absent at BUILD time; ``ships`` says which of the three routes
-the application reaches the user by; ``register`` says what it claims.
-An adopted application is always ``optional`` (most machines do not have
-it) and always ``register: "none"`` (it owns its own file types, and the
-ePy bundle must not claim a document type on a program it does not
-produce)."""
+``binary`` is the upstream executable stem (``cadcraft``) while ``id`` is the
+family name (``epy_cadcraft``); the file on disk keeps the upstream name, so
+the installer renames nothing the tool itself depends on. An installed
+application MUST record its ``upstream`` URL -- a foreign program the bundle
+redistributes without saying where it came from is exactly the claim this
+repository refuses to ship -- and always carries ``register: "none"`` (it
+owns its own file types).
+
+The three axes stay independent: ``optional`` says the binary may be absent
+at BUILD time; ``ships`` says which route the application reaches the user
+by; ``register`` says what it claims."""
 
 
 SHIPS_MODES = frozenset(
-    {SHIPS_WITH_STUDIO, SHIPS_OWN_INSTALLER, SHIPS_EXTERNAL}
+    {SHIPS_WITH_STUDIO, SHIPS_OWN_INSTALLER, SHIPS_INSTALLED}
 )
 """The three ways an application can reach the user."""
 
@@ -126,6 +133,24 @@ def external_exe_env(app_id: str) -> str:
         ``EPY_<ID>_EXE`` in upper case, e.g. ``EPY_CADCRAFT_EXE``.
     """
     return f"{_EXE_ENV_PREFIX}{app_id.upper()}_EXE"
+
+
+def adopted_cli_env(app_id: str) -> str:
+    """Return the environment variable naming an adopted app's ``-cli``.
+
+    The adopted tools ship a ``<name>-cli`` (batch/MCP) beside their GUI
+    ``<name>.exe``. A launched application reaches that CLI by reading this
+    variable, so Studio sets it for every adopted tool it can find.
+    ``EPY_<ID>_CLI`` -- a SEPARATE name from :func:`external_exe_env`,
+    because the two are different executables of the same project.
+
+    Args:
+        app_id: The catalog id, e.g. ``cadcraft``.
+
+    Returns:
+        ``EPY_<ID>_CLI`` in upper case, e.g. ``EPY_CADCRAFT_CLI``.
+    """
+    return f"{_EXE_ENV_PREFIX}{app_id.upper()}_CLI"
 
 
 @dataclass(frozen=True)
@@ -155,6 +180,10 @@ class App:
             needs no provenance because this repository IS one. For an
             adopted one it is required: the selector shows a foreign
             program, and the reader is owed the name of its source.
+        install_page: Where a user installs an ADOPTED application, when
+            the catalog declares it. Empty for our own applications and
+            for an adopted one whose page is instead derived from
+            ``upstream`` (:func:`download_page`).
     """
 
     app_id: str
@@ -169,6 +198,19 @@ class App:
     ships: str = SHIPS_WITH_STUDIO
     own_install_appid: str = ""
     upstream: str = ""
+    binary: str = ""
+    install_page: str = ""
+
+    @property
+    def exe_stem(self) -> str:
+        """The executable stem to look for: the upstream one when named.
+
+        An adopted application keeps the upstream file name on disk
+        (``cadcraft.exe``) while its family id is the ePy one
+        (``epy_cadcraft``); the resolver looks for the BINARY, so the
+        installer renames nothing the tool itself depends on.
+        """
+        return self.binary or self.app_id
 
     @property
     def claims_default(self) -> bool:
@@ -184,6 +226,34 @@ class App:
     def built_here(self) -> bool:
         """Whether Studio's own build produces this executable."""
         return self.ships == SHIPS_WITH_STUDIO
+
+
+_GITHUB_RE = re.compile(r"github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)")
+
+
+def download_page(app: App) -> str:
+    """Return where a user gets an ADOPTED application, or ``""``.
+
+    Studio never redistributes an adopted application, so installing one
+    means the user fetches it from its own project. The page is the
+    explicit ``install.page`` the catalog may declare, and otherwise the
+    GitHub releases page of the repository the ``upstream`` field already
+    names -- derived from the provenance the entry is REQUIRED to carry,
+    never invented. An application whose ``upstream`` names no GitHub
+    repository yields ``""`` and the selector offers no install link.
+
+    Args:
+        app: The catalog entry.
+
+    Returns:
+        A URL, or ``""`` when none can be derived.
+    """
+    if app.install_page:
+        return app.install_page
+    match = _GITHUB_RE.search(app.upstream)
+    if match is None:
+        return ""
+    return f"https://github.com/{match.group(1)}/releases"
 
 
 def catalog_path() -> Path:
@@ -236,14 +306,22 @@ def apps() -> tuple[App, ...]:
                 f"selector can only guess at the default folder, and an "
                 f"application installed elsewhere reads as not installed."
             )
-        if ships == SHIPS_EXTERNAL and not item.get("upstream"):
-            raise ValueError(
-                f"{item['id']}: ships={ships!r} needs upstream, the project "
-                f"URL (and license) the adopted application comes from. An "
-                f"entry that offers a foreign program without naming its "
-                f"source is a bundle that lies, and this repository refuses "
-                f"to ship one."
-            )
+        if ships == SHIPS_INSTALLED:
+            if not item.get("upstream"):
+                raise ValueError(
+                    f"{item['id']}: ships={ships!r} needs upstream, the "
+                    f"project URL (and license) the adopted application comes "
+                    f"from. A bundle that redistributes a foreign program "
+                    f"without naming its source is a bundle that lies, and "
+                    f"this repository refuses to ship one."
+                )
+            if not item.get("component"):
+                raise ValueError(
+                    f"{item['id']}: ships={ships!r} needs component, the Inno "
+                    f"component that installs it. Studio's installer is what "
+                    f"puts an installed application on the machine, so an "
+                    f"entry with no component installs nothing."
+                )
         found.append(
             App(
                 app_id=str(item["id"]),
@@ -262,6 +340,10 @@ def apps() -> tuple[App, ...]:
                 ships=ships,
                 own_install_appid=str(item.get("own_install_appid", "")),
                 upstream=str(item.get("upstream", "")),
+                binary=str(item.get("binary", "")),
+                install_page=str(
+                    (item.get("install") or {}).get("page", "")
+                ),
             )
         )
     return tuple(found)
@@ -315,14 +397,13 @@ def for_build(suite_root: Path) -> tuple[list[App], list[str]]:
             # sibling checkout -- epy_lab has one -- so checking the file
             # would build an application the catalog declares Studio does
             # not build; an adopted one is not even Python.
-            why = (
-                "ships with its own installer"
-                if app.ships == SHIPS_OWN_INSTALLER
-                else "is adopted upstream"
-            )
+            why = {
+                SHIPS_OWN_INSTALLER: "ships with its own installer",
+                SHIPS_INSTALLED: "is installed by Studio's installer",
+            }.get(app.ships, "is not built here")
             skipped.append(
                 f"NOT BUILT HERE: {app.app_id} {why} ({app.ships}); "
-                f"Studio offers it and does not bundle it"
+                f"Studio does not build it"
             )
             continue
         script = entry_point(app, suite_root)
@@ -380,8 +461,8 @@ def installed_exe(app: App) -> Path | None:
     if app.built_here:
         candidate = install_dir() / f"{app.app_id}.exe"
         return candidate if candidate.is_file() else None
-    if app.ships == SHIPS_EXTERNAL:
-        return _external_exe(app)
+    if app.ships == SHIPS_INSTALLED:
+        return _installed_exe(app)
     for folder in _own_install_dirs(app):
         candidate = folder / f"{app.app_id}.exe"
         if candidate.is_file():
@@ -389,22 +470,22 @@ def installed_exe(app: App) -> Path | None:
     return None
 
 
-def _external_exe(app: App) -> Path | None:
-    r"""Locate an ADOPTED application, which installed itself somewhere.
+def _installed_exe(app: App) -> Path | None:
+    r"""Locate an INSTALLED adopted application, or ``None``.
 
-    Three routes, most specific first, because an adopted application is
-    a foreign program whose folder is not something this repository ever
-    chose:
+    Routes, most specific first. The first two let a user who keeps a copy
+    elsewhere point at it; the third is where THIS bundle installs it (the
+    ``crafts\<binary>`` tree beside the launcher); the rest are the
+    conventional upstream install folders, for a machine that installed
+    the tool on its own.
 
-    1. The environment variable :func:`external_exe_env` names. A person
-       who installed it somewhere unusual can point at it without a
-       rebuild, and a test can point at a fixture.
-    2. ``PATH``. A per-user or machine install that put its launcher on
-       the path -- the common release case for all of these.
-    3. The conventional install folders (an ``<Name>`` folder under
-       ``%LOCALAPPDATA%\\Programs`` or ``%ProgramFiles%``).
+    1. The environment variable :func:`external_exe_env` names.
+    2. ``PATH``.
+    3. ``<launcher>\crafts\<binary>\<binary>.exe``, then
+       ``<launcher>\<binary>.exe``.
+    4. ``%LOCALAPPDATA%\Programs\<binary>`` and the ``%ProgramFiles%`` roots.
 
-    Absence is the normal answer -- most machines do not have it -- so
+    Absence is a normal answer -- the tool may not have been staged -- so
     every miss returns ``None`` rather than raising.
 
     Args:
@@ -413,21 +494,26 @@ def _external_exe(app: App) -> Path | None:
     Returns:
         The executable, or ``None`` when it is not installed.
     """
-    named = os.environ.get(external_exe_env(app.app_id), "")
+    stem = app.exe_stem
+    named = os.environ.get(external_exe_env(stem), "")
     if named and Path(named).is_file():
         return Path(named)
-    on_path = shutil.which(app.app_id)
+    on_path = shutil.which(stem)
     if on_path:
         return Path(on_path)
-    for folder in _external_dirs(app):
-        candidate = folder / f"{app.app_id}.exe"
+    for folder in (install_dir() / "crafts" / stem, install_dir()):
+        candidate = folder / f"{stem}.exe"
+        if candidate.is_file():
+            return candidate
+    for folder in _installed_dirs(stem):
+        candidate = folder / f"{stem}.exe"
         if candidate.is_file():
             return candidate
     return None
 
 
-def _external_dirs(app: App) -> tuple[Path, ...]:
-    """Where an adopted application's conventional install folder may be."""
+def _installed_dirs(stem: str) -> tuple[Path, ...]:
+    """Where the upstream tool's conventional install folder may be."""
     found: list[Path] = []
     for base in ("LOCALAPPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)"):
         root = os.environ.get(base)
@@ -435,10 +521,63 @@ def _external_dirs(app: App) -> tuple[Path, ...]:
             continue
         # LOCALAPPDATA holds per-user installs under Programs\\, the two
         # ProgramFiles roots hold machine installs directly.
-        folder = Path(root) / "Programs" / app.app_id \
-            if base == "LOCALAPPDATA" else Path(root) / app.app_id
+        folder = Path(root) / "Programs" / stem \
+            if base == "LOCALAPPDATA" else Path(root) / stem
         found.append(folder)
     return tuple(found)
+
+
+def _adopted_cli(app: App) -> Path | None:
+    """Locate an adopted app's ``<name>-cli`` executable, or ``None``.
+
+    The CLI ships BESIDE the GUI executable, so the search is the same one
+    :func:`_installed_exe` runs, ending at the app's own folder. The stem is
+    the UPSTREAM one (``cadcraft``), not the family id.
+    """
+    stem = f"{app.exe_stem}-cli"
+    named = os.environ.get(adopted_cli_env(app.exe_stem), "")
+    if named and Path(named).is_file():
+        return Path(named)
+    on_path = shutil.which(stem)
+    if on_path:
+        return Path(on_path)
+    exe = installed_exe(app)
+    if exe is not None:
+        for candidate in (f"{stem}.exe", stem):
+            beside = exe.parent / candidate
+            if beside.is_file():
+                return beside
+    return None
+
+
+def craft_env() -> dict[str, str]:
+    """Return every adopted CLI found, as environment variables for a child.
+
+    The "hint, never a dependency" handoff for the adopted ArtCraft tools,
+    beside the ePy Docs backend in :mod:`._backends`: for every adopted
+    application the catalog carries, this finds its ``<name>-cli`` and
+    returns ``EPY_<NAME>_CLI`` -> its path. A launched application -- or a
+    drawing flow IT drives -- then reaches the tool without importing
+    anything of Studio's, and an application started any other way behaves
+    the same minus the shortcut.
+
+    This is also how a drawing flow reaches ``cadcraft-cli convert`` when it
+    was started FROM the Studio: Studio sets the variable, and
+    ``epy_plotter`` reads it. A machine with the tool on ``PATH`` works even
+    without Studio.
+
+    Returns:
+        Variables to add to a child's environment; empty when no adopted
+        tool is installed.
+    """
+    found: dict[str, str] = {}
+    for app in apps():
+        if app.ships != SHIPS_INSTALLED:
+            continue
+        cli = _adopted_cli(app)
+        if cli is not None:
+            found[adopted_cli_env(app.exe_stem)] = str(cli)
+    return found
 
 
 def _own_install_dirs(app: App) -> tuple[Path, ...]:

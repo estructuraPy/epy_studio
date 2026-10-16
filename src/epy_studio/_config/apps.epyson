@@ -2,69 +2,20 @@
   "config_id": "apps",
   "version": "1.2.0",
   "description": "Which applications this Studio bundle carries: the executable each ships, how it is presented in the selector, which installer component installs it, and whether it may register as the default document handler.",
-  "audit_status": "verified",
+  "audit_status": "n_a",
+  "audit_notes": "Application bundle manifest (executables, selector text, installer components, file-association policy): packaging configuration with no physical, normative or monetary magnitude. Was marked verified without any reference; there is nothing to verify against a document.",
+  "references": {"entries": []},
   "_note": "One place, because the list was in five and three of them had already drifted -- launcher.py, epy_studio.spec (three sections), windows/epy_studio.iss (five sections), build.py and README, with the last two still saying 'three editors' after the fourth shipped. launcher.py reads this at run time and epy_studio.spec reads it at build time, so a fifth application is one entry here instead of nine edits. The .iss cannot read JSON; build.py refuses to build when the two disagree.",
   "_description_note": "The four sentences answer the SAME questions in the same order: what kind of document, what the editor gives you, what comes out. They did not before -- ePy Reports claimed 'live preview' while Slides and Papers said nothing about it, and all three have it (measured: 15, 16 and 9 files reaching the preview widget), so a reader comparing them would have concluded the other two lacked it. ePy Draft is the one that genuinely differs, and saying so is the point of having a sentence at all. These are English keys; the Spanish lives in _core/_i18n.py.",
   "_optional_note": "An optional application is one the owner hands out, not one the installer offers. Its sibling checkout may be ABSENT when Studio is built: the spec skips it by name, the installer script wraps its lines in #ifexist so it compiles either way, and the selector does not offer it at all when its executable is not there -- not greyed, absent. A required application whose executable is missing keeps its greyed row: that is a custom install the user chose, and saying how to complete it is still right. The lists an application needs at build time -- asset subpackages, hidden imports, its icon -- live here too, so a new application really is one entry and not nine edits.",
   "apps": [
-    {
-      "id": "epy_reports", "display": "ePy Reports", "component": "reports",
-      "register": "default", "optional": false,
-      "asset_packages": ["branding", "themes", "reference_docx", "mathjax", "csl", "mermaid", "nomnoml"],
-      "hidden_imports": [],
-      "icon": "_core/_packaging/assets_build/epy_reports.ico",
-      "description": "Technical reports — live preview, exports to PDF, Word and HTML"
-    },
-    {
-      "id": "epy_slides", "display": "ePy Slides", "component": "slides",
-      "register": "default", "optional": false,
-      "asset_packages": ["branding", "themes", "reference_pptx", "mathjax", "revealjs", "mermaid", "nomnoml"],
-      "hidden_imports": [],
-      "icon": "_core/_packaging/assets_build/epy_slides.ico",
-      "description": "Presentation decks — live preview, exports to PDF, PowerPoint and HTML"
-    },
-    {
-      "id": "epy_papers", "display": "ePy Papers", "component": "papers",
-      "register": "default", "optional": false,
-      "asset_packages": ["branding", "themes", "mathjax", "csl", "mermaid", "nomnoml"],
-      "hidden_imports": [],
-      "icon": "_core/_packaging/assets_build/epy_papers.ico",
-      "description": "Academic manuscripts — live preview, journal profiles, exports to PDF and Word"
-    },
-    {
-      "id": "epy_draft", "display": "ePy Draft", "component": "craft",
-      "register": "openwith", "optional": true,
-      "asset_packages": ["branding", "prompts"],
-      "hidden_imports": ["keyring.backends", "keyring.backends.Windows", "keyring.backends.SecretService", "keyring.backends.chainer", "keyring.backends.fail", "yaml", "pypdf"],
-      "icon": "_core/_packaging/assets_build/epy_draft.ico",
-      "description": "Batch drafting over your reference library — no preview, renders through the other three"
-    },
-    {
-      "id": "epy_quoting", "display": "ePy Quoting", "component": "quoting",
-      "register": "none", "optional": true,
-      "asset_packages": ["branding"],
-      "hidden_imports": [],
-      "icon": "_core/_packaging/assets_build/epy_quoting.ico",
-      "description": "Service offers — fee quotation for structural-engineering work"
-    },
-    {
-      "id": "epy_outreach", "display": "ePy Outreach", "component": "outreach",
-      "register": "none", "optional": true,
-      "asset_packages": ["prompts"],
-      "hidden_imports": [],
-      "icon": "_core/_packaging/assets_build/epy_outreach.ico",
-      "description": "Sales outreach — contact registry, client research and service-presentation letters"
-    },
-    {
-      "id": "epy_lab", "display": "ePy Lab", "component": "",
-      "register": "none", "optional": true,
-      "ships": "own_installer",
-      "own_install_appid": "{3C1F6B2E-9A74-4E0D-8B5A-6F2D1C0E7A91}",
-      "asset_packages": [],
-      "hidden_imports": [],
-      "icon": "",
-      "description": "Virtual structures laboratory — parametric experiments, exports interactive pages, animations and .kepy cases"
-    }
+    {"id": "epy_reports", "display": "ePy Reports", "component": "reports", "register": "default", "optional": false, "asset_packages": ["branding", "themes", "reference_docx", "mathjax", "csl", "mermaid", "nomnoml"], "hidden_imports": [], "icon": "_core/_packaging/assets_build/epy_reports.ico", "description": "Technical reports — live preview, exports to PDF, Word and HTML"},
+    {"id": "epy_slides", "display": "ePy Slides", "component": "slides", "register": "default", "optional": false, "asset_packages": ["branding", "themes", "reference_pptx", "mathjax", "revealjs", "mermaid", "nomnoml"], "hidden_imports": [], "icon": "_core/_packaging/assets_build/epy_slides.ico", "description": "Presentation decks — live preview, exports to PDF, PowerPoint and HTML"},
+    {"id": "epy_papers", "display": "ePy Papers", "component": "papers", "register": "default", "optional": false, "asset_packages": ["branding", "themes", "mathjax", "csl", "mermaid", "nomnoml"], "hidden_imports": [], "icon": "_core/_packaging/assets_build/epy_papers.ico", "description": "Academic manuscripts — live preview, journal profiles, exports to PDF and Word"},
+    {"id": "epy_draft", "display": "ePy Draft", "component": "craft", "register": "openwith", "optional": true, "asset_packages": ["branding", "prompts"], "hidden_imports": ["keyring.backends", "keyring.backends.Windows", "keyring.backends.SecretService", "keyring.backends.chainer", "keyring.backends.fail", "yaml", "pypdf"], "icon": "_core/_packaging/assets_build/epy_draft.ico", "description": "Batch drafting over your reference library — no preview, renders through the other three"},
+    {"id": "epy_quoting", "display": "ePy Quoting", "component": "quoting", "register": "none", "optional": true, "asset_packages": ["branding"], "hidden_imports": [], "icon": "_core/_packaging/assets_build/epy_quoting.ico", "description": "Service offers — fee quotation for structural-engineering work"},
+    {"id": "epy_outreach", "display": "ePy Outreach", "component": "outreach", "register": "none", "optional": true, "asset_packages": ["prompts"], "hidden_imports": [], "icon": "_core/_packaging/assets_build/epy_outreach.ico", "description": "Sales outreach — contact registry, client research and service-presentation letters"},
+    {"id": "epy_lab", "display": "ePy Lab", "component": "", "register": "none", "optional": true, "ships": "own_installer", "own_install_appid": "{3C1F6B2E-9A74-4E0D-8B5A-6F2D1C0E7A91}", "asset_packages": [], "hidden_imports": [], "icon": "", "description": "Virtual structures laboratory — parametric experiments, exports interactive pages, animations and .kepy cases"}
   ],
   "_ships_note": "ePy Lab is the first application Studio OFFERS without BUILDING. It is a front end over the design libraries rather than a self-contained editor: its own PyInstaller spec collects EIGHTEEN packages -- itself plus epy_analysis, epy_plotter, epy_units and fourteen design libraries -- together with the openseespy and Pynite engines. Studio's _app_analysis gives each application pathex=[its own src] and one _config tree, so bundling this one would mean teaching the spec to carry a dependency closure, and the bundle already stands at 6.7 GB / 12,840 files. So it keeps its own installer and its own folder, the selector finds it through installed_exe(), and a machine without it simply does not see the row. 'optional' and 'ships' are independent axes: optional says the sibling checkout may be absent at BUILD time, ships says Studio never builds it at all. Because it is not built here it needs no .iss lines, no icon in this repo and no hidden imports -- which is why those three are empty rather than guessed.",
   "_lab_association_note": "ePy Lab claims no file association, so register is 'none'. That is not an oversight: .kepy is shared. An epy_lab experiment (format epy_lab.experiment/1) and an ePy Draft project are BOTH .kepy files, and Studio's installer already points .kepy at epy_draft.exe, which refuses a foreign one by its required tables {documents, chunks, memory, runs}. Two producers and one extension means whoever owns the association has to DISPATCH on what the file declares, and until that exists a second claimant would only take the association away from the one that has it. An experiment is opened from ePy Lab's own window or with epy_lab.exe --experiment <file>.",

@@ -76,6 +76,31 @@ english.CompQuoting=ePy Quoting — service offers and fee quotation
 spanish.CompQuoting=ePy Quoting — ofertas de servicios y cotización de honorarios
 english.CompOutreach=ePy Outreach — contacts, client research and outreach letters
 spanish.CompOutreach=ePy Outreach — contactos, investigación del cliente y cartas de prospección
+english.CompCadcraft=ePy CAD - 2D drafting and CAD
+spanish.CompCadcraft=ePy CAD - Dibujo 2D y CAD
+english.CompPhotocraft=ePy Paint - Raster image editor
+spanish.CompPhotocraft=ePy Paint - Editor de imágenes de mapa de bits
+english.CompLightcraft=ePy Photo - RAW photo catalog and develop
+spanish.CompLightcraft=ePy Photo - Catálogo y revelado de fotos RAW
+english.CompFilmcraft=ePy Video - Video editor
+spanish.CompFilmcraft=ePy Video - Editor de video
+english.CompVectorcraft=ePy Vector - Vector graphics
+spanish.CompVectorcraft=ePy Vector - Gráficos vectoriales
+english.CompPdfcraft=ePy PDF - PDF authoring and batch
+spanish.CompPdfcraft=ePy PDF - Autoría y lote de PDF
+english.CompDeckcraft=ePy Decks - Presentations
+spanish.CompDeckcraft=ePy Decks - Presentaciones
+english.CompGridcraft=ePy Sheets - Spreadsheets
+spanish.CompGridcraft=ePy Sheets - Hojas de cálculo
+english.CompSoundcraft=ePy Audio - Audio production
+spanish.CompSoundcraft=ePy Audio - Producción de audio
+english.CompWordcraft=ePy Write - Word processor
+spanish.CompWordcraft=ePy Write - Procesador de texto
+english.CompDesigncraft=ePy Layout - Page layout and composition
+spanish.CompDesigncraft=ePy Layout - Maquetación y composición de páginas
+english.CompEffectcraft=ePy Motion - Motion graphics and VFX
+spanish.CompEffectcraft=ePy Motion - Gráficos en movimiento y VFX
+
 
 [Types]
 Name: "full"; Description: "{cm:TypeFull}"
@@ -106,6 +131,47 @@ Name: "quoting"; Description: "{cm:CompQuoting}"; Types: full custom
 Name: "outreach"; Description: "{cm:CompOutreach}"; Types: full custom
 #endif
 
+; Adopted crafting applications, installed from the staged
+; dist/.../crafts/<binary>/ tree this bundle carries. Guarded like the
+; optional apps: the binary may not be staged, and #ifexist keeps ISCC
+; able to compile either way.
+#ifexist DistDir + "\crafts\cadcraft\cadcraft.exe"
+Name: "craft_cadcraft"; Description: "{cm:CompCadcraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\photocraft\photocraft.exe"
+Name: "craft_photocraft"; Description: "{cm:CompPhotocraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\lightcraft\lightcraft.exe"
+Name: "craft_lightcraft"; Description: "{cm:CompLightcraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\filmcraft\filmcraft.exe"
+Name: "craft_filmcraft"; Description: "{cm:CompFilmcraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\vectorcraft\vectorcraft.exe"
+Name: "craft_vectorcraft"; Description: "{cm:CompVectorcraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\pdfcraft\pdfcraft.exe"
+Name: "craft_pdfcraft"; Description: "{cm:CompPdfcraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\deckcraft\deckcraft.exe"
+Name: "craft_deckcraft"; Description: "{cm:CompDeckcraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\gridcraft\gridcraft.exe"
+Name: "craft_gridcraft"; Description: "{cm:CompGridcraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\soundcraft\soundcraft.exe"
+Name: "craft_soundcraft"; Description: "{cm:CompSoundcraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\wordcraft\wordcraft.exe"
+Name: "craft_wordcraft"; Description: "{cm:CompWordcraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\designcraft\designcraft.exe"
+Name: "craft_designcraft"; Description: "{cm:CompDesigncraft}"; Types: full custom
+#endif
+#ifexist DistDir + "\crafts\effectcraft\effectcraft.exe"
+Name: "craft_effectcraft"; Description: "{cm:CompEffectcraft}"; Types: full custom
+#endif
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
@@ -129,6 +195,59 @@ Source: "{#DistDir}\epy_quoting.exe"; DestDir: "{app}"; Flags: ignoreversion; Co
 Source: "{#DistDir}\epy_outreach.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: outreach
 #endif
 
+; Adopted crafting applications, installed from the staged
+; dist/.../crafts/<binary>/ tree this bundle carries. Guarded like the
+; optional apps: the binary may not be staged, and #ifexist keeps ISCC
+; able to compile either way.
+#ifexist DistDir + "\crafts\cadcraft\cadcraft.exe"
+Source: "{#DistDir}\crafts\cadcraft\cadcraft.exe"; DestDir: "{app}\crafts\cadcraft"; Flags: ignoreversion; Components: craft_cadcraft
+Source: "{#DistDir}\crafts\cadcraft\*"; DestDir: "{app}\crafts\cadcraft"; Excludes: "cadcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_cadcraft
+#endif
+#ifexist DistDir + "\crafts\photocraft\photocraft.exe"
+Source: "{#DistDir}\crafts\photocraft\photocraft.exe"; DestDir: "{app}\crafts\photocraft"; Flags: ignoreversion; Components: craft_photocraft
+Source: "{#DistDir}\crafts\photocraft\*"; DestDir: "{app}\crafts\photocraft"; Excludes: "photocraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_photocraft
+#endif
+#ifexist DistDir + "\crafts\lightcraft\lightcraft.exe"
+Source: "{#DistDir}\crafts\lightcraft\lightcraft.exe"; DestDir: "{app}\crafts\lightcraft"; Flags: ignoreversion; Components: craft_lightcraft
+Source: "{#DistDir}\crafts\lightcraft\*"; DestDir: "{app}\crafts\lightcraft"; Excludes: "lightcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_lightcraft
+#endif
+#ifexist DistDir + "\crafts\filmcraft\filmcraft.exe"
+Source: "{#DistDir}\crafts\filmcraft\filmcraft.exe"; DestDir: "{app}\crafts\filmcraft"; Flags: ignoreversion; Components: craft_filmcraft
+Source: "{#DistDir}\crafts\filmcraft\*"; DestDir: "{app}\crafts\filmcraft"; Excludes: "filmcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_filmcraft
+#endif
+#ifexist DistDir + "\crafts\vectorcraft\vectorcraft.exe"
+Source: "{#DistDir}\crafts\vectorcraft\vectorcraft.exe"; DestDir: "{app}\crafts\vectorcraft"; Flags: ignoreversion; Components: craft_vectorcraft
+Source: "{#DistDir}\crafts\vectorcraft\*"; DestDir: "{app}\crafts\vectorcraft"; Excludes: "vectorcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_vectorcraft
+#endif
+#ifexist DistDir + "\crafts\pdfcraft\pdfcraft.exe"
+Source: "{#DistDir}\crafts\pdfcraft\pdfcraft.exe"; DestDir: "{app}\crafts\pdfcraft"; Flags: ignoreversion; Components: craft_pdfcraft
+Source: "{#DistDir}\crafts\pdfcraft\*"; DestDir: "{app}\crafts\pdfcraft"; Excludes: "pdfcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_pdfcraft
+#endif
+#ifexist DistDir + "\crafts\deckcraft\deckcraft.exe"
+Source: "{#DistDir}\crafts\deckcraft\deckcraft.exe"; DestDir: "{app}\crafts\deckcraft"; Flags: ignoreversion; Components: craft_deckcraft
+Source: "{#DistDir}\crafts\deckcraft\*"; DestDir: "{app}\crafts\deckcraft"; Excludes: "deckcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_deckcraft
+#endif
+#ifexist DistDir + "\crafts\gridcraft\gridcraft.exe"
+Source: "{#DistDir}\crafts\gridcraft\gridcraft.exe"; DestDir: "{app}\crafts\gridcraft"; Flags: ignoreversion; Components: craft_gridcraft
+Source: "{#DistDir}\crafts\gridcraft\*"; DestDir: "{app}\crafts\gridcraft"; Excludes: "gridcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_gridcraft
+#endif
+#ifexist DistDir + "\crafts\soundcraft\soundcraft.exe"
+Source: "{#DistDir}\crafts\soundcraft\soundcraft.exe"; DestDir: "{app}\crafts\soundcraft"; Flags: ignoreversion; Components: craft_soundcraft
+Source: "{#DistDir}\crafts\soundcraft\*"; DestDir: "{app}\crafts\soundcraft"; Excludes: "soundcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_soundcraft
+#endif
+#ifexist DistDir + "\crafts\wordcraft\wordcraft.exe"
+Source: "{#DistDir}\crafts\wordcraft\wordcraft.exe"; DestDir: "{app}\crafts\wordcraft"; Flags: ignoreversion; Components: craft_wordcraft
+Source: "{#DistDir}\crafts\wordcraft\*"; DestDir: "{app}\crafts\wordcraft"; Excludes: "wordcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_wordcraft
+#endif
+#ifexist DistDir + "\crafts\designcraft\designcraft.exe"
+Source: "{#DistDir}\crafts\designcraft\designcraft.exe"; DestDir: "{app}\crafts\designcraft"; Flags: ignoreversion; Components: craft_designcraft
+Source: "{#DistDir}\crafts\designcraft\*"; DestDir: "{app}\crafts\designcraft"; Excludes: "designcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_designcraft
+#endif
+#ifexist DistDir + "\crafts\effectcraft\effectcraft.exe"
+Source: "{#DistDir}\crafts\effectcraft\effectcraft.exe"; DestDir: "{app}\crafts\effectcraft"; Flags: ignoreversion; Components: craft_effectcraft
+Source: "{#DistDir}\crafts\effectcraft\*"; DestDir: "{app}\crafts\effectcraft"; Excludes: "effectcraft.exe"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: craft_effectcraft
+#endif
+
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\epy_studio.exe"; IconFilename: "{app}\epy_studio.exe"
 Name: "{autoprograms}\ePy Reports"; Filename: "{app}\epy_reports.exe"; IconFilename: "{app}\epy_reports.exe"; Components: reports
@@ -142,6 +261,46 @@ Name: "{autoprograms}\ePy Quoting"; Filename: "{app}\epy_quoting.exe"; IconFilen
 #endif
 #ifexist DistDir + "\epy_outreach.exe"
 Name: "{autoprograms}\ePy Outreach"; Filename: "{app}\epy_outreach.exe"; IconFilename: "{app}\epy_outreach.exe"; Components: outreach
+#endif
+; Adopted crafting applications, installed from the staged
+; dist/.../crafts/<binary>/ tree this bundle carries. Guarded like the
+; optional apps: the binary may not be staged, and #ifexist keeps ISCC
+; able to compile either way.
+#ifexist DistDir + "\crafts\cadcraft\cadcraft.exe"
+Name: "{autoprograms}\ePy CAD"; Filename: "{app}\crafts\cadcraft\cadcraft.exe"; Components: craft_cadcraft
+#endif
+#ifexist DistDir + "\crafts\photocraft\photocraft.exe"
+Name: "{autoprograms}\ePy Paint"; Filename: "{app}\crafts\photocraft\photocraft.exe"; Components: craft_photocraft
+#endif
+#ifexist DistDir + "\crafts\lightcraft\lightcraft.exe"
+Name: "{autoprograms}\ePy Photo"; Filename: "{app}\crafts\lightcraft\lightcraft.exe"; Components: craft_lightcraft
+#endif
+#ifexist DistDir + "\crafts\filmcraft\filmcraft.exe"
+Name: "{autoprograms}\ePy Video"; Filename: "{app}\crafts\filmcraft\filmcraft.exe"; Components: craft_filmcraft
+#endif
+#ifexist DistDir + "\crafts\vectorcraft\vectorcraft.exe"
+Name: "{autoprograms}\ePy Vector"; Filename: "{app}\crafts\vectorcraft\vectorcraft.exe"; Components: craft_vectorcraft
+#endif
+#ifexist DistDir + "\crafts\pdfcraft\pdfcraft.exe"
+Name: "{autoprograms}\ePy PDF"; Filename: "{app}\crafts\pdfcraft\pdfcraft.exe"; Components: craft_pdfcraft
+#endif
+#ifexist DistDir + "\crafts\deckcraft\deckcraft.exe"
+Name: "{autoprograms}\ePy Decks"; Filename: "{app}\crafts\deckcraft\deckcraft.exe"; Components: craft_deckcraft
+#endif
+#ifexist DistDir + "\crafts\gridcraft\gridcraft.exe"
+Name: "{autoprograms}\ePy Sheets"; Filename: "{app}\crafts\gridcraft\gridcraft.exe"; Components: craft_gridcraft
+#endif
+#ifexist DistDir + "\crafts\soundcraft\soundcraft.exe"
+Name: "{autoprograms}\ePy Audio"; Filename: "{app}\crafts\soundcraft\soundcraft.exe"; Components: craft_soundcraft
+#endif
+#ifexist DistDir + "\crafts\wordcraft\wordcraft.exe"
+Name: "{autoprograms}\ePy Write"; Filename: "{app}\crafts\wordcraft\wordcraft.exe"; Components: craft_wordcraft
+#endif
+#ifexist DistDir + "\crafts\designcraft\designcraft.exe"
+Name: "{autoprograms}\ePy Layout"; Filename: "{app}\crafts\designcraft\designcraft.exe"; Components: craft_designcraft
+#endif
+#ifexist DistDir + "\crafts\effectcraft\effectcraft.exe"
+Name: "{autoprograms}\ePy Motion"; Filename: "{app}\crafts\effectcraft\effectcraft.exe"; Components: craft_effectcraft
 #endif
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\epy_studio.exe"; IconFilename: "{app}\epy_studio.exe"; Tasks: desktopicon
 

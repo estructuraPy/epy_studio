@@ -227,16 +227,28 @@ def _optional_ids() -> frozenset[str]:
 
 
 def _own_installer_ids() -> frozenset[str]:
-    """Return the ids Studio OFFERS and does not build.
+    """Return the ids that supply their OWN installer.
 
-    A separate question from ``optional``, which asks whether the sibling
-    checkout may be absent at build time. These are never built here at
-    all, so the installer names them nowhere and no probe of ours can
-    look inside an executable this repository does not produce.
+    Studio OFFERS them and never builds them: the installer names them
+    nowhere and no probe of ours can look inside an executable this
+    repository does not produce.
     """
     return frozenset(
         str(app["id"]) for app in _catalog_apps()
-        if str(app.get("ships", "studio")) != "studio"
+        if str(app.get("ships", "studio")) == "own_installer"
+    )
+
+
+def _installed_ids() -> frozenset[str]:
+    """Return the ids Studio's OWN installer installs (but never builds).
+
+    A separate question from ``_own_installer_ids``: these ARE named in the
+    .iss -- Studio's installer copies their staged tree -- guarded with
+    ``#ifexist`` because the binary may be absent at build time.
+    """
+    return frozenset(
+        str(app["id"]) for app in _catalog_apps()
+        if str(app.get("ships", "studio")) == "installed"
     )
 
 
@@ -290,17 +302,41 @@ def _verify_manifest() -> None:
         guarded[exe_name] = guarded.get(exe_name, "") + match.group("body")
     unguarded = _GUARD.sub("", iss)
     for app in catalog["apps"]:
-        exe = f"{app['id']}.exe"
+        ships = app.get("ships", "studio")
+        # The executable the installer copies: the UPSTREAM stem for an
+        # adopted application (its family id is the ePy one).
+        exe = f"{app.get('binary') or app['id']}.exe"
         component = f"Name: \"{app['component']}\""
-        if app.get("ships", "studio") != "studio":
-            # Studio does not build it, so the installer has nothing to
-            # install and the .iss must NOT name it. Checked in the negative,
-            # because a stray line would try to copy an executable this build
-            # never produces.
+        if ships == "own_installer":
+            # It supplies its own installer, so the .iss must NOT name it.
+            # Checked in the negative: a stray line would try to copy an
+            # executable this build never produces.
             if exe in iss or component in iss:
                 problems.append(
                     f"{exe} ships with its own installer and the .iss names "
                     f"it; Studio installs only what it builds"
+                )
+            continue
+        if ships == "installed":
+            # Studio's INSTALLER installs it (the staged tree under
+            # dist/.../crafts/<binary>/), so the .iss MUST name it -- and,
+            # because the binary may be absent at build time, MUST guard it
+            # with #ifexist exactly like an optional application.
+            inside = guarded.get(exe, "")
+            if exe not in inside:
+                problems.append(
+                    f"{exe} is installed and has no #ifexist block of its own "
+                    f"in the .iss"
+                )
+            if component not in inside:
+                problems.append(
+                    f"component {app['component']!r} of installed {exe} is "
+                    f"not inside its #ifexist block"
+                )
+            if exe in unguarded or component in unguarded:
+                problems.append(
+                    f"{exe} is installed but a line names it outside its "
+                    f"#ifexist block; ISCC would fail without the binary"
                 )
             continue
         if app.get("optional"):

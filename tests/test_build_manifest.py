@@ -51,18 +51,24 @@ def test_every_optional_application_is_guarded_and_no_required_one_is(
     iss = (ROOT / "windows" / "epy_studio.iss").read_text(encoding="utf-8")
     guards = list(build._GUARD.finditer(iss))
     assert guards, "no #ifexist block at all"
-    # An application Studio does not BUILD is not guarded, because the
-    # installer does not name it at all: there is nothing to guard.
-    unbuilt = build._own_installer_ids()
-    optional = build._optional_ids() - unbuilt
+    # An own-installer application is named NOWHERE -- it supplies its own
+    # installer. Everything else the installer touches (optional, and the
+    # `installed` ones Studio's own installer copies) is named inside an
+    # #ifexist block, because its checkout or its binary may be absent.
+    own = build._own_installer_ids()
+    optional = build._optional_ids() - own
+    exe_of = {
+        str(app["id"]): f"{app.get('binary') or app['id']}.exe"
+        for app in build._catalog_apps()
+    }
     guarded_exes = {match.group("exe") for match in guards}
-    assert guarded_exes == {f"{app_id}.exe" for app_id in optional}
+    assert guarded_exes == {exe_of[app_id] for app_id in optional}
 
     outside = build._GUARD.sub("", iss)
     for app in build._catalog_apps():
         app_id, component = str(app["id"]), str(app["component"])
-        exe = f"{app_id}.exe"
-        if app_id in unbuilt:
+        exe = exe_of[app_id]
+        if app_id in own:
             assert exe not in iss, f"{exe} is not built and the .iss names it"
             continue
         if app_id in optional:
@@ -79,7 +85,7 @@ def test_a_guard_body_names_the_application_it_guards() -> None:
     # name; every other block carries the executable.
     iss = (ROOT / "windows" / "epy_studio.iss").read_text(encoding="utf-8")
     by_exe = {
-        f"{app['id']}.exe": str(app["component"])
+        f"{app.get('binary') or app['id']}.exe": str(app["component"])
         for app in build._catalog_apps()
     }
     for match in build._GUARD.finditer(iss):
@@ -162,15 +168,41 @@ def test_a_required_application_missing_from_the_script_still_refuses(
 def test_the_optional_ids_come_from_the_catalog() -> None:
     # The private applications, plus the adopted ArtCraft ones: both may be
     # absent from a bundle -- the first because its checkout may be missing,
-    # the second because it is a foreign program Studio never builds.
+    # the second because its binary may not be staged.
     adopted = frozenset(
         str(app["id"]) for app in build._catalog_apps()
-        if app.get("ships") == "external"
+        if app.get("ships") == "installed"
     )
     private = frozenset(
         {"epy_draft", "epy_quoting", "epy_outreach", "epy_lab"}
     )
     assert build._optional_ids() == private | adopted
-    # A separate axis: everything Studio OFFERS but never builds -- epy_lab
-    # supplies itself, the adopted ones come from upstream.
-    assert build._own_installer_ids() == frozenset({"epy_lab"}) | adopted
+    # A separate axis: epy_lab supplies itself; the adopted ones are installed
+    # by Studio's own installer.
+    assert build._own_installer_ids() == frozenset({"epy_lab"})
+    assert build._installed_ids() == adopted
+
+
+def test_the_installed_applications_are_named_in_the_installer() -> None:
+    # `installed` means Studio's OWN installer installs it, so the .iss MUST
+    # name the BINARY (cadcraft.exe), inside an #ifexist block (the binary may
+    # be absent at build). The FAMILY id (epy_cadcraft.exe) is never a file.
+    installed = [
+        app for app in build._catalog_apps()
+        if app.get("ships") == "installed"
+    ]
+    assert installed
+    iss = (build.ROOT / "windows" / "epy_studio.iss").read_text(
+        encoding="utf-8", errors="replace")
+    for app in installed:
+        binary = str(app.get("binary") or app["id"])
+        assert f"{binary}.exe" in iss, binary
+        assert f"{app['id']}.exe" not in iss, app["id"]
+        assert f'Name: "{app["component"]}"' in iss, app["component"]
+
+
+def test_the_real_manifest_still_agrees() -> None:
+    # The catalog gained twelve adopted rows this session; the installer
+    # contract must still hold. This runs the SAME refusal the build runs, so a
+    # drift between the catalog and the .iss fails here and not at ship time.
+    build._verify_manifest()

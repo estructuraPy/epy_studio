@@ -333,6 +333,21 @@ class TestTheAdoptedApplications:
         with pytest.raises(ValueError, match="needs upstream"):
             _catalog.apps()
 
+    def test_an_adopted_entry_without_a_component_is_refused(
+            self, monkeypatch, tmp_path):
+        """Sibling of the upstream refusal: Studio's installer is what puts an
+        adopted application on the machine, so an entry that ships without
+        naming its Inno component promises an install nothing performs."""
+        data = json.loads(_catalog.catalog_path().read_text(encoding="utf-8"))
+        entry = next(
+            item for item in data["apps"] if item["id"] == "epy_cadcraft")
+        entry.pop("component")
+        path = tmp_path / "apps.epyson"
+        path.write_text(json.dumps(data), encoding="utf-8")
+        monkeypatch.setattr(_catalog, "catalog_path", lambda: path)
+        with pytest.raises(ValueError, match="needs component"):
+            _catalog.apps()
+
     def test_every_adopted_entry_records_its_licence(self) -> None:
         adopted = [app for app in _catalog.apps()
                    if app.ships == _catalog.SHIPS_INSTALLED]
@@ -371,6 +386,19 @@ class TestFindingAnAdoptedApplication:
         self._no_env(monkeypatch)
         monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
         folder = tmp_path / "Programs" / "cadcraft"
+        folder.mkdir(parents=True)
+        exe = folder / "cadcraft.exe"
+        exe.write_bytes(b"MZ")
+        assert _catalog.installed_exe(_cadcraft()) == exe
+
+    def test_then_the_launchers_own_crafts_folder(self, monkeypatch, tmp_path):
+        """Third step of the lookup order, and the one the others did not
+        reach: a bundled install keeps the craft beside the launcher."""
+        self._no_env(monkeypatch)
+        monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "empty"))
+        launcher = tmp_path / "launcher"
+        monkeypatch.setattr(_catalog, "install_dir", lambda: launcher)
+        folder = launcher / "crafts" / "cadcraft"
         folder.mkdir(parents=True)
         exe = folder / "cadcraft.exe"
         exe.write_bytes(b"MZ")

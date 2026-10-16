@@ -27,7 +27,7 @@ import pytest
 
 from epy_studio._core import _catalog
 from epy_studio._core._catalog import (
-    SHIPS_EXTERNAL,
+    SHIPS_INSTALLED,
     SHIPS_OWN_INSTALLER,
     SHIPS_WITH_STUDIO,
     App,
@@ -107,7 +107,7 @@ class TestTheAxesAreIndependent:
         # one supplies itself, the other is adopted from upstream.
         by_id = {app.app_id: app for app in apps()}
         assert by_id["epy_lab"].ships == SHIPS_OWN_INSTALLER
-        assert by_id["cadcraft"].ships == SHIPS_EXTERNAL
+        assert by_id["epy_cadcraft"].ships == SHIPS_INSTALLED
 
     def test_an_optional_application_is_not_therefore_unbuilt(self):
         """ePy Draft and ePy Quoting are optional AND built here."""

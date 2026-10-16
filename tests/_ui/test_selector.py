@@ -88,14 +88,20 @@ def test_every_required_application_gets_a_row(qt_app) -> None:
 def test_an_optional_application_without_its_exe_is_not_offered(
     qt_app,
 ) -> None:
-    # The owner's rule: not greyed, ABSENT. An optional application is
-    # handed out, not installed by leaving a box ticked, so a row for
-    # one that is not there would advertise something the installer
-    # cannot give.
-    from epy_studio._core._catalog import apps
+    # The owner's rule: not greyed, ABSENT. An optional application of
+    # OURS is handed out, not installed by leaving a box ticked, so a row
+    # for one that is not there would advertise something the installer
+    # cannot give. ADOPTED (external) applications are the exception: the
+    # reader installs them, so they are offered and carry Install/Locate;
+    # they are covered by their own tests below.
+    from epy_studio._core._catalog import SHIPS_INSTALLED, apps
     from epy_studio._ui.selector import build_window
 
-    optional = [app for app in apps() if app.optional]
+    optional = [
+        app
+        for app in apps()
+        if app.optional and app.ships != SHIPS_INSTALLED
+    ]
     assert optional, "nothing optional to test against"
     texts = _labels(build_window([], backend=Backend(), language="en"))
     for app in optional:
@@ -642,3 +648,129 @@ def test_what_the_machine_answered_is_remembered(
         assert again.version == "9.9"
     finally:
         window.close()
+
+
+# ------------------------------- adopted applications, install by choice
+
+
+def _buttons(window) -> list[str]:
+    """The text of every push button in the window."""
+    from PySide6.QtWidgets import QPushButton
+
+    return [
+        item.text()
+        for item in window.findChildren(QPushButton)
+        if item.text()
+    ]
+
+
+def test_an_adopted_app_without_its_exe_is_offered_to_install_or_locate(
+    qt_app, monkeypatch
+) -> None:
+    # Studio never installs an adopted application, so a row that is not
+    # there yet still has to appear: the reader decides. The rule that an
+    # optional application absent from disk is hidden is for OUR apps; an
+    # adopted one carries Install/Locate instead.
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    monkeypatch.setattr(selector, "installed_exe", lambda _app: None)
+    monkeypatch.setattr(selector, "load_external_paths", lambda: {})
+    window = selector.build_window([], backend=Backend(), language="en")
+    assert "ePy CAD" in _labels(window)
+    assert "Install..." in _buttons(window)
+    assert "Locate..." in _buttons(window)
+
+
+def test_open_hands_the_url_to_the_browser(qt_app, monkeypatch) -> None:
+    from PySide6 import QtGui
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    opened: list[str] = []
+    monkeypatch.setattr(
+        QtGui.QDesktopServices,
+        "openUrl",
+        staticmethod(lambda url: opened.append(url.toString())),
+    )
+    window = selector.build_window([], backend=Backend(), language="en")
+    try:
+        window._open("https://github.com/storytold/cadcraft/releases")
+        assert opened == ["https://github.com/storytold/cadcraft/releases"]
+        # An empty page (a non-GitHub upstream) opens nothing.
+        window._open("")
+        assert opened == ["https://github.com/storytold/cadcraft/releases"]
+    finally:
+        window.close()
+
+
+def test_a_located_executable_is_remembered_and_found_again(
+    qt_app, monkeypatch, tmp_path, scratch_registry
+) -> None:
+    from epy_studio._core._catalog import external_exe_env
+    from epy_studio._ui import selector
+
+    exe = tmp_path / "cadcraft.exe"
+    exe.write_bytes(b"MZ")
+    monkeypatch.delenv(external_exe_env("cadcraft"), raising=False)
+    selector.remember_external_path("epy_cadcraft", exe)
+    assert selector.load_external_paths() == {"epy_cadcraft": str(exe)}
+    import os
+
+    assert os.environ[external_exe_env("cadcraft")] == str(exe)
+
+
+def test_a_located_executable_that_is_gone_is_dropped(
+    qt_app, monkeypatch, tmp_path, scratch_registry
+) -> None:
+    from epy_studio._core._catalog import external_exe_env
+    from epy_studio._ui import selector
+
+    monkeypatch.delenv(external_exe_env("cadcraft"), raising=False)
+    selector.remember_external_path("epy_cadcraft", tmp_path / "gone.exe")
+    assert selector.load_external_paths() == {}
+
+
+def test_locate_stores_the_choice_and_rebuilds_the_window(
+    qt_app, monkeypatch, tmp_path, scratch_registry
+) -> None:
+    from PySide6 import QtWidgets
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._core._catalog import external_exe_env
+    from epy_studio._ui import selector
+
+    exe = tmp_path / "cadcraft.exe"
+    exe.write_bytes(b"MZ")
+    monkeypatch.delenv(external_exe_env("cadcraft"), raising=False)
+    monkeypatch.setattr(
+        QtWidgets.QFileDialog,
+        "getOpenFileName",
+        staticmethod(lambda *args, **kwargs: (str(exe), "")),
+    )
+    window = selector.build_window([], backend=Backend(), language="en")
+    app = next(a for a in selector.apps() if a.app_id == "epy_cadcraft")
+    window._locate(app)
+    assert selector.load_external_paths() == {"epy_cadcraft": str(exe)}
+
+
+def test_locate_cancelled_changes_nothing(
+    qt_app, monkeypatch, scratch_registry
+) -> None:
+    from PySide6 import QtWidgets
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._core._catalog import external_exe_env
+    from epy_studio._ui import selector
+
+    monkeypatch.delenv(external_exe_env("cadcraft"), raising=False)
+    monkeypatch.setattr(
+        QtWidgets.QFileDialog,
+        "getOpenFileName",
+        staticmethod(lambda *args, **kwargs: ("", "")),
+    )
+    window = selector.build_window([], backend=Backend(), language="en")
+    app = next(a for a in selector.apps() if a.app_id == "epy_cadcraft")
+    window._locate(app)
+    assert selector.load_external_paths() == {}

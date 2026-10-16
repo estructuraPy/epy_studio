@@ -43,6 +43,14 @@ _ES: dict[str, str] = {
     "Not installed — re-run the installer to add it.":
         "No instalado — vuelva a ejecutar el instalador para agregarlo.",
     "(not installed)": "(no instalado)",
+    "Install...": "Instalar...",
+    "Locate...": "Ubicar...",
+    "Locate {app}": "Ubicar {app}",
+    "Get it from its own project:": "Obténgalo de su propio proyecto:",
+    "Point Studio at an executable already on disk.":
+        "Indique a Studio un ejecutable que ya esté en disco.",
+    "No download page is declared for this application.":
+        "No hay página de descarga declarada para esta aplicación.",
     "ePy Studio is not set up to open your documents. Add it to "
     "the list of applications that handle Markdown files?\n\n"
     "This only adds it to “Open with”. Windows still asks you to "

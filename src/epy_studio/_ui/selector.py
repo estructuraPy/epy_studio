@@ -36,7 +36,16 @@ from .._core._backends import (
     detect_docs,
     handoff_env,
 )
-from .._core._catalog import App, apps, install_dir, installed_exe
+from .._core._catalog import (
+    SHIPS_INSTALLED,
+    App,
+    apps,
+    craft_env,
+    download_page,
+    external_exe_env,
+    install_dir,
+    installed_exe,
+)
 
 __all__ = ["APP_NAME", "build_window", "manual_path"]
 
@@ -215,6 +224,52 @@ def remember_theme(name: str) -> None:
     from PySide6.QtCore import QSettings  # noqa: PLC0415
 
     QSettings(ORGANIZATION, "epy_studio").setValue(THEME_KEY, name)
+EXTERNAL_KEY = "external/{}"
+"""QSettings key naming a user-located adopted application's exe."""
+
+
+def remember_external_path(app_id: str, path: str | Path) -> None:
+    """Store where the reader pointed at an adopted application.
+
+    Studio never installs an adopted application, so when the reader has
+    one the resolver would not find, they point at it once and Studio
+    remembers it -- the stored form of the ``EPY_<ID>_EXE`` escape hatch.
+
+    Args:
+        app_id: The catalog id, e.g. ``cadcraft``.
+        path: The executable the reader chose.
+    """
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    QSettings(ORGANIZATION, "epy_studio").setValue(
+        EXTERNAL_KEY.format(app_id), str(path)
+    )
+
+
+def load_external_paths() -> dict[str, str]:
+    """Return every adopted application the reader located, by id.
+
+    Read once, as the window is built, and published through the
+    ``EPY_<ID>_EXE`` variable the resolver (:func:`installed_exe`)
+    already honours, so a located application behaves exactly like one
+    found on ``PATH``. A stored path that is no longer on disk is
+    dropped rather than offered.
+
+    Returns:
+        id -> executable path, for the entries still on disk.
+    """
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    settings = QSettings(ORGANIZATION, "epy_studio")
+    found: dict[str, str] = {}
+    for app in apps():
+        if app.ships != SHIPS_INSTALLED:
+            continue
+        stored = str(settings.value(EXTERNAL_KEY.format(app.app_id), ""))
+        if stored and Path(stored).is_file():
+            found[app.app_id] = stored
+            os.environ[external_exe_env(app.exe_stem)] = stored
+    return found
 
 
 def build_window(
@@ -241,11 +296,13 @@ def build_window(
     from PySide6.QtCore import (  # noqa: PLC0415
         QObject,
         Qt,  # noqa: PLC0415
+        QUrl,  # noqa: PLC0415
         Signal,
     )
     from PySide6.QtGui import QDesktopServices, QFont, QIcon  # noqa: PLC0415
     from PySide6.QtWidgets import (  # noqa: PLC0415
         QCheckBox,
+        QFileDialog,
         QFrame,
         QHBoxLayout,
         QLabel,
@@ -257,6 +314,9 @@ def build_window(
     )
 
     _i18n.set_language(language or preferred_language())
+    # A located adopted application is given back to the resolver before
+    # any row is built, so it shows as installed from the first draw.
+    load_external_paths()
     # Not detected here. Asking the machine means starting a subprocess
     # per candidate interpreter, and inside the frozen bundle this
     # process is not one of them -- so it probes whatever `python` and
@@ -338,13 +398,19 @@ def build_window(
             base = install_dir()
             for app in apps():
                 exe = installed_exe(app)
-                if app.optional and exe is None:
-                    # An OPTIONAL application that is not installed
-                    # is not offered at all -- not greyed. A greyed
-                    # row says 'you could have this, re-run the
-                    # installer'; an optional one is the owner's to
-                    # hand out, and its absence is not an incomplete
-                    # install.
+                if (
+                    app.optional
+                    and exe is None
+                    and app.ships != SHIPS_INSTALLED
+                ):
+                    # An OPTIONAL application of OURS that is not
+                    # installed is not offered at all -- not greyed. A
+                    # greyed row says 'you could have this, re-run the
+                    # installer'. An ADOPTED application is the
+                    # exception: Studio never installs it, so the reader
+                    # must be able to install it or point at it, and
+                    # that needs the row to be there whether it is
+                    # installed yet or not.
                     continue
                 layout.addWidget(self._tool_row(base, app))
 
@@ -531,29 +597,95 @@ def build_window(
                     lambda _checked=False, p=exe_path: self._launch(p)
                 )
                 button.setIcon(QIcon(str(exe_path)))
-            else:
-                button.setEnabled(False)
-                button.setToolTip(
-                    _i18n.tr(
-                        "Not installed — re-run the installer to "
-                        "add it."
-                    )
-                    if app.built_here
-                    else _i18n.tr(
-                        "Not installed — it ships on its own; install "
-                        "it and this row becomes available."
-                    )
+                line.addWidget(
+                    button, alignment=Qt.AlignmentFlag.AlignVCenter
                 )
+                return row
+            if app.ships == SHIPS_INSTALLED:
+                # Studio never installs an adopted application, so the
+                # reader decides: fetch it from its own project, or point
+                # Studio at a copy already on disk. Two doors, and no
+                # disabled Open in between.
                 desc_label.setText(
                     _i18n.tr(app.description)
                     + "  "
                     + _i18n.tr("(not installed)")
                 )
+                page = download_page(app)
+                install = QPushButton(_i18n.tr("Install..."), row)
+                install.setMinimumWidth(96)
+                install.setEnabled(bool(page))
+                install.setToolTip(
+                    _i18n.tr("Get it from its own project:") + f" {page}"
+                    if page
+                    else _i18n.tr(
+                        "No download page is declared for this "
+                        "application."
+                    )
+                )
+                install.clicked.connect(
+                    lambda _checked=False, p=page: self._open(p)
+                )
+                locate = QPushButton(_i18n.tr("Locate..."), row)
+                locate.setMinimumWidth(96)
+                locate.setToolTip(
+                    _i18n.tr(
+                        "Point Studio at an executable already on disk."
+                    )
+                )
+                locate.clicked.connect(
+                    lambda _checked=False, a=app: self._locate(a)
+                )
+                line.addWidget(
+                    install, alignment=Qt.AlignmentFlag.AlignVCenter
+                )
+                line.addWidget(
+                    locate, alignment=Qt.AlignmentFlag.AlignVCenter
+                )
+                return row
+            button.setEnabled(False)
+            button.setToolTip(
+                _i18n.tr(
+                    "Not installed — re-run the installer to "
+                    "add it."
+                )
+                if app.built_here
+                else _i18n.tr(
+                    "Not installed — it ships on its own; install "
+                    "it and this row becomes available."
+                )
+            )
+            desc_label.setText(
+                _i18n.tr(app.description)
+                + "  "
+                + _i18n.tr("(not installed)")
+            )
             line.addWidget(button, alignment=Qt.AlignmentFlag.AlignVCenter)
             return row
 
+        def _open(self, url: str) -> None:
+            """Open a URL in the reader's browser, ignoring an empty one."""
+            if url:
+                QDesktopServices.openUrl(QUrl(url))
+
+        def _locate(self, app: App) -> None:
+            """Ask for an adopted application's executable, remember it."""
+            chosen, _filter = QFileDialog.getOpenFileName(
+                self,
+                _i18n.tr("Locate {app}").format(app=app.display),
+                "",
+                "Executable (*.exe)",
+            )
+            if not chosen:
+                return
+            remember_external_path(app.app_id, chosen)
+            os.environ[external_exe_env(app.exe_stem)] = chosen
+            replacement = build_window(self._files, backend=self._backend)
+            replacement.show()
+            self.close()
+
         def _launch(self, exe_path: Path) -> None:
-            """Start the selected tool, forwarding files and the hint."""
+            """Start the selected tool, forwarding files and the hints."""
             subprocess.Popen(  # noqa: S603 — fixed path in our install dir
                 [str(exe_path), *self._files],
                 cwd=str(exe_path.parent),
@@ -562,6 +694,9 @@ def build_window(
                     **handoff_env(
                         self._settled_backend(), offer=docs_offered()
                     ),
+                    # The adopted ArtCraft CLIs found on this machine, so a
+                    # drawing flow the launched app drives can reach them.
+                    **craft_env(),
                 },
             )
             self.close()

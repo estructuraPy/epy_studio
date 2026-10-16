@@ -1,6 +1,6 @@
 {
   "config_id": "apps",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Which applications this Studio bundle carries: the executable each ships, how it is presented in the selector, which installer component installs it, and whether it may register as the default document handler.",
   "audit_status": "n_a",
   "audit_notes": "Application bundle manifest (executables, selector text, installer components, file-association policy): packaging configuration with no physical, normative or monetary magnitude. Was marked verified without any reference; there is nothing to verify against a document.",
@@ -10,56 +10,127 @@
   "_optional_note": "An optional application is one the owner hands out, not one the installer offers. Its sibling checkout may be ABSENT when Studio is built: the spec skips it by name, the installer script wraps its lines in #ifexist so it compiles either way, and the selector does not offer it at all when its executable is not there -- not greyed, absent. A required application whose executable is missing keeps its greyed row: that is a custom install the user chose, and saying how to complete it is still right. The lists an application needs at build time -- asset subpackages, hidden imports, its icon -- live here too, so a new application really is one entry and not nine edits.",
   "apps": [
     {
-      "id": "epy_reports", "display": "ePy Reports", "component": "reports",
-      "register": "default", "optional": false,
-      "asset_packages": ["branding", "themes", "reference_docx", "mathjax", "csl", "mermaid", "nomnoml"],
+      "id": "epy_reports",
+      "display": "ePy Reports",
+      "component": "reports",
+      "register": "default",
+      "optional": false,
+      "asset_packages": [
+        "branding",
+        "themes",
+        "reference_docx",
+        "mathjax",
+        "csl",
+        "mermaid",
+        "nomnoml"
+      ],
       "hidden_imports": [],
       "icon": "_core/_packaging/assets_build/epy_reports.ico",
       "description": "Technical reports — live preview, exports to PDF, Word and HTML"
     },
     {
-      "id": "epy_slides", "display": "ePy Slides", "component": "slides",
-      "register": "default", "optional": false,
-      "asset_packages": ["branding", "themes", "reference_pptx", "mathjax", "revealjs", "mermaid", "nomnoml"],
+      "id": "epy_slides",
+      "display": "ePy Slides",
+      "component": "slides",
+      "register": "default",
+      "optional": false,
+      "asset_packages": [
+        "branding",
+        "themes",
+        "reference_pptx",
+        "mathjax",
+        "revealjs",
+        "mermaid",
+        "nomnoml"
+      ],
       "hidden_imports": [],
       "icon": "_core/_packaging/assets_build/epy_slides.ico",
       "description": "Presentation decks — live preview, exports to PDF, PowerPoint and HTML"
     },
     {
-      "id": "epy_papers", "display": "ePy Papers", "component": "papers",
-      "register": "default", "optional": false,
-      "asset_packages": ["branding", "themes", "mathjax", "csl", "mermaid", "nomnoml"],
+      "id": "epy_papers",
+      "display": "ePy Papers",
+      "component": "papers",
+      "register": "default",
+      "optional": false,
+      "asset_packages": [
+        "branding",
+        "themes",
+        "mathjax",
+        "csl",
+        "mermaid",
+        "nomnoml"
+      ],
       "hidden_imports": [],
       "icon": "_core/_packaging/assets_build/epy_papers.ico",
       "description": "Academic manuscripts — live preview, journal profiles, exports to PDF and Word"
     },
     {
-      "id": "epy_draft", "display": "ePy Draft", "component": "craft",
-      "register": "openwith", "optional": true,
-      "asset_packages": ["branding", "prompts"],
-      "hidden_imports": ["keyring.backends", "keyring.backends.Windows", "keyring.backends.SecretService", "keyring.backends.chainer", "keyring.backends.fail", "yaml", "pypdf"],
+      "id": "epy_draft",
+      "display": "ePy Draft",
+      "component": "craft",
+      "register": "openwith",
+      "optional": true,
+      "asset_packages": [
+        "branding",
+        "prompts"
+      ],
+      "hidden_imports": [
+        "keyring.backends",
+        "keyring.backends.Windows",
+        "keyring.backends.SecretService",
+        "keyring.backends.chainer",
+        "keyring.backends.fail",
+        "yaml",
+        "pypdf"
+      ],
       "icon": "_core/_packaging/assets_build/epy_draft.ico",
       "description": "Batch drafting over your reference library — no preview, renders through the other three"
     },
     {
-      "id": "epy_quoting", "display": "ePy Quoting", "component": "quoting",
-      "register": "none", "optional": true,
-      "asset_packages": ["branding"],
+      "id": "epy_quoting",
+      "display": "ePy Quoting",
+      "component": "quoting",
+      "register": "none",
+      "optional": true,
+      "asset_packages": [
+        "branding"
+      ],
       "hidden_imports": [],
       "icon": "_core/_packaging/assets_build/epy_quoting.ico",
       "description": "Service offers — fee quotation for structural-engineering work"
     },
     {
-      "id": "epy_outreach", "display": "ePy Outreach", "component": "outreach",
-      "register": "none", "optional": true,
-      "asset_packages": ["prompts"],
-      "hidden_imports": [],
+      "id": "epy_outreach",
+      "display": "ePy Outreach",
+      "component": "outreach",
+      "register": "none",
+      "optional": true,
+      "asset_packages": [
+        "prompts"
+      ],
+      "hidden_imports": [
+        "epy_draft",
+        "epy_draft._core._index.store",
+        "epy_draft._core._project.content",
+        "epy_draft._core._prompts.library",
+        "keyring.backends",
+        "keyring.backends.Windows",
+        "keyring.backends.SecretService",
+        "keyring.backends.chainer",
+        "keyring.backends.fail",
+        "yaml",
+        "pypdf"
+      ],
       "icon": "_core/_packaging/assets_build/epy_outreach.ico",
       "description": "Sales outreach — contact registry, client research and service-presentation letters"
     },
     {
-      "id": "epy_lab", "display": "ePy Lab", "component": "",
-      "register": "none", "optional": true,
+      "id": "epy_lab",
+      "display": "ePy Lab",
+      "component": "",
+      "register": "none",
+      "optional": true,
       "ships": "own_installer",
       "own_install_appid": "{3C1F6B2E-9A74-4E0D-8B5A-6F2D1C0E7A91}",
       "asset_packages": [],
@@ -68,76 +139,136 @@
       "description": "Virtual structures laboratory — parametric experiments, exports interactive pages, animations and .kepy cases"
     },
     {
-      "id": "cadcraft", "display": "ePy CAD", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_cadcraft",
+      "display": "ePy CAD",
+      "component": "craft_cadcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/cadcraft — MIT OR Apache-2.0",
-      "description": "2D drafting and CAD — reads and writes DXF (R12–2018) and DWG; the drafting engine is ArtCraft's CADCraft (MIT/Apache-2.0)"
+      "description": "2D drafting and CAD — reads and writes DXF (R12–2018) and DWG; the drafting engine is ArtCraft's CADCraft (MIT/Apache-2.0)",
+      "binary": "cadcraft"
     },
     {
-      "id": "photocraft", "display": "ePy Paint", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_photocraft",
+      "display": "ePy Paint",
+      "component": "craft_photocraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/photocraft — MIT OR Apache-2.0",
-      "description": "Raster image editor — layers, selections, PSD/PSB; the engine is ArtCraft's PhotoCraft (MIT/Apache-2.0)"
+      "description": "Raster image editor — layers, selections, PSD/PSB; the engine is ArtCraft's PhotoCraft (MIT/Apache-2.0)",
+      "binary": "photocraft"
     },
     {
-      "id": "lightcraft", "display": "ePy Photo", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_lightcraft",
+      "display": "ePy Photo",
+      "component": "craft_lightcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/lightcraft — MIT OR Apache-2.0",
-      "description": "RAW photo catalog and develop — DNG/CR2/ARW/NEF and more; the engine is ArtCraft's LightCraft (MIT/Apache-2.0)"
+      "description": "RAW photo catalog and develop — DNG/CR2/ARW/NEF and more; the engine is ArtCraft's LightCraft (MIT/Apache-2.0)",
+      "binary": "lightcraft"
     },
     {
-      "id": "filmcraft", "display": "ePy Video", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_filmcraft",
+      "display": "ePy Video",
+      "component": "craft_filmcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/filmcraft — MIT OR Apache-2.0",
-      "description": "Video editor — H.264/HEVC/ProRes/AV1, MP4/MOV/WebM; the engine is ArtCraft's FilmCraft (MIT/Apache-2.0)"
+      "description": "Video editor — H.264/HEVC/ProRes/AV1, MP4/MOV/WebM; the engine is ArtCraft's FilmCraft (MIT/Apache-2.0)",
+      "binary": "filmcraft"
     },
     {
-      "id": "vectorcraft", "display": "ePy Vector", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_vectorcraft",
+      "display": "ePy Vector",
+      "component": "craft_vectorcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/vectorcraft — MIT OR Apache-2.0",
-      "description": "Vector graphics — SVG/PDF/EPS export and DXF read; the engine is ArtCraft's VectorCraft (MIT/Apache-2.0)"
+      "description": "Vector graphics — SVG/PDF/EPS export and DXF read; the engine is ArtCraft's VectorCraft (MIT/Apache-2.0)",
+      "binary": "vectorcraft"
     },
     {
-      "id": "pdfcraft", "display": "ePy PDF", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_pdfcraft",
+      "display": "ePy PDF",
+      "component": "craft_pdfcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/pdfcraft — MIT OR Apache-2.0",
-      "description": "PDF authoring and batch — combine, split, extract, edit; the engine is ArtCraft's PDFCraft (MIT/Apache-2.0)"
+      "description": "PDF authoring and batch — combine, split, extract, edit; the engine is ArtCraft's PDFCraft (MIT/Apache-2.0)",
+      "binary": "pdfcraft"
     },
     {
-      "id": "deckcraft", "display": "ePy Decks", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_deckcraft",
+      "display": "ePy Decks",
+      "component": "craft_deckcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/deckcraft — MIT OR Apache-2.0",
-      "description": "Presentations — opens and saves .pptx, exports PDF; the engine is ArtCraft's DeckCraft (MIT/Apache-2.0)"
+      "description": "Presentations — opens and saves .pptx, exports PDF; the engine is ArtCraft's DeckCraft (MIT/Apache-2.0)",
+      "binary": "deckcraft"
     },
     {
-      "id": "gridcraft", "display": "ePy Sheets", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_gridcraft",
+      "display": "ePy Sheets",
+      "component": "craft_gridcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/gridcraft — MIT OR Apache-2.0",
-      "description": "Spreadsheets — native .xlsx, formulas, CSV/TSV; the engine is ArtCraft's GridCraft (MIT/Apache-2.0)"
+      "description": "Spreadsheets — native .xlsx, formulas, CSV/TSV; the engine is ArtCraft's GridCraft (MIT/Apache-2.0)",
+      "binary": "gridcraft"
     },
     {
-      "id": "soundcraft", "display": "ePy Audio", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_soundcraft",
+      "display": "ePy Audio",
+      "component": "craft_soundcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/soundcraft — MIT OR Apache-2.0",
-      "description": "Audio production — WAV/FLAC/AIFF, mixing and bounce; the engine is ArtCraft's SoundCraft (MIT/Apache-2.0)"
+      "description": "Audio production — WAV/FLAC/AIFF, mixing and bounce; the engine is ArtCraft's SoundCraft (MIT/Apache-2.0)",
+      "binary": "soundcraft"
     },
     {
-      "id": "wordcraft", "display": "ePy Write", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_wordcraft",
+      "display": "ePy Write",
+      "component": "craft_wordcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/wordcraft — MIT OR Apache-2.0",
-      "description": "Word processor — .docx/.odt/.rtf/.md, exports PDF; the engine is ArtCraft's WordCraft (MIT/Apache-2.0)"
+      "description": "Word processor — .docx/.odt/.rtf/.md, exports PDF; the engine is ArtCraft's WordCraft (MIT/Apache-2.0)",
+      "binary": "wordcraft"
     },
     {
-      "id": "designcraft", "display": "ePy Layout", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_designcraft",
+      "display": "ePy Layout",
+      "component": "craft_designcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/designcraft — MIT OR Apache-2.0",
-      "description": "Page layout and composition — IDML import/export; the engine is ArtCraft's DesignCraft (MIT/Apache-2.0)"
+      "description": "Page layout and composition — IDML import/export; the engine is ArtCraft's DesignCraft (MIT/Apache-2.0)",
+      "binary": "designcraft"
     },
     {
-      "id": "effectcraft", "display": "ePy Motion", "component": "", "register": "none",
-      "optional": true, "ships": "external",
+      "id": "epy_effectcraft",
+      "display": "ePy Motion",
+      "component": "craft_effectcraft",
+      "register": "none",
+      "optional": true,
+      "ships": "installed",
       "upstream": "github.com/storytold/effectcraft — MIT OR Apache-2.0",
-      "description": "Motion graphics and VFX — Lottie, H.264/ProRes; the engine is ArtCraft's EffectCraft (MIT/Apache-2.0)"
+      "description": "Motion graphics and VFX — Lottie, H.264/ProRes; the engine is ArtCraft's EffectCraft (MIT/Apache-2.0)",
+      "binary": "effectcraft"
     }
   ],
   "_ships_note": "ePy Lab is the first application Studio OFFERS without BUILDING. It is a front end over the design libraries rather than a self-contained editor: its own PyInstaller spec collects EIGHTEEN packages -- itself plus epy_analysis, epy_plotter, epy_units and fourteen design libraries -- together with the openseespy and Pynite engines. Studio's _app_analysis gives each application pathex=[its own src] and one _config tree, so bundling this one would mean teaching the spec to carry a dependency closure, and the bundle already stands at 6.7 GB / 12,840 files. So it keeps its own installer and its own folder, the selector finds it through installed_exe(), and a machine without it simply does not see the row. 'optional' and 'ships' are independent axes: optional says the sibling checkout may be absent at BUILD time, ships says Studio never builds it at all. Because it is not built here it needs no .iss lines, no icon in this repo and no hidden imports -- which is why those three are empty rather than guessed.",

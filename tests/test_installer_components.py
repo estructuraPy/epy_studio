@@ -60,12 +60,12 @@ def test_every_application_is_its_own_component() -> None:
     # installer never draws.
     declared = {
         str(app["component"]) for app in _apps()
-        if str(app.get("ships", "studio")) == "studio"
+        if str(app.get("ships", "studio")) in ("studio", "installed")
     }
     assert declared <= components
     assert all(
         not str(app["component"]) for app in _apps()
-        if str(app.get("ships", "studio")) != "studio"
+        if str(app.get("ships", "studio")) not in ("studio", "installed")
     )
 
 

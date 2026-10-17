@@ -30,6 +30,7 @@ _ES: dict[str, str] = {
     "Open": "Abrir",
     "User manual": "Manual de usuario",
     "Language": "Idioma",
+    "Columns": "Columnas",
     "Theme": "Tema",
     "looking for ePy Docs…": "buscando ePy Docs…",
     "Offer ePy Docs as a renderer":
@@ -61,6 +62,14 @@ _ES: dict[str, str] = {
         "Windows le pedirá confirmar el valor predeterminado en "
         "Configuración.",
     "Export backends: built-in": "Motores de exportación: integrados",
+    # --- the ePy Blender launcher --------------------------------------
+    "ePy Blender": "ePy Blender",
+    "Open Blender with the ePy Suite addon loaded.":
+        "Abrir Blender con el addon de ePy Suite cargado.",
+    "Not available: install epy_blender, or set "
+    "EPY_BLENDER_LAUNCH to the launcher command.":
+        "No disponible: instale epy_blender o defina EPY_BLENDER_LAUNCH "
+        "con el comando del lanzador.",
     # --- what each application is for ---------------------------------
     #
     # One sentence per application, and they answer the SAME questions in

@@ -774,3 +774,93 @@ def test_locate_cancelled_changes_nothing(
     app = next(a for a in selector.apps() if a.app_id == "epy_cadcraft")
     window._locate(app)
     assert selector.load_external_paths() == {}
+
+
+class TestTheBlenderLauncher:
+    """The ePy Blender action: a launcher COMMAND, disabled when absent."""
+
+    def test_the_variable_wins(self, monkeypatch) -> None:
+        from epy_studio._ui import selector
+
+        monkeypatch.setenv(
+            selector.ENV_BLENDER_LAUNCH, "python -m epy_blender")
+        assert selector.blender_launch_command() == "python -m epy_blender"
+
+    def test_then_the_installed_entry_point(self, monkeypatch) -> None:
+        from epy_studio._ui import selector
+
+        monkeypatch.delenv(selector.ENV_BLENDER_LAUNCH, raising=False)
+        monkeypatch.setattr(
+            selector.shutil, "which",
+            lambda name: r"C:\x\epy_blender-launch.exe"
+            if name == "epy_blender-launch" else None)
+        assert selector.blender_launch_command().endswith(".exe")
+
+    def test_absence_is_the_empty_command(self, monkeypatch) -> None:
+        from epy_studio._ui import selector
+
+        monkeypatch.delenv(selector.ENV_BLENDER_LAUNCH, raising=False)
+        monkeypatch.setattr(selector.shutil, "which", lambda _name: None)
+        assert selector.blender_launch_command() == ""
+
+
+# ------------------------------------------- the theme
+
+
+def test_the_theme_is_stored_and_read_back(qt_app, ini_settings) -> None:
+    from epy_studio._ui import selector
+
+    selector.remember_theme("technical")
+    assert selector.current_theme() == "technical"
+
+
+def test_an_unknown_stored_theme_falls_back(qt_app, ini_settings) -> None:
+    from epy_export import DEFAULT_THEME, ORGANIZATION
+
+    from epy_studio._ui import selector
+
+    ini_settings(ORGANIZATION, "epy_studio").setValue("theme", "nope")
+    assert selector.current_theme() == DEFAULT_THEME
+
+
+def test_choosing_a_theme_applies_it_and_rebuilds(
+    qt_app, ini_settings, monkeypatch
+) -> None:
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    applied: list[str] = []
+    monkeypatch.setattr(
+        selector, "apply_theme", lambda _app, name: applied.append(name)
+    )
+    window = selector.build_window([], backend=Backend(), language="en")
+    window._set_theme("minimal")
+    assert applied == ["minimal"]
+    assert selector.current_theme() == "minimal"
+
+
+def test_the_column_count_is_stored_and_read_back(
+    qt_app, ini_settings
+) -> None:
+    from epy_studio._ui import selector
+
+    selector.remember_columns(4)
+    assert selector.current_columns() == 4
+
+
+def test_an_invalid_column_count_falls_back(qt_app, ini_settings) -> None:
+    from epy_export import ORGANIZATION
+
+    from epy_studio._ui import selector
+
+    ini_settings(ORGANIZATION, "epy_studio").setValue("columns", "9")
+    assert selector.current_columns() == selector._GRID_COLUMNS
+
+
+def test_choosing_a_column_count_rebuilds(qt_app, ini_settings) -> None:
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    window = selector.build_window([], backend=Backend(), language="en")
+    window._set_columns(4)
+    assert selector.current_columns() == 4

@@ -16,6 +16,7 @@ registration CLI still runs before any Qt import.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import threading
 from pathlib import Path
@@ -47,7 +48,7 @@ from .._core._catalog import (
     installed_exe,
 )
 
-__all__ = ["APP_NAME", "build_window", "manual_path"]
+__all__ = ["APP_NAME", "blender_launch_command", "build_window", "manual_path"]
 
 APP_NAME = "ePy Studio"
 
@@ -68,6 +69,25 @@ def manual_path() -> Path | None:
         if candidate.is_file():
             return candidate
     return None
+
+
+ENV_BLENDER_LAUNCH = "EPY_BLENDER_LAUNCH"
+"""Names the command that opens Blender with the ePy Suite."""
+
+
+def blender_launch_command() -> str:
+    """Return the command that opens Blender with the suite, or ``""``.
+
+    The launcher is a Python entry point -- ``epy_blender-launch``, installed
+    by the ``epy_blender`` package -- not an executable this repository builds,
+    so a machine without it simply has no Blender action. The variable is the
+    escape hatch for a workspace checkout, where the launcher is
+    ``python -m epy_blender``.
+    """
+    named = os.environ.get(ENV_BLENDER_LAUNCH, "")
+    if named:
+        return named
+    return shutil.which("epy_blender-launch") or ""
 
 
 def preferred_language() -> str:
@@ -112,6 +132,34 @@ def preferred_language() -> str:
     if QLocale.system().language() == QLocale.Language.Spanish:
         return "es"
     return "en"
+
+
+_GRID_COLUMNS = 3
+"""How many application cards share a row by default."""
+
+_GRID_CHOICES = (2, 3, 4, 5)
+"""The column counts the reader may choose from."""
+
+
+def current_columns() -> int:
+    """Return the stored column count, falling back to the default."""
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    stored = str(
+        QSettings(ORGANIZATION, "epy_studio").value("columns", "")
+    )
+    try:
+        value = int(stored)
+    except (TypeError, ValueError):
+        return _GRID_COLUMNS
+    return value if value in _GRID_CHOICES else _GRID_COLUMNS
+
+
+def remember_columns(count: int) -> None:
+    """Store the reader's chosen column count."""
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    QSettings(ORGANIZATION, "epy_studio").setValue("columns", count)
 
 
 _DETECT_WAIT_MS = 30_000
@@ -299,16 +347,19 @@ def build_window(
         QUrl,  # noqa: PLC0415
         Signal,
     )
-    from PySide6.QtGui import QDesktopServices, QFont, QIcon  # noqa: PLC0415
+    from PySide6.QtGui import QDesktopServices  # noqa: PLC0415
     from PySide6.QtWidgets import (  # noqa: PLC0415
         QCheckBox,
+        QComboBox,
         QFileDialog,
         QFrame,
+        QGridLayout,
         QHBoxLayout,
         QLabel,
         QMainWindow,
         QMenu,
         QPushButton,
+        QScrollArea,
         QVBoxLayout,
         QWidget,
     )
@@ -370,14 +421,11 @@ def build_window(
 
             root = QWidget(self)
             layout = QVBoxLayout(root)
-            layout.setContentsMargins(24, 24, 24, 24)
-            layout.setSpacing(12)
+            layout.setContentsMargins(30, 28, 30, 18)
+            layout.setSpacing(14)
 
             title = QLabel(APP_NAME, root)
-            title_font = QFont()
-            title_font.setPointSize(18)
-            title_font.setBold(True)
-            title.setFont(title_font)
+            title.setObjectName("AppTitle")
             layout.addWidget(title)
 
             if self._files:
@@ -393,9 +441,17 @@ def build_window(
                     _i18n.tr("Choose the editor for your document:"),
                     root,
                 )
+            subtitle.setObjectName("AppSubtitle")
+            subtitle.setWordWrap(True)
             layout.addWidget(subtitle)
 
             base = install_dir()
+            grid = QGridLayout()
+            grid.setHorizontalSpacing(16)
+            grid.setVerticalSpacing(16)
+            grid.setContentsMargins(0, 0, 0, 0)
+            index = 0
+            columns = current_columns()
             for app in apps():
                 exe = installed_exe(app)
                 if (
@@ -412,7 +468,19 @@ def build_window(
                     # that needs the row to be there whether it is
                     # installed yet or not.
                     continue
-                layout.addWidget(self._tool_row(base, app))
+                grid.addWidget(
+                    self._app_card(base, app),
+                    index // columns,
+                    index % columns,
+                )
+                index += 1
+            holder = QWidget()
+            holder.setLayout(grid)
+            scroll = QScrollArea(root)
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.Shape.NoFrame)
+            scroll.setWidget(holder)
+            layout.addWidget(scroll, 1)
 
             bottom = QHBoxLayout()
             manual = manual_path()
@@ -426,6 +494,26 @@ def build_window(
             else:
                 manual_btn.setEnabled(False)
             bottom.addWidget(manual_btn)
+            # ePy Blender: a real launcher COMMAND, not an executable this
+            # repository builds. Disabled, with the reason, when it is absent.
+            blender = blender_launch_command()
+            blender_btn = QPushButton(_i18n.tr("ePy Blender"), root)
+            if blender:
+                blender_btn.setToolTip(
+                    _i18n.tr("Open Blender with the ePy Suite addon loaded.")
+                )
+                blender_btn.clicked.connect(
+                    lambda _checked=False, c=blender: self._launch_command(c)
+                )
+            else:
+                blender_btn.setEnabled(False)
+                blender_btn.setToolTip(
+                    _i18n.tr(
+                        "Not available: install epy_blender, or set "
+                        "EPY_BLENDER_LAUNCH to the launcher command."
+                    )
+                )
+            bottom.addWidget(blender_btn)
             # A reader who changes it here changes it for the selector
             # only; each application keeps its own, because each stores
             # the choice under its own name. Studio writes its own key
@@ -452,6 +540,18 @@ def build_window(
                 )
             theme_btn.setMenu(theme_menu)
             bottom.addWidget(theme_btn)
+            columns_label = QLabel(_i18n.tr("Columns"), root)
+            bottom.addWidget(columns_label)
+            columns_combo = QComboBox(root)
+            for count in _GRID_CHOICES:
+                columns_combo.addItem(str(count), count)
+            columns_combo.setCurrentText(str(current_columns()))
+            columns_combo.currentIndexChanged.connect(
+                lambda _index: self._set_columns(
+                    int(columns_combo.currentData())
+                )
+            )
+            bottom.addWidget(columns_combo)
             # Offered only where there is something to offer: a
             # checkbox for a package nobody has is a question with
             # one answer, and the status strip already says so.
@@ -566,54 +666,66 @@ def build_window(
             replacement.show()
             self.close()
 
-        def _tool_row(self, base: Path, app: App) -> Any:
-            """Build one launchable row.
+        def _set_columns(self, count: int) -> None:
+            """Store the column count and rebuild the grid."""
+            remember_columns(count)
+            replacement = build_window(self._files, backend=self._backend)
+            replacement.show()
+            self.close()
+
+        def _app_card(self, base: Path, app: App) -> Any:
+            """Build one application card for the grid.
 
             ``base`` is where the applications Studio BUILDS live. One that
             ships with its own installer is somewhere else entirely, so the
             path is resolved by the catalog rather than assembled here.
             """
             exe_path = installed_exe(app) or base / f"{app.app_id}.exe"
-            row = QFrame(self)
-            row.setFrameShape(QFrame.Shape.StyledPanel)
-            line = QHBoxLayout(row)
+            card = QFrame(self)
+            card.setObjectName("AppCard")
+            card.setFrameShape(QFrame.Shape.NoFrame)
+            card.setMinimumWidth(240)
+            column = QVBoxLayout(card)
+            column.setContentsMargins(18, 18, 18, 16)
+            column.setSpacing(8)
 
-            text_col = QVBoxLayout()
-            name_label = QLabel(app.display, row)
-            name_font = QFont()
-            name_font.setPointSize(12)
-            name_font.setBold(True)
-            name_label.setFont(name_font)
-            text_col.addWidget(name_label)
-            desc_label = QLabel(_i18n.tr(app.description), row)
-            desc_label.setWordWrap(True)
-            text_col.addWidget(desc_label)
-            line.addLayout(text_col, stretch=1)
+            badge = QLabel(card)
+            badge.setObjectName("AppBadge")
+            badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            badge.setFixedSize(68, 68)
+            badge.setText(app.display[:1].upper())
+            column.addWidget(badge, alignment=Qt.AlignmentFlag.AlignHCenter)
 
-            button = QPushButton(_i18n.tr("Open"), row)
-            button.setMinimumWidth(96)
+            name = QLabel(app.display, card)
+            name.setObjectName("AppName")
+            name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            name.setWordWrap(True)
+            column.addWidget(name)
+
+            desc = QLabel(_i18n.tr(app.description), card)
+            desc.setObjectName("AppDesc")
+            desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            desc.setWordWrap(True)
+            column.addWidget(desc)
+            column.addStretch(1)
+
             if exe_path.is_file():
+                button = QPushButton(_i18n.tr("Open"), card)
+                button.setObjectName("Primary")
                 button.clicked.connect(
                     lambda _checked=False, p=exe_path: self._launch(p)
                 )
-                button.setIcon(QIcon(str(exe_path)))
-                line.addWidget(
-                    button, alignment=Qt.AlignmentFlag.AlignVCenter
-                )
-                return row
+                column.addWidget(button)
+                return card
             if app.ships == SHIPS_INSTALLED:
-                # Studio never installs an adopted application, so the
-                # reader decides: fetch it from its own project, or point
-                # Studio at a copy already on disk. Two doors, and no
-                # disabled Open in between.
-                desc_label.setText(
+                desc.setText(
                     _i18n.tr(app.description)
                     + "  "
                     + _i18n.tr("(not installed)")
                 )
                 page = download_page(app)
-                install = QPushButton(_i18n.tr("Install..."), row)
-                install.setMinimumWidth(96)
+                actions = QHBoxLayout()
+                install = QPushButton(_i18n.tr("Install..."), card)
                 install.setEnabled(bool(page))
                 install.setToolTip(
                     _i18n.tr("Get it from its own project:") + f" {page}"
@@ -626,8 +738,8 @@ def build_window(
                 install.clicked.connect(
                     lambda _checked=False, p=page: self._open(p)
                 )
-                locate = QPushButton(_i18n.tr("Locate..."), row)
-                locate.setMinimumWidth(96)
+                actions.addWidget(install)
+                locate = QPushButton(_i18n.tr("Locate..."), card)
                 locate.setToolTip(
                     _i18n.tr(
                         "Point Studio at an executable already on disk."
@@ -636,13 +748,10 @@ def build_window(
                 locate.clicked.connect(
                     lambda _checked=False, a=app: self._locate(a)
                 )
-                line.addWidget(
-                    install, alignment=Qt.AlignmentFlag.AlignVCenter
-                )
-                line.addWidget(
-                    locate, alignment=Qt.AlignmentFlag.AlignVCenter
-                )
-                return row
+                actions.addWidget(locate)
+                column.addLayout(actions)
+                return card
+            button = QPushButton(_i18n.tr("Open"), card)
             button.setEnabled(False)
             button.setToolTip(
                 _i18n.tr(
@@ -655,13 +764,13 @@ def build_window(
                     "it and this row becomes available."
                 )
             )
-            desc_label.setText(
+            desc.setText(
                 _i18n.tr(app.description)
                 + "  "
                 + _i18n.tr("(not installed)")
             )
-            line.addWidget(button, alignment=Qt.AlignmentFlag.AlignVCenter)
-            return row
+            column.addWidget(button)
+            return card
 
         def _open(self, url: str) -> None:
             """Open a URL in the reader's browser, ignoring an empty one."""
@@ -682,6 +791,14 @@ def build_window(
             os.environ[external_exe_env(app.exe_stem)] = chosen
             replacement = build_window(self._files, backend=self._backend)
             replacement.show()
+            self.close()
+
+        def _launch_command(self, command: str) -> None:
+            """Start a launcher command (a path, or ``python -m ...``)."""
+            subprocess.Popen(  # noqa: S602 - the command is the user's own setting
+                command,
+                shell=True,
+            )
             self.close()
 
         def _launch(self, exe_path: Path) -> None:

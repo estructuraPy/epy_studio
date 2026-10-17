@@ -7,7 +7,7 @@
 # (`estructuraPy/epy_studio_install`) - the ONE place the executables live.
 #
 # REQUIRED SECRET
-#   SUITE_TOKEN - a PAT with `repo` scope over the `estructuraPy` org. Three of
+#   SUITE_PAT - a PAT with `repo` scope over the `estructuraPy` org. Three of
 #   the six apps (epy_draft, epy_quoting, epy_outreach) are PRIVATE, so the
 #   default GITHUB_TOKEN cannot check them out; and the tag job needs write
 #   access to `epy_studio_install` to publish the setup. Add it under
@@ -50,9 +50,9 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "cannot clone $r" }
           }
 
-      - name: Check out the private applications (when SUITE_TOKEN is set)
+      - name: Check out the private applications (when SUITE_PAT is set)
         env:
-          GH_TOKEN: ${{ secrets.SUITE_TOKEN }}
+          GH_TOKEN: ${{ secrets.SUITE_PAT }}
         shell: pwsh
         run: |
           # The three PRIVATE apps are OPTIONAL in the catalog: without the
@@ -62,7 +62,7 @@ jobs:
           foreach ($r in @('epy_draft', 'epy_quoting', 'epy_outreach')) {
             gh repo clone "estructuraPy/$r" $r -- --depth 1 2>$null
             if ($LASTEXITCODE -ne 0) {
-              Write-Warning "$r skipped: no SUITE_TOKEN (it is optional)"
+              Write-Warning "$r skipped: no SUITE_PAT (it is optional)"
             }
           }
           # gh's non-zero exit is the EXPECTED "no token" answer here; the
@@ -137,11 +137,11 @@ jobs:
       - name: Publish to the artifacts repository
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          GH_TOKEN: ${{ secrets.SUITE_TOKEN }}
+          GH_TOKEN: ${{ secrets.SUITE_PAT }}
         shell: pwsh
         run: |
           if (-not $env:GH_TOKEN) {
-            Write-Warning "SUITE_TOKEN is not set; the setup stays as this run's artifact."
+            Write-Warning "SUITE_PAT is not set; the setup stays as this run's artifact."
             exit 0
           }
           $setup = Get-ChildItem "epy_studio/dist/epy_studio-setup-*.exe" |

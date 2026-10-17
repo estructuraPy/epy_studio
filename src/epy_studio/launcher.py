@@ -25,6 +25,26 @@ __all__ = ["main", "offer_registration"]
 _PROMPT_KEY = "registration_prompt"
 """Settings key remembering that the question below was already asked."""
 
+THEME_KEY = "theme"
+"""Settings key remembering the reader's chosen palette."""
+
+
+def _theme_name() -> str:
+    """Return the stored theme, falling back to the default.
+
+    Returns:
+        A name from :data:`epy_export.theme_names`.
+    """
+    from epy_export import (  # noqa: PLC0415
+        DEFAULT_THEME,
+        ORGANIZATION,
+        theme_names,
+    )
+    from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+    stored = str(QSettings(ORGANIZATION, "epy_studio").value(THEME_KEY, ""))
+    return stored if stored in theme_names() else DEFAULT_THEME
+
 
 def offer_registration() -> str:
     """Ask once whether ePy Studio should handle Markdown documents.

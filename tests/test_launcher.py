@@ -141,6 +141,11 @@ def test_main_builds_and_shows_the_window_when_no_cli_flag_is_given(
         def __init__(self, argv) -> None:
             built["app_argv"] = argv
 
+        def setStyleSheet(self, _style: str) -> None:  # noqa: N802
+            # The chosen palette is applied to the QApplication; the fake
+            # only has to accept the call.
+            built["styled"] = True
+
         def exec(self) -> int:
             return 42
 

@@ -1,0 +1,144 @@
+# Build the Windows installer - the whole chain, on a runner.
+#
+# This is the CI twin of the local build: PyInstaller builds the bundle, the
+# adopted Crafting Apps are staged from their upstream portable releases, and
+# Inno Setup compiles `windows/epy_studio.iss`. The result is uploaded as an
+# artifact, and on a tag it is published to the artifacts repository
+# (`estructuraPy/epy_studio_install`) - the ONE place the executables live.
+#
+# REQUIRED SECRET
+#   SUITE_TOKEN - a PAT with `repo` scope over the `estructuraPy` org. Three of
+#   the six apps (epy_draft, epy_quoting, epy_outreach) are PRIVATE, so the
+#   default GITHUB_TOKEN cannot check them out; and the tag job needs write
+#   access to `epy_studio_install` to publish the setup. Add it under
+#   Settings > Secrets and variables > Actions.
+#
+# LAYOUT MATTERS
+#   `epy_studio.spec` looks for its sibling repositories in the PARENT of this
+#   checkout (`_SUITE = _ROOT.parent`). So this repository is checked out into
+#   `epy_studio/` and every sibling sits beside it, exactly like the local
+#   workspace.
+name: Build installer
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  installer:
+    name: Windows installer
+    runs-on: windows-latest
+    steps:
+      - name: Check out this repository into the suite
+        uses: actions/checkout@v4
+        with:
+          path: epy_studio
+
+      - name: Check out the public suite siblings
+        shell: pwsh
+        run: |
+          foreach ($r in @('epy_export', 'epy_reports', 'epy_slides',
+                           'epy_papers')) {
+            git clone --depth 1 "https://github.com/estructuraPy/$r.git" $r
+            if ($LASTEXITCODE -ne 0) { throw "cannot clone $r" }
+          }
+
+      - name: Check out the private applications (when SUITE_TOKEN is set)
+        env:
+          GH_TOKEN: ${{ secrets.SUITE_TOKEN }}
+        shell: pwsh
+        run: |
+          # The three PRIVATE apps are OPTIONAL in the catalog: without the
+          # token the bundle is built from the public editors + the crafts,
+          # and epy_draft/quoting/outreach are skipped BY NAME (build.py says
+          # so). With it, the full bundle is produced.
+          foreach ($r in @('epy_draft', 'epy_quoting', 'epy_outreach')) {
+            gh repo clone "estructuraPy/$r" $r -- --depth 1 2>$null
+            if ($LASTEXITCODE -ne 0) {
+              Write-Warning "$r skipped: no SUITE_TOKEN (it is optional)"
+            }
+          }
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install the suite and PyInstaller
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller
+          # epy_export first: the apps depend on it and it is on no index.
+          python -m pip install -e .\epy_export
+          foreach ($r in @('epy_reports', 'epy_slides', 'epy_papers',
+                           'epy_draft', 'epy_quoting', 'epy_outreach')) {
+            if (Test-Path $r) { python -m pip install -e ".\$r" }
+          }
+
+      - name: Build the bundle
+        working-directory: epy_studio
+        run: python build.py
+
+      - name: Stage the adopted crafts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $stage = "epy_studio/dist/epy_studio/crafts"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          foreach ($c in @(
+              'cadcraft', 'photocraft', 'lightcraft', 'filmcraft',
+              'vectorcraft', 'pdfcraft', 'deckcraft', 'gridcraft',
+              'soundcraft', 'wordcraft', 'designcraft', 'effectcraft')) {
+            $dl = Join-Path $env:RUNNER_TEMP "dl_$c"
+            New-Item -ItemType Directory -Force -Path $dl | Out-Null
+            gh release download -R "storytold/$c" `
+              -p "*windows-x64-portable.zip" -D $dl --clobber
+            if ($LASTEXITCODE -ne 0) { throw "cannot download $c" }
+            $zip = Get-ChildItem $dl -Filter *.zip | Select-Object -First 1
+            $ex = Join-Path $env:RUNNER_TEMP "ex_$c"
+            Expand-Archive -Path $zip.FullName -DestinationPath $ex -Force
+            $inner = Get-ChildItem $ex -Directory | Select-Object -First 1
+            $dest = Join-Path $stage $c
+            New-Item -ItemType Directory -Force -Path $dest | Out-Null
+            Copy-Item "$($inner.FullName)\*" $dest -Recurse -Force
+          }
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Compile the installer
+        working-directory: epy_studio
+        shell: pwsh
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "windows\epy_studio.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
+
+      - name: Upload the installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: epy_studio-setup
+          path: epy_studio/dist/epy_studio-setup-*.exe
+          if-no-files-found: error
+
+      - name: Publish to the artifacts repository
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.SUITE_TOKEN }}
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem "epy_studio/dist/epy_studio-setup-*.exe" |
+            Select-Object -First 1
+          gh release create "${{ github.ref_name }}" $setup.FullName `
+            -R estructuraPy/epy_studio_install `
+            --title "ePy Studio ${{ github.ref_name }}" `
+            --notes "Built from ${{ github.repository }}@${{ github.sha }}."

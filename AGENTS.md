@@ -24,14 +24,21 @@ Las ArtCraft se copian a NUESTRA organización (`estructuraPy`) como repos
 seguir sus cambios. El campo `upstream` del catálogo nombra la procedencia,
 licencia incluida.
 
-## 3. Un repositorio con todos los `.exe`
+## 3. Dos sitios, uno por visibilidad
 
-Los ejecutables para instalar todo lo asociado a ePy Studio viven en **UN**
-repositorio dedicado: **`estructuraPy/epy_studio_install`** (privado). Lleva
-`apps/<id>/<id>.exe` (las apps que compila Studio) y `crafts/<binary>/` (los
-árboles adoptados), más un `manifest.epyson` GENERADO del catálogo. El
-instalador consume ese repo; no se dispersan binarios por otros repos ni se
-commitean `.exe` a los repos de código.
+Cada clase de ejecutable tiene **UN solo sitio**, y ninguna se copia al otro:
+
+- **Públicos** → `estructuraPy/epy_studio_install` (**público**): las apps
+  públicas que compila Studio (`epy_reports`, `epy_slides`, `epy_papers`), las
+  12 crafts adoptadas y el instalador público.
+- **Privados** → `estructuraPy/epy_studio_install_private` (**privado**): las
+  apps privadas (`epy_draft`, `epy_quoting`, `epy_outreach`) y el instalador
+  completo. Requiere `SUITE_PAT` (Contents: read) para descargarse.
+
+El instalador consume el sitio que corresponde a lo que va a instalar; los
+`manifest.epyson` de cada sitio se generan del catálogo (`_config/apps.epyson`)
+y no se editan a mano. Un exe público NO se commitea al sitio privado, ni al
+revés.
 
 ## 4. Instalación con ePy Studio (`ships: "installed"`)
 

@@ -65,6 +65,10 @@ jobs:
               Write-Warning "$r skipped: no SUITE_TOKEN (it is optional)"
             }
           }
+          # gh's non-zero exit is the EXPECTED "no token" answer here; the
+          # step must not fail for it (the apps are optional and build.py
+          # skips them by name).
+          exit 0
 
       - name: Set up Python
         uses: actions/setup-python@v5

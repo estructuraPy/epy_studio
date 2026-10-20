@@ -18,12 +18,46 @@ env:
 jobs:
   lint:
     name: Lint (ruff)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, epy-ci]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Its post-step rewrites .git/config and wedges on this runner.
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Create the job venv
+        # Ubuntu 24.04 has no `python` alias and its system pip is externally
+        # managed (PEP 668), so every install below targets this venv.
+        run: |
+          P="$(command -v python || command -v python3)"
+          "$P" -m venv "$RUNNER_TEMP/ci-venv"
+          echo "$RUNNER_TEMP/ci-venv/bin" >> "$GITHUB_PATH"
+      - name: Refresh the local suite mirrors
+        # Self-hosted only: $HOME/epy-mirrors holds full bare clones, so pip's
+        # git+ specs resolve locally instead of re-cloning the suite per job.
+        # A failed fetch stops the job: a stale mirror would lie about main.
+        run: |
+          MIRRORS="$HOME/epy-mirrors"
+          if [ ! -d "$MIRRORS" ]; then
+            echo "no local mirrors; installing from GitHub"
+            exit 0
+          fi
+          REPOS="epy_suite epy_units epy_export epy_analysis epy_plotter epy_docs epy_concrete epy_steel epy_timber epy_masonry epy_geotechnical epy_project epy_bridges epy_houses epy_tanks epy_tall epy_structure epy_buildings epy_towers"
+          for repo in $REPOS; do
+            git config --global --unset-all "url.$MIRRORS/$repo.git.insteadOf" || true
+          done
+          for repo in $REPOS; do
+            git -C "$MIRRORS/$repo.git" fetch origin \
+              "+refs/heads/main:refs/heads/main" "+refs/tags/*:refs/tags/*" \
+              || { echo "mirror refresh failed: $repo"; exit 1; }
+          done
+          for repo in $REPOS; do
+            git config --global --replace-all "url.$MIRRORS/$repo.git.insteadOf" \
+              "https://github.com/estructuraPy/$repo.git"
+          done
+          echo "$HOME/bin" >> "$GITHUB_PATH"
       - name: Install ruff
         run: pip install "ruff>=0.5"
       - name: ruff check
@@ -31,12 +65,46 @@ jobs:
 
   typecheck:
     name: Typecheck (pyright)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, epy-ci]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Its post-step rewrites .git/config and wedges on this runner.
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Create the job venv
+        # Ubuntu 24.04 has no `python` alias and its system pip is externally
+        # managed (PEP 668), so every install below targets this venv.
+        run: |
+          P="$(command -v python || command -v python3)"
+          "$P" -m venv "$RUNNER_TEMP/ci-venv"
+          echo "$RUNNER_TEMP/ci-venv/bin" >> "$GITHUB_PATH"
+      - name: Refresh the local suite mirrors
+        # Self-hosted only: $HOME/epy-mirrors holds full bare clones, so pip's
+        # git+ specs resolve locally instead of re-cloning the suite per job.
+        # A failed fetch stops the job: a stale mirror would lie about main.
+        run: |
+          MIRRORS="$HOME/epy-mirrors"
+          if [ ! -d "$MIRRORS" ]; then
+            echo "no local mirrors; installing from GitHub"
+            exit 0
+          fi
+          REPOS="epy_suite epy_units epy_export epy_analysis epy_plotter epy_docs epy_concrete epy_steel epy_timber epy_masonry epy_geotechnical epy_project epy_bridges epy_houses epy_tanks epy_tall epy_structure epy_buildings epy_towers"
+          for repo in $REPOS; do
+            git config --global --unset-all "url.$MIRRORS/$repo.git.insteadOf" || true
+          done
+          for repo in $REPOS; do
+            git -C "$MIRRORS/$repo.git" fetch origin \
+              "+refs/heads/main:refs/heads/main" "+refs/tags/*:refs/tags/*" \
+              || { echo "mirror refresh failed: $repo"; exit 1; }
+          done
+          for repo in $REPOS; do
+            git config --global --replace-all "url.$MIRRORS/$repo.git.insteadOf" \
+              "https://github.com/estructuraPy/$repo.git"
+          done
+          echo "$HOME/bin" >> "$GITHUB_PATH"
       - name: Install the shared engine (not on PyPI)
         run: >-
           pip install "epy_export[pdf,qt] @ git+https://github.com/estructuraPy/epy_export.git@v0.3.0"
@@ -59,12 +127,46 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, epy-ci]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Its post-step rewrites .git/config and wedges on this runner.
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Create the job venv
+        # Ubuntu 24.04 has no `python` alias and its system pip is externally
+        # managed (PEP 668), so every install below targets this venv.
+        run: |
+          P="$(command -v python || command -v python3)"
+          "$P" -m venv "$RUNNER_TEMP/ci-venv"
+          echo "$RUNNER_TEMP/ci-venv/bin" >> "$GITHUB_PATH"
+      - name: Refresh the local suite mirrors
+        # Self-hosted only: $HOME/epy-mirrors holds full bare clones, so pip's
+        # git+ specs resolve locally instead of re-cloning the suite per job.
+        # A failed fetch stops the job: a stale mirror would lie about main.
+        run: |
+          MIRRORS="$HOME/epy-mirrors"
+          if [ ! -d "$MIRRORS" ]; then
+            echo "no local mirrors; installing from GitHub"
+            exit 0
+          fi
+          REPOS="epy_suite epy_units epy_export epy_analysis epy_plotter epy_docs epy_concrete epy_steel epy_timber epy_masonry epy_geotechnical epy_project epy_bridges epy_houses epy_tanks epy_tall epy_structure epy_buildings epy_towers"
+          for repo in $REPOS; do
+            git config --global --unset-all "url.$MIRRORS/$repo.git.insteadOf" || true
+          done
+          for repo in $REPOS; do
+            git -C "$MIRRORS/$repo.git" fetch origin \
+              "+refs/heads/main:refs/heads/main" "+refs/tags/*:refs/tags/*" \
+              || { echo "mirror refresh failed: $repo"; exit 1; }
+          done
+          for repo in $REPOS; do
+            git config --global --replace-all "url.$MIRRORS/$repo.git.insteadOf" \
+              "https://github.com/estructuraPy/$repo.git"
+          done
+          echo "$HOME/bin" >> "$GITHUB_PATH"
       - name: Install Qt runtime libraries (headless)
         run: |
           sudo apt-get update
@@ -82,12 +184,46 @@ jobs:
   housekeeper:
     name: Housekeeper (--strict)
     needs: [lint]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, epy-ci]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Its post-step rewrites .git/config and wedges on this runner.
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Create the job venv
+        # Ubuntu 24.04 has no `python` alias and its system pip is externally
+        # managed (PEP 668), so every install below targets this venv.
+        run: |
+          P="$(command -v python || command -v python3)"
+          "$P" -m venv "$RUNNER_TEMP/ci-venv"
+          echo "$RUNNER_TEMP/ci-venv/bin" >> "$GITHUB_PATH"
+      - name: Refresh the local suite mirrors
+        # Self-hosted only: $HOME/epy-mirrors holds full bare clones, so pip's
+        # git+ specs resolve locally instead of re-cloning the suite per job.
+        # A failed fetch stops the job: a stale mirror would lie about main.
+        run: |
+          MIRRORS="$HOME/epy-mirrors"
+          if [ ! -d "$MIRRORS" ]; then
+            echo "no local mirrors; installing from GitHub"
+            exit 0
+          fi
+          REPOS="epy_suite epy_units epy_export epy_analysis epy_plotter epy_docs epy_concrete epy_steel epy_timber epy_masonry epy_geotechnical epy_project epy_bridges epy_houses epy_tanks epy_tall epy_structure epy_buildings epy_towers"
+          for repo in $REPOS; do
+            git config --global --unset-all "url.$MIRRORS/$repo.git.insteadOf" || true
+          done
+          for repo in $REPOS; do
+            git -C "$MIRRORS/$repo.git" fetch origin \
+              "+refs/heads/main:refs/heads/main" "+refs/tags/*:refs/tags/*" \
+              || { echo "mirror refresh failed: $repo"; exit 1; }
+          done
+          for repo in $REPOS; do
+            git config --global --replace-all "url.$MIRRORS/$repo.git.insteadOf" \
+              "https://github.com/estructuraPy/$repo.git"
+          done
+          echo "$HOME/bin" >> "$GITHUB_PATH"
       # Several rules keep their canonical implementation in the suite's
       # private tooling, which a runner that checks out one repository
       # does not have. Those rules report themselves NOT CHECKED, by
@@ -102,12 +238,46 @@ jobs:
     name: Build distribution
     needs: test
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, epy-ci]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Its post-step rewrites .git/config and wedges on this runner.
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Create the job venv
+        # Ubuntu 24.04 has no `python` alias and its system pip is externally
+        # managed (PEP 668), so every install below targets this venv.
+        run: |
+          P="$(command -v python || command -v python3)"
+          "$P" -m venv "$RUNNER_TEMP/ci-venv"
+          echo "$RUNNER_TEMP/ci-venv/bin" >> "$GITHUB_PATH"
+      - name: Refresh the local suite mirrors
+        # Self-hosted only: $HOME/epy-mirrors holds full bare clones, so pip's
+        # git+ specs resolve locally instead of re-cloning the suite per job.
+        # A failed fetch stops the job: a stale mirror would lie about main.
+        run: |
+          MIRRORS="$HOME/epy-mirrors"
+          if [ ! -d "$MIRRORS" ]; then
+            echo "no local mirrors; installing from GitHub"
+            exit 0
+          fi
+          REPOS="epy_suite epy_units epy_export epy_analysis epy_plotter epy_docs epy_concrete epy_steel epy_timber epy_masonry epy_geotechnical epy_project epy_bridges epy_houses epy_tanks epy_tall epy_structure epy_buildings epy_towers"
+          for repo in $REPOS; do
+            git config --global --unset-all "url.$MIRRORS/$repo.git.insteadOf" || true
+          done
+          for repo in $REPOS; do
+            git -C "$MIRRORS/$repo.git" fetch origin \
+              "+refs/heads/main:refs/heads/main" "+refs/tags/*:refs/tags/*" \
+              || { echo "mirror refresh failed: $repo"; exit 1; }
+          done
+          for repo in $REPOS; do
+            git config --global --replace-all "url.$MIRRORS/$repo.git.insteadOf" \
+              "https://github.com/estructuraPy/$repo.git"
+          done
+          echo "$HOME/bin" >> "$GITHUB_PATH"
       - name: Install build
         run: pip install build
       # pyproject-build, NOT "python -m build": for -m, sys.path[0] is

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -16,15 +17,25 @@ from epy_studio._core import _catalog
 SPEC_LISTS_BEFORE_THE_MOVE = {
     "epy_reports": (
         (
-            "branding", "themes", "reference_docx", "mathjax", "csl",
-            "mermaid", "nomnoml",
+            "branding",
+            "themes",
+            "reference_docx",
+            "mathjax",
+            "csl",
+            "mermaid",
+            "nomnoml",
         ),
         (),
     ),
     "epy_slides": (
         (
-            "branding", "themes", "reference_pptx", "mathjax", "revealjs",
-            "mermaid", "nomnoml",
+            "branding",
+            "themes",
+            "reference_pptx",
+            "mathjax",
+            "revealjs",
+            "mermaid",
+            "nomnoml",
         ),
         (),
     ),
@@ -35,9 +46,13 @@ SPEC_LISTS_BEFORE_THE_MOVE = {
     "epy_draft": (
         ("branding", "prompts"),
         (
-            "keyring.backends", "keyring.backends.Windows",
-            "keyring.backends.SecretService", "keyring.backends.chainer",
-            "keyring.backends.fail", "yaml", "pypdf",
+            "keyring.backends",
+            "keyring.backends.Windows",
+            "keyring.backends.SecretService",
+            "keyring.backends.chainer",
+            "keyring.backends.fail",
+            "yaml",
+            "pypdf",
         ),
     ),
 }
@@ -46,14 +61,27 @@ SPEC_LISTS_BEFORE_THE_MOVE = {
 def test_every_shipped_application_is_listed() -> None:
     ids = [app.app_id for app in _catalog.apps()]
     assert ids == [
-        "epy_reports", "epy_slides", "epy_papers", "epy_draft", "epy_quoting",
-        "epy_outreach", "epy_lab",
+        "epy_reports",
+        "epy_slides",
+        "epy_papers",
+        "epy_draft",
+        "epy_quoting",
+        "epy_outreach",
+        "epy_lab",
         # The adopted ArtCraft Crafting Apps (MIT/Apache-2.0), in catalog
         # order, under their ePy FAMILY names; `binary` carries the upstream
         # stem the resolver actually looks for on disk.
-        "epy_cadcraft", "epy_photocraft", "epy_lightcraft", "epy_filmcraft",
-        "epy_vectorcraft", "epy_pdfcraft", "epy_deckcraft", "epy_gridcraft",
-        "epy_soundcraft", "epy_wordcraft", "epy_designcraft",
+        "epy_cadcraft",
+        "epy_photocraft",
+        "epy_lightcraft",
+        "epy_filmcraft",
+        "epy_vectorcraft",
+        "epy_pdfcraft",
+        "epy_deckcraft",
+        "epy_gridcraft",
+        "epy_soundcraft",
+        "epy_wordcraft",
+        "epy_designcraft",
         "epy_effectcraft",
     ]
 
@@ -72,9 +100,7 @@ def test_draft_advertises_open_with_and_never_claims_the_default() -> None:
 # The applications whose repositories are PRIVATE. Kept as a literal
 # rather than derived, because the fact lives on GitHub and a test that
 # asked the network would answer differently offline.
-PRIVATE = frozenset(
-    {"epy_draft", "epy_quoting", "epy_outreach", "epy_lab"}
-)
+PRIVATE = frozenset({"epy_draft", "epy_quoting", "epy_outreach", "epy_lab"})
 
 
 def test_an_application_is_optional_when_it_is_private_or_adopted() -> None:
@@ -225,16 +251,25 @@ def test_an_absent_optional_application_is_skipped_by_name(
     )  # every optional one but epy_quoting and epy_outreach
     built, skipped = _catalog.for_build(suite)
     assert [app.app_id for app in built] == [
-        "epy_reports", "epy_slides", "epy_papers", "epy_draft",
+        "epy_reports",
+        "epy_slides",
+        "epy_papers",
+        "epy_draft",
     ]
     # Two kinds of omission, and they are DIFFERENT: epy_quoting and
     # epy_outreach are absent from this suite, while every application that
     # reaches the user by another route is never built here at all.
-    absent = {line.split()[3].rstrip(":") for line in skipped
-              if "SKIPPED optional" in line}
+    absent = {
+        line.split()[3].rstrip(":")
+        for line in skipped
+        if "SKIPPED optional" in line
+    }
     assert absent == {"epy_quoting", "epy_outreach"}
-    unbuilt = {line.split()[3].rstrip(":") for line in skipped
-               if "NOT BUILT HERE" in line}
+    unbuilt = {
+        line.split()[3].rstrip(":")
+        for line in skipped
+        if "NOT BUILT HERE" in line
+    }
     assert unbuilt == _unbuilt_ids()
     assert "epy_lab" in unbuilt
     assert {"epy_cadcraft", "epy_photocraft"} <= unbuilt
@@ -243,8 +278,14 @@ def test_an_absent_optional_application_is_skipped_by_name(
 def test_a_present_optional_application_is_built(tmp_path: Path) -> None:
     # The entry point's EXISTENCE is the switch.
     suite = _suite_with(
-        tmp_path, "epy_reports", "epy_slides", "epy_papers", "epy_draft",
-        "epy_quoting", "epy_outreach", "epy_lab",
+        tmp_path,
+        "epy_reports",
+        "epy_slides",
+        "epy_papers",
+        "epy_draft",
+        "epy_quoting",
+        "epy_outreach",
+        "epy_lab",
     )
     built, skipped = _catalog.for_build(suite)
     assert [app.app_id for app in built][-1] == "epy_outreach"
@@ -291,15 +332,19 @@ def test_the_public_editors_alone_are_a_buildable_bundle(
     suite = _suite_with(tmp_path, "epy_reports", "epy_slides", "epy_papers")
     built, skipped = _catalog.for_build(suite)
     assert [app.app_id for app in built] == [
-        "epy_reports", "epy_slides", "epy_papers",
+        "epy_reports",
+        "epy_slides",
+        "epy_papers",
     ]
     assert len(skipped) == 3 + len(_unbuilt_ids())
     assert {"epy_draft", "epy_quoting", "epy_outreach"} == {
-        line.split()[3].rstrip(":") for line in skipped
+        line.split()[3].rstrip(":")
+        for line in skipped
         if line.startswith("SKIPPED")
     }
     assert sum("NOT BUILT HERE" in line for line in skipped) == len(
-        _unbuilt_ids())
+        _unbuilt_ids()
+    )
 
 
 # --- adopted (external) applications -----------------------------------
@@ -322,10 +367,12 @@ class TestTheAdoptedApplications:
         assert "artcraftx" not in ids
 
     def test_an_adopted_entry_without_upstream_is_refused(
-            self, monkeypatch, tmp_path):
+        self, monkeypatch, tmp_path
+    ):
         data = json.loads(_catalog.catalog_path().read_text(encoding="utf-8"))
         entry = next(
-            item for item in data["apps"] if item["id"] == "epy_cadcraft")
+            item for item in data["apps"] if item["id"] == "epy_cadcraft"
+        )
         entry.pop("upstream")
         path = tmp_path / "apps.epyson"
         path.write_text(json.dumps(data), encoding="utf-8")
@@ -334,13 +381,15 @@ class TestTheAdoptedApplications:
             _catalog.apps()
 
     def test_an_adopted_entry_without_a_component_is_refused(
-            self, monkeypatch, tmp_path):
+        self, monkeypatch, tmp_path
+    ):
         """Sibling of the upstream refusal: Studio's installer is what puts an
         adopted application on the machine, so an entry that ships without
         naming its Inno component promises an install nothing performs."""
         data = json.loads(_catalog.catalog_path().read_text(encoding="utf-8"))
         entry = next(
-            item for item in data["apps"] if item["id"] == "epy_cadcraft")
+            item for item in data["apps"] if item["id"] == "epy_cadcraft"
+        )
         entry.pop("component")
         path = tmp_path / "apps.epyson"
         path.write_text(json.dumps(data), encoding="utf-8")
@@ -349,8 +398,11 @@ class TestTheAdoptedApplications:
             _catalog.apps()
 
     def test_every_adopted_entry_records_its_licence(self) -> None:
-        adopted = [app for app in _catalog.apps()
-                   if app.ships == _catalog.SHIPS_INSTALLED]
+        adopted = [
+            app
+            for app in _catalog.apps()
+            if app.ships == _catalog.SHIPS_INSTALLED
+        ]
         assert adopted
         for app in adopted:
             assert app.upstream, app.app_id
@@ -378,8 +430,10 @@ class TestFindingAnAdoptedApplication:
         exe.write_bytes(b"MZ")
         self._no_env(monkeypatch)
         monkeypatch.setattr(
-            _catalog.shutil, "which",
-            lambda name: str(exe) if name == "cadcraft" else None)
+            _catalog.shutil,
+            "which",
+            lambda name: str(exe) if name == "cadcraft" else None,
+        )
         assert _catalog.installed_exe(_cadcraft()) == exe
 
     def test_then_the_conventional_folder(self, monkeypatch, tmp_path):
@@ -405,7 +459,8 @@ class TestFindingAnAdoptedApplication:
         assert _catalog.installed_exe(_cadcraft()) == exe
 
     def test_an_absent_adopted_application_reads_as_not_installed(
-            self, monkeypatch, tmp_path):
+        self, monkeypatch, tmp_path
+    ):
         # Absence is the NORMAL answer -- most machines do not have it -- so
         # it comes back as None rather than raising.
         self._no_env(monkeypatch)
@@ -421,8 +476,10 @@ class TestFindingAnAdoptedApplication:
         self._no_env(monkeypatch)
         monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
         monkeypatch.setattr(
-            _catalog, "_own_install_dirs",
-            lambda _app: pytest.fail("an adopted app read the registry"))
+            _catalog,
+            "_own_install_dirs",
+            lambda _app: pytest.fail("an adopted app read the registry"),
+        )
         assert _catalog.installed_exe(_cadcraft()) is None
 
 
@@ -431,7 +488,8 @@ def _clear_cli_env(monkeypatch) -> None:
     for app in _catalog.apps():
         if app.ships == _catalog.SHIPS_INSTALLED:
             monkeypatch.delenv(
-                _catalog.adopted_cli_env(app.exe_stem), raising=False)
+                _catalog.adopted_cli_env(app.exe_stem), raising=False
+            )
 
 
 class TestHandingTheCraftsToALaunchedApp:
@@ -441,10 +499,9 @@ class TestHandingTheCraftsToALaunchedApp:
     def test_the_cli_env_name_is_the_documented_shape(self) -> None:
         assert _catalog.adopted_cli_env("cadcraft") == "EPY_CADCRAFT_CLI"
         # A SEPARATE variable from the GUI executable's -- two executables.
-        assert (
-            _catalog.adopted_cli_env("cadcraft")
-            != _catalog.external_exe_env("cadcraft")
-        )
+        assert _catalog.adopted_cli_env(
+            "cadcraft"
+        ) != _catalog.external_exe_env("cadcraft")
 
     def test_nothing_installed_is_an_empty_hint(self, monkeypatch) -> None:
         _clear_cli_env(monkeypatch)
@@ -467,12 +524,15 @@ class TestHandingTheCraftsToALaunchedApp:
         _clear_cli_env(monkeypatch)
         monkeypatch.setattr(_catalog, "installed_exe", lambda _app: None)
         monkeypatch.setattr(
-            _catalog.shutil, "which",
-            lambda name: str(cli) if name == "cadcraft-cli" else None)
+            _catalog.shutil,
+            "which",
+            lambda name: str(cli) if name == "cadcraft-cli" else None,
+        )
         assert _catalog.craft_env() == {"EPY_CADCRAFT_CLI": str(cli)}
 
     def test_the_cli_is_found_beside_the_gui_executable(
-            self, monkeypatch, tmp_path) -> None:
+        self, monkeypatch, tmp_path
+    ) -> None:
         exe = tmp_path / "cadcraft.exe"
         exe.write_bytes(b"MZ")
         cli = tmp_path / "cadcraft-cli.exe"
@@ -480,19 +540,24 @@ class TestHandingTheCraftsToALaunchedApp:
         _clear_cli_env(monkeypatch)
         monkeypatch.setattr(_catalog.shutil, "which", lambda _n: None)
         monkeypatch.setattr(
-            _catalog, "installed_exe",
-            lambda app: exe if app.app_id == "epy_cadcraft" else None)
+            _catalog,
+            "installed_exe",
+            lambda app: exe if app.app_id == "epy_cadcraft" else None,
+        )
         assert _catalog.craft_env() == {"EPY_CADCRAFT_CLI": str(cli)}
 
     def test_only_adopted_apps_get_a_cli_variable(
-            self, monkeypatch, tmp_path) -> None:
+        self, monkeypatch, tmp_path
+    ) -> None:
         cli = tmp_path / "cadcraft-cli"
         cli.write_bytes(b"MZ")
         _clear_cli_env(monkeypatch)
         monkeypatch.setattr(_catalog, "installed_exe", lambda _app: None)
         monkeypatch.setattr(
-            _catalog.shutil, "which",
-            lambda name: str(cli) if name == "cadcraft-cli" else None)
+            _catalog.shutil,
+            "which",
+            lambda name: str(cli) if name == "cadcraft-cli" else None,
+        )
         # No ePy editor, no sibling library: only the adopted tools.
         assert set(_catalog.craft_env()) == {"EPY_CADCRAFT_CLI"}
 
@@ -502,7 +567,7 @@ class TestHandingTheCraftsToALaunchedApp:
 
 def _adopted(**extra) -> _catalog.App:
     """One adopted catalog entry, with the required upstream filled in."""
-    fields = {
+    fields: dict[str, Any] = {
         "app_id": "cadcraft",
         "display": "ePy CAD",
         "description": "",
@@ -525,14 +590,17 @@ def test_the_download_page_comes_from_the_upstream_repository() -> None:
 
 
 def test_an_explicit_install_page_wins_over_the_derived_one() -> None:
-    assert _catalog.download_page(
-        _adopted(install_page="https://getartcraft.com/cadcraft")
-    ) == "https://getartcraft.com/cadcraft"
+    assert (
+        _catalog.download_page(
+            _adopted(install_page="https://getartcraft.com/cadcraft")
+        )
+        == "https://getartcraft.com/cadcraft"
+    )
 
 
 def test_an_upstream_with_no_github_repository_has_no_page() -> None:
     # Nothing to derive and nothing declared: no link, rather than a
     # guessed one.
-    assert _catalog.download_page(
-        _adopted(upstream="example.org/x — MIT")
-    ) == ""
+    assert (
+        _catalog.download_page(_adopted(upstream="example.org/x — MIT")) == ""
+    )

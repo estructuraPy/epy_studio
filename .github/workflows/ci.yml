@@ -110,6 +110,21 @@ jobs:
           pip install "epy_export[pdf,qt] @ git+https://github.com/estructuraPy/epy_export.git@v0.3.0"
       - name: Install package + dev deps
         run: pip install -e ".[dev]"
+      - name: Install the peer extras this repo declares
+        # Every extra naming a suite repository (deploy, suite, simulation,
+        # ...) is a PEER the tests import; installing the package alone does not
+        # pull them, and collection then fails. The git URLs resolve to the
+        # mirrors. ifcopenshell is pulled only when the tests mention it.
+        shell: bash
+        run: |
+          set -e
+          if grep -qs "ifcopenshell" -r tests; then
+            python -m pip install ifcopenshell
+          fi
+          SPECS=$(grep -oE '"epy[_-][A-Za-z0-9_-]+ @ git\+https://github\.com/estructuraPy/[A-Za-z0-9_.-]+"' pyproject.toml || true)
+          printf '%s\n' "$SPECS" | sort -u | while IFS= read -r spec; do
+            [ -n "$spec" ] && python -m pip install "$spec"
+          done
       - name: Install pyright
         run: npm install -g pyright
       # pyrightconfig.json pins pythonPlatform to Windows. typeshed
@@ -176,6 +191,21 @@ jobs:
           pip install "epy_export[pdf,qt] @ git+https://github.com/estructuraPy/epy_export.git@v0.3.0"
       - name: Install package + dev deps
         run: pip install -e ".[dev]"
+      - name: Install the peer extras this repo declares
+        # Every extra naming a suite repository (deploy, suite, simulation,
+        # ...) is a PEER the tests import; installing the package alone does not
+        # pull them, and collection then fails. The git URLs resolve to the
+        # mirrors. ifcopenshell is pulled only when the tests mention it.
+        shell: bash
+        run: |
+          set -e
+          if grep -qs "ifcopenshell" -r tests; then
+            python -m pip install ifcopenshell
+          fi
+          SPECS=$(grep -oE '"epy[_-][A-Za-z0-9_-]+ @ git\+https://github\.com/estructuraPy/[A-Za-z0-9_.-]+"' pyproject.toml || true)
+          printf '%s\n' "$SPECS" | sort -u | while IFS= read -r spec; do
+            [ -n "$spec" ] && python -m pip install "$spec"
+          done
       - name: Test
         env:
           QT_QPA_PLATFORM: offscreen

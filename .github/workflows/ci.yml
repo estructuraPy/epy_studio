@@ -6,6 +6,9 @@
 name: CI
 
 on:
+  # Manual runs: a self-hosted runner can miss a queued
+  # assignment, and a dispatch relaunches the same HEAD.
+  workflow_dispatch:
   push:
     branches: ["main"]
     tags: ["v*.*.*"]

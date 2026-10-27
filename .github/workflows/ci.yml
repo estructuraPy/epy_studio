@@ -126,7 +126,7 @@ jobs:
           fi
           SPECS=$(grep -oE '"epy[_-][A-Za-z0-9_-]+ @ git\+https://github\.com/estructuraPy/[A-Za-z0-9_.-]+"' pyproject.toml || true)
           printf '%s\n' "$SPECS" | tr -d '"' | sort -u | while IFS= read -r spec; do
-            [ -n "$spec" ] && python -m pip install "$spec"
+            if [ -n "$spec" ]; then python -m pip install "$spec"; fi
           done
       - name: Install pyright
         run: npm install -g pyright
@@ -207,7 +207,7 @@ jobs:
           fi
           SPECS=$(grep -oE '"epy[_-][A-Za-z0-9_-]+ @ git\+https://github\.com/estructuraPy/[A-Za-z0-9_.-]+"' pyproject.toml || true)
           printf '%s\n' "$SPECS" | tr -d '"' | sort -u | while IFS= read -r spec; do
-            [ -n "$spec" ] && python -m pip install "$spec"
+            if [ -n "$spec" ]; then python -m pip install "$spec"; fi
           done
       - name: Test
         env:

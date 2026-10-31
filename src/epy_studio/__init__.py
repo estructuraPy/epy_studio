@@ -1,4 +1,4 @@
-"""ePy Studio — pick the right editor for the document at hand.
+"""epy_studio — pick the right editor for the document at hand.
 
 A selector that launches one of the family's applications from the
 shared install directory. It deliberately contains no editing logic:

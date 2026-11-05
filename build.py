@@ -138,6 +138,11 @@ def _verify_qt_runtime(target: Path) -> None:
         "WebEngine ICU data": (
             internal / "PySide6" / "resources" / "icudtl.dat"
         ),
+        "SQLite extension": internal / "_sqlite3.pyd",
+        "SQLite runtime": internal / "sqlite3.dll",
+        "TLS extension": internal / "_ssl.pyd",
+        "TLS runtime": internal / "libssl-3-x64.dll",
+        "Crypto runtime": internal / "libcrypto-3-x64.dll",
     }
     missing = [
         f"{label}: {path}"

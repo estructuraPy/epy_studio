@@ -12,6 +12,7 @@
 # Build from this directory AFTER `pip install -e` of the three apps:
 #   python build.py
 
+import sys as _sys
 from pathlib import Path as _Path
 
 import pypandoc
@@ -89,6 +90,20 @@ if not _pandoc.lower().endswith(".exe"):
     _pandoc += ".exe"
 _pandoc_bins = [*_pandoc_bins, (_pandoc, "pypandoc/files")]
 
+# conda's _sqlite3.pyd links against Library/bin/sqlite3.dll, which
+# PyInstaller does not discover on its own. Without it the frozen apps
+# fail with "DLL load failed importing _sqlite3".
+_sqlite_dll = _Path(_sys.base_prefix) / "Library" / "bin" / "sqlite3.dll"
+_sqlite_bins = [(_sqlite_dll, ".")] if _sqlite_dll.is_file() else []
+
+# conda's _ssl.pyd links against OpenSSL 3, also under Library/bin.
+_openssl_dir = _Path(_sys.base_prefix) / "Library" / "bin"
+_openssl_bins = [
+    (_openssl_dir / name, ".")
+    for name in ("libssl-3-x64.dll", "libcrypto-3-x64.dll")
+    if (_openssl_dir / name).is_file()
+]
+
 
 def _app_assets(pkg: str) -> list[tuple[str, str]]:
     """Bundle <repo>/src/<pkg>/_config preserving package layout.
@@ -139,7 +154,7 @@ def _app_analysis(  # noqa: F821
     return Analysis(  # noqa: F821 — PyInstaller build namespace
         [str(_SUITE / pkg / "src" / pkg / "__main__.py")],
         pathex=[str(_SUITE / pkg / "src")],
-        binaries=list(_pandoc_bins),
+        binaries=list(_pandoc_bins) + _sqlite_bins + _openssl_bins,
         datas=list(_pandoc_datas) + _app_assets(pkg),
         hiddenimports=_app_hidden(pkg, extra_asset_pkgs, extra_hidden),
         hookspath=[],

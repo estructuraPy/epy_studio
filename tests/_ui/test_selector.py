@@ -94,13 +94,19 @@ def test_an_optional_application_without_its_exe_is_not_offered(
     # cannot give. ADOPTED (external) applications are the exception: the
     # reader installs them, so they are offered and carry Install/Locate;
     # they are covered by their own tests below.
-    from epy_studio._core._catalog import SHIPS_INSTALLED, apps
+    from epy_studio._core._catalog import (
+        SHIPS_INSTALLED,
+        apps,
+        installed_exe,
+    )
     from epy_studio._ui.selector import build_window
 
     optional = [
         app
         for app in apps()
-        if app.optional and app.ships != SHIPS_INSTALLED
+        if app.optional
+        and app.ships != SHIPS_INSTALLED
+        and installed_exe(app) is None
     ]
     assert optional, "nothing optional to test against"
     texts = _labels(build_window([], backend=Backend(), language="en"))

@@ -24,6 +24,8 @@ _lang = "en"
 # English -> Spanish. Neutral / professional Spanish.
 _ES: dict[str, str] = {
     "ePy Studio": "ePy Studio",
+    "ePy Suite": "ePy Suite",
+    "Applications": "Aplicaciones",
     "Choose the editor for your document:":
         "Elija el editor para su documento:",
     "Open <b>{names}</b> with:": "Abrir <b>{names}</b> con:",

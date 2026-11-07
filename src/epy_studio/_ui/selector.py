@@ -415,18 +415,27 @@ def build_window(
         def __init__(self) -> None:
             super().__init__()
             self.setWindowTitle(APP_NAME)
-            self.setMinimumWidth(560)
+            self.setMinimumSize(760, 620)
+            self.resize(1180, 780)
             self._files = files
             self._backend = found
 
             root = QWidget(self)
             layout = QVBoxLayout(root)
-            layout.setContentsMargins(30, 28, 30, 18)
-            layout.setSpacing(14)
+            layout.setContentsMargins(32, 30, 32, 22)
+            layout.setSpacing(18)
 
-            title = QLabel(APP_NAME, root)
+            header = QFrame(root)
+            header.setObjectName("HeaderCard")
+            header_layout = QVBoxLayout(header)
+            header_layout.setContentsMargins(24, 20, 24, 20)
+            header_layout.setSpacing(5)
+            eyebrow = QLabel(_i18n.tr("ePy Suite"), header)
+            eyebrow.setObjectName("Eyebrow")
+            header_layout.addWidget(eyebrow)
+            title = QLabel(APP_NAME, header)
             title.setObjectName("AppTitle")
-            layout.addWidget(title)
+            header_layout.addWidget(title)
 
             if self._files:
                 names = ", ".join(Path(f).name for f in self._files)
@@ -443,12 +452,17 @@ def build_window(
                 )
             subtitle.setObjectName("AppSubtitle")
             subtitle.setWordWrap(True)
-            layout.addWidget(subtitle)
+            header_layout.addWidget(subtitle)
+            layout.addWidget(header)
+
+            section = QLabel(_i18n.tr("Applications"), root)
+            section.setObjectName("SectionTitle")
+            layout.addWidget(section)
 
             base = install_dir()
             grid = QGridLayout()
-            grid.setHorizontalSpacing(16)
-            grid.setVerticalSpacing(16)
+            grid.setHorizontalSpacing(18)
+            grid.setVerticalSpacing(18)
             grid.setContentsMargins(0, 0, 0, 0)
             index = 0
             columns = current_columns()
@@ -583,10 +597,10 @@ def build_window(
                 )
             )
             status.setWordWrap(True)
-            bottom.addWidget(status)
+            status.setObjectName("Muted")
             self._status = status
-            layout.addLayout(bottom)
-            layout.addStretch(1)
+            layout.insertLayout(2, bottom)
+            self.statusBar().addWidget(status, 1)
             self.setCentralWidget(root)
 
             # A caller that HANDED us the answer -- the language
@@ -684,15 +698,16 @@ def build_window(
             card = QFrame(self)
             card.setObjectName("AppCard")
             card.setFrameShape(QFrame.Shape.NoFrame)
-            card.setMinimumWidth(240)
+            card.setMinimumWidth(260)
+            card.setMinimumHeight(290)
             column = QVBoxLayout(card)
-            column.setContentsMargins(18, 18, 18, 16)
-            column.setSpacing(8)
+            column.setContentsMargins(22, 22, 22, 20)
+            column.setSpacing(10)
 
             badge = QLabel(card)
             badge.setObjectName("AppBadge")
             badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            badge.setFixedSize(68, 68)
+            badge.setFixedSize(72, 72)
             badge.setText(app.display[:1].upper())
             column.addWidget(badge, alignment=Qt.AlignmentFlag.AlignHCenter)
 

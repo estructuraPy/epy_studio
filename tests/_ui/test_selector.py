@@ -802,6 +802,39 @@ class TestTheBlenderLauncher:
             if name == "epy_blender-launch" else None)
         assert selector.blender_launch_command().endswith(".exe")
 
+    def test_a_present_launcher_starts(self, qt_app, monkeypatch) -> None:
+        """The enabled action runs the launcher command."""
+
+        from PySide6.QtWidgets import QPushButton
+
+        from epy_studio._core._backends import Backend
+        from epy_studio._ui import selector
+
+        calls: list[tuple[object, dict[str, object]]] = []
+        monkeypatch.setattr(
+            selector,
+            "blender_launch_command",
+            lambda: "python -m epy_blender",
+        )
+        monkeypatch.setattr(
+            selector.subprocess,
+            "Popen",
+            lambda *args, **kwargs: calls.append((args, kwargs)),
+        )
+        window = selector.build_window(
+            [], backend=Backend(), language="en"
+        )
+        button = next(
+            item
+            for item in window.findChildren(QPushButton)
+            if item.text() == "ePy Blender"
+        )
+        button.click()
+        assert calls == [
+            (("python -m epy_blender",), {"shell": True})
+        ]
+
+
     def test_absence_is_the_empty_command(self, monkeypatch) -> None:
         from epy_studio._ui import selector
 

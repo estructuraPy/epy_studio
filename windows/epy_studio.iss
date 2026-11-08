@@ -76,6 +76,8 @@ english.CompQuoting=ePy Quoting — service offers and fee quotation
 spanish.CompQuoting=ePy Quoting — ofertas de servicios y cotización de honorarios
 english.CompOutreach=ePy Outreach — contacts, client research and outreach letters
 spanish.CompOutreach=ePy Outreach — contactos, investigación del cliente y cartas de prospección
+english.CompProject=ePy Project - projects, tasks, resources and tracking
+spanish.CompProject=ePy Project - proyectos, tareas, recursos y seguimiento
 english.CompCadcraft=ePy CAD - 2D drafting and CAD
 spanish.CompCadcraft=ePy CAD - Dibujo 2D y CAD
 english.CompPhotocraft=ePy Paint - Raster image editor
@@ -129,6 +131,9 @@ Name: "quoting"; Description: "{cm:CompQuoting}"; Types: full custom
 ; shortcut, and nothing else.
 #ifexist DistDir + "\epy_outreach.exe"
 Name: "outreach"; Description: "{cm:CompOutreach}"; Types: full custom
+#endif
+#ifexist DistDir + "\epy_project.exe"
+Name: "project"; Description: "{cm:CompProject}"; Types: full custom
 #endif
 
 ; Adopted crafting applications, installed from the staged
@@ -193,6 +198,9 @@ Source: "{#DistDir}\epy_quoting.exe"; DestDir: "{app}"; Flags: ignoreversion; Co
 #endif
 #ifexist DistDir + "\epy_outreach.exe"
 Source: "{#DistDir}\epy_outreach.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: outreach
+#endif
+#ifexist DistDir + "\epy_project.exe"
+Source: "{#DistDir}\epy_project.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: project
 #endif
 
 ; Adopted crafting applications, installed from the staged
@@ -261,6 +269,9 @@ Name: "{autoprograms}\ePy Quoting"; Filename: "{app}\epy_quoting.exe"; IconFilen
 #endif
 #ifexist DistDir + "\epy_outreach.exe"
 Name: "{autoprograms}\ePy Outreach"; Filename: "{app}\epy_outreach.exe"; IconFilename: "{app}\epy_outreach.exe"; Components: outreach
+#endif
+#ifexist DistDir + "\epy_project.exe"
+Name: "{autoprograms}\ePy Project"; Filename: "{app}\epy_project.exe"; IconFilename: "{app}\epy_project.exe"; Components: project
 #endif
 ; Adopted crafting applications, installed from the staged
 ; dist/.../crafts/<binary>/ tree this bundle carries. Guarded like the

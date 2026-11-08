@@ -23,12 +23,10 @@ from pathlib import Path
 from typing import Any
 
 from epy_export import (
-    DEFAULT_THEME,
     LEGACY_ORGANIZATIONS,
     ORGANIZATION,
     apply_theme,
     is_truthy,
-    theme_names,
 )
 
 from .._core import _i18n
@@ -254,17 +252,21 @@ def remember_backend(backend: Backend) -> None:
 
 
 THEME_KEY = "theme"
+
+from epy_export._ui import _theme as _suite_theme  # noqa: E402
+
+_suite_theme.use_namespace("epy_studio")
 """QSettings key remembering the reader's chosen palette."""
 
 
 def current_theme() -> str:
     """Return the stored theme name, falling back to the default."""
+    from epy_export._ui.theme_manager import initial_theme  # noqa: PLC0415
     from PySide6.QtCore import QSettings  # noqa: PLC0415
 
-    stored = str(
-        QSettings(ORGANIZATION, "epy_studio").value(THEME_KEY, "")
+    return initial_theme(
+        QSettings(ORGANIZATION, "epy_studio"), THEME_KEY
     )
-    return stored if stored in theme_names() else DEFAULT_THEME
 
 
 def remember_theme(name: str) -> None:
@@ -342,16 +344,18 @@ def build_window(
         The window, ready to show.
     """
     from PySide6.QtCore import (  # noqa: PLC0415
+        QFileInfo,
         QObject,
         Qt,  # noqa: PLC0415
         QUrl,  # noqa: PLC0415
         Signal,
     )
-    from PySide6.QtGui import QDesktopServices  # noqa: PLC0415
+    from PySide6.QtGui import QDesktopServices, QIcon  # noqa: PLC0415
     from PySide6.QtWidgets import (  # noqa: PLC0415
         QCheckBox,
         QComboBox,
         QFileDialog,
+        QFileIconProvider,
         QFrame,
         QGridLayout,
         QHBoxLayout,
@@ -365,6 +369,9 @@ def build_window(
     )
 
     _i18n.set_language(language or preferred_language())
+    from epy_export._core._provider_prefs import ensure_default  # noqa: PLC0415
+
+    provider_pref = ensure_default()
     # A located adopted application is given back to the resolver before
     # any row is built, so it shows as installed from the first draw.
     load_external_paths()
@@ -545,13 +552,22 @@ def build_window(
             bottom.addWidget(language_btn)
             theme_btn = QPushButton(_i18n.tr("Theme"), root)
             theme_menu = QMenu(theme_btn)
-            for name in theme_names():
-                action = theme_menu.addAction(name.capitalize())
-                action.setCheckable(True)
-                action.setChecked(name == current_theme())
-                action.triggered.connect(
-                    lambda _checked=False, n=name: self._set_theme(n)
-                )
+            from epy_export._ui.theme_manager import (  # noqa: PLC0415
+                ThemeController,
+            )
+            from PySide6.QtCore import QSettings  # noqa: PLC0415
+            from PySide6.QtWidgets import QApplication  # noqa: PLC0415
+
+            self.theme_controller = ThemeController(
+                QApplication.instance(),
+                QSettings(ORGANIZATION, "epy_studio"),
+                key=THEME_KEY,
+                namespace="epy_studio",
+                language=_i18n.current_language(),
+                on_apply=lambda name: self._set_theme(name),
+                parent=root,
+            )
+            self.theme_controller.attach(theme_menu)
             theme_btn.setMenu(theme_menu)
             bottom.addWidget(theme_btn)
             columns_label = QLabel(_i18n.tr("Columns"), root)
@@ -601,6 +617,16 @@ def build_window(
             self._status = status
             layout.insertLayout(2, bottom)
             self.statusBar().addWidget(status, 1)
+            ai_status = QLabel(
+                f"AI: {provider_pref.provider} / {provider_pref.model}"
+            )
+            ai_status.setObjectName("Muted")
+            ai_status.setToolTip(
+                _i18n.tr(
+                    "The provider and model every assistant inherits."
+                )
+            )
+            self.statusBar().addPermanentWidget(ai_status)
             self.setCentralWidget(root)
 
             # A caller that HANDED us the answer -- the language
@@ -687,6 +713,35 @@ def build_window(
             replacement.show()
             self.close()
 
+        def _app_icon(self, app: App, exe_path: Path) -> Any:
+            """Return the application's own icon, or ``None``.
+
+            An installed executable carries the icon in its resources.
+            A checkout has no executable, so the sibling repository's
+            build icon is used. The letter badge is only a fallback.
+            """
+            if exe_path.is_file():
+                icon = QIcon(str(exe_path))
+                if not icon.isNull():
+                    return icon
+                shell = QFileIconProvider().icon(
+                    QFileInfo(str(exe_path))
+                )
+                if not shell.isNull():
+                    return shell
+            if not app.icon:
+                return None
+            suite = Path(__file__).resolve().parents[4]
+            for root in (suite, suite / "_deps"):
+                candidate = (
+                    root / app.app_id / "src" / app.app_id / app.icon
+                )
+                if candidate.is_file():
+                    icon = QIcon(str(candidate))
+                    if not icon.isNull():
+                        return icon
+            return None
+
         def _app_card(self, base: Path, app: App) -> Any:
             """Build one application card for the grid.
 
@@ -708,7 +763,12 @@ def build_window(
             badge.setObjectName("AppBadge")
             badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
             badge.setFixedSize(72, 72)
-            badge.setText(app.display[:1].upper())
+            icon = self._app_icon(app, exe_path)
+            if icon is not None:
+                badge.setPixmap(icon.pixmap(72, 72))
+                badge.setStyleSheet("background: transparent;")
+            else:
+                badge.setText(app.display[:1].upper())
             column.addWidget(badge, alignment=Qt.AlignmentFlag.AlignHCenter)
 
             name = QLabel(app.display, card)

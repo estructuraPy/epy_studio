@@ -123,6 +123,21 @@
       "description": "Sales outreach — contact registry, client research and service-presentation letters"
     },
     {
+      "id": "epy_project",
+      "display": "ePy Project",
+      "component": "project",
+      "register": "none",
+      "optional": true,
+      "asset_packages": [],
+      "hidden_imports": [
+        "networkx",
+        "pydantic",
+        "epy_units"
+      ],
+      "icon": "_core/_packaging/assets_build/epy_project.ico",
+      "description": "Project management - Gantt, Kanban, resources, tracking and reports"
+    },
+    {
       "id": "epy_lab",
       "display": "ePy Lab",
       "component": "",

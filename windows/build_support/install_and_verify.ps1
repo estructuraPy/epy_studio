@@ -24,7 +24,19 @@ $iss = Join-Path $root "windows\epy_studio.iss"
 $iscc = Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"
 $version = (Select-String -Path $iss -Pattern '#define AppVersion "([^"]+)"').Matches[0].Groups[1].Value
 $setup = Join-Path $root "dist\epy_studio-setup-$version.exe"
-$target = Join-Path $env:LOCALAPPDATA "Programs\epy_studio"
+# The installer records where it last wrote. Using the conventional
+# LocalAppData path here can install a second copy and then verify that
+# copy while the user keeps launching the old one.
+$recorded = (
+    Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
+    Where-Object { $_.DisplayName -like "*ePy Studio*" } |
+    Select-Object -First 1
+).InstallLocation
+$target = if ($recorded) {
+    $recorded.TrimEnd("\")
+} else {
+    Join-Path $env:LOCALAPPDATA "Programs\epy_studio"
+}
 $python = "C:\Users\ingah\miniforge3\python.exe"
 
 if (-not (Test-Path (Join-Path $root "dist\epy_studio\epy_studio.exe"))) {
@@ -58,7 +70,7 @@ Write-Host "== 3/6 silent install over the previous release =="
 # the installer stop, and with /SUPPRESSMSGBOXES it stops by ABORTING
 # (exit 5) rather than asking -- so that is named here rather than read
 # as a broken installer.
-$components = "reports,slides,papers,craft,quoting"
+$components = "reports,slides,papers,craft,quoting,outreach,project"
 $p = Start-Process -FilePath $setup -ArgumentList `
     "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", `
     "/DIR=$target", "/TYPE=full", "/COMPONENTS=$components" -Wait -PassThru

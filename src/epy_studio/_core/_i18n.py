@@ -34,6 +34,8 @@ _ES: dict[str, str] = {
     "Language": "Idioma",
     "Columns": "Columnas",
     "Theme": "Tema",
+    "The provider and model every assistant inherits.":
+        "El proveedor y el modelo que hereda cada asistente.",
     "looking for ePy Docs…": "buscando ePy Docs…",
     "Offer ePy Docs as a renderer":
         "Ofrecer ePy Docs como motor de composicion",

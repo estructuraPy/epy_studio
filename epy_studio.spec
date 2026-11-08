@@ -104,6 +104,16 @@ _openssl_bins = [
     if (_openssl_dir / name).is_file()
 ]
 
+# conda's _ctypes.pyd links against libffi, which PyInstaller does not
+# discover in this environment. The frozen app dies in pyi_rth_mplconfig
+# with "DLL load failed while importing _ctypes" when it is absent.
+# liblzma and libbz2 are the matching dependencies of _lzma and _bz2.
+_runtime_bins = [
+    (_openssl_dir / name, ".")
+    for name in ("ffi-8.dll", "liblzma.dll", "LIBBZ2.dll")
+    if (_openssl_dir / name).is_file()
+]
+
 
 def _app_assets(pkg: str) -> list[tuple[str, str]]:
     """Bundle <repo>/src/<pkg>/_config preserving package layout.
@@ -142,6 +152,15 @@ def _app_hidden(
     # Lazy-imported inside _pdf_footer.add_watermark; PyInstaller may miss
     # the in-function import.
     hidden += ["PIL", "PIL.Image"]
+    # The assistant is imported from a function in each app's
+    # epy_studio_connect wrapper. PyInstaller sees the wrapper but not the
+    # epy_draft side unless these modules are named.
+    hidden += [
+        "epy_draft._core._assistant",
+        "epy_draft._ui.assistant",
+        "epy_draft.epy_studio_connect.chat",
+        "epy_export._ui.app_header",
+    ]
     return hidden
 
 
@@ -151,16 +170,28 @@ def _app_analysis(  # noqa: F821
     extra_hidden: list[str] | None = None,
 ) -> Analysis:  # noqa: F821
     """One Analysis per app, built from its repo's src/ tree."""
+    excludes = _EXCLUDES
+    if pkg == "epy_project":
+        excludes = [
+            item
+            for item in _EXCLUDES
+            if item not in {"numpy", "pandas", "matplotlib", "plotly"}
+        ]
     return Analysis(  # noqa: F821 — PyInstaller build namespace
         [str(_SUITE / pkg / "src" / pkg / "__main__.py")],
         pathex=[str(_SUITE / pkg / "src")],
-        binaries=list(_pandoc_bins) + _sqlite_bins + _openssl_bins,
+        binaries=(
+            list(_pandoc_bins)
+            + _sqlite_bins
+            + _openssl_bins
+            + _runtime_bins
+        ),
         datas=list(_pandoc_datas) + _app_assets(pkg),
         hiddenimports=_app_hidden(pkg, extra_asset_pkgs, extra_hidden),
         hookspath=[],
         hooksconfig={},
         runtime_hooks=[],
-        excludes=_EXCLUDES,
+        excludes=excludes,
         noarchive=False,
 )
 
@@ -293,7 +324,7 @@ _app_collect = [
     for item in (app_exe, a.binaries, a.datas)
 ]
 exe_launcher = _exe(
-    a_launcher, "epy_studio", _icon("epy_reports", "assets_build", "epy_reports.ico")
+    a_launcher, "epy_studio", _icon("epy_studio", "assets_build", "epy_studio.ico")
 )
 
 coll = COLLECT(  # noqa: F821

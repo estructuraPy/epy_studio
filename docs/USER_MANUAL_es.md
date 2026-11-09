@@ -19,6 +19,23 @@ Autor: Ing. Angel Navarro-Mora M.Sc. — ANM Ingeniería.
 Los tres editan el mismo formato fuente — Markdown con extensiones
 Quarto — así que un documento puede moverse entre ellos sin conversión.
 
+## Demo y recorrido guiado
+
+El demo se documenta una sola vez, en el manual de cada aplicación; la
+interfaz solo abre ese manual. Empiece en ePy Studio, abra la aplicación
+cuyo trabajo quiera ver y elija *Ayuda → Manual de usuario*:
+
+- **Reports, Slides y Papers**: el manual es el demo en vivo; recórralo
+  y use los mismos menús que describe.
+- **Draft y Quoting**: abra el Recorrido rápido para el ejemplo completo
+  y luego el Manual de referencia para el detalle.
+- **Project**: abra *Proyecto → Abrir proyecto de demostración*.
+- **Outreach**: use *Ayuda → Cargar espacio de trabajo de demostración*.
+
+No busque una segunda copia del recorrido dentro de un diálogo o de un
+tooltip: el manual es la única fuente y todas sus capturas se toman de la
+interfaz instalada.
+
 ## Abrir documentos
 
 Hay tres caminos:

@@ -8,15 +8,19 @@ editor that fits the job.
 
 Author: Ing. Angel Navarro-Mora M.Sc. — ANM Ingeniería.
 
-## The three editors
+## The applications
 
 | Tool | Use it for | Exports |
 |---|---|---|
 | **ePy Reports** | Technical reports with live preview | PDF, Word, self-contained HTML |
 | **ePy Slides** | Presentation decks | reveal.js HTML, PowerPoint |
 | **ePy Papers** | Academic manuscripts | Journal-template PDF |
+| **ePy Draft** | Batch drafting over a reference library | Markdown, PDF, DOCX |
+| **ePy Quoting** | Deterministic engineering offers | Offer folder, .zepy |
+| **ePy Outreach** | Contacts, research and letters | Workspace, .zepy |
+| **ePy Project** | Tasks, Gantt, Kanban and tracking | Markdown, PDF, HTML, .zepy |
 
-All three edit the same source format — Markdown with Quarto
+The document editors edit the same source format — Markdown with Quarto
 extensions — so a document can move between them without conversion.
 
 ## Demo and guided walkthrough

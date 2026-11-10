@@ -31,6 +31,8 @@ _ES: dict[str, str] = {
     "Open <b>{names}</b> with:": "Abrir <b>{names}</b> con:",
     "Open": "Abrir",
     "User manual": "Manual de usuario",
+    "The bundled user manual is not available.":
+        "El manual de usuario incluido no est? disponible.",
     "Language": "Idioma",
     "Columns": "Columnas",
     "Theme": "Tema",

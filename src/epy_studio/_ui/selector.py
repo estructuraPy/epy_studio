@@ -53,10 +53,8 @@ APP_NAME = "ePy Studio"
 
 def manual_path() -> Path | None:
     """Locate the bundled user manual for the current UI language."""
-    from PySide6.QtCore import QLocale  # noqa: PLC0415
-
     docs = install_dir() / "docs"
-    spanish = QLocale.system().language() == QLocale.Language.Spanish
+    spanish = _i18n.current_language() == "es"
     order = (
         ["USER_MANUAL_es.md", "USER_MANUAL.md"]
         if spanish
@@ -426,6 +424,12 @@ def build_window(
             self.resize(1180, 780)
             self._files = files
             self._backend = found
+            from PySide6.QtCore import QSettings  # noqa: PLC0415
+
+            self._settings = QSettings(ORGANIZATION, "epy_studio")
+            geometry = self._settings.value("window/geometry")
+            if geometry is not None:
+                self.restoreGeometry(geometry)
 
             root = QWidget(self)
             layout = QVBoxLayout(root)
@@ -514,6 +518,9 @@ def build_window(
                 )
             else:
                 manual_btn.setEnabled(False)
+                manual_btn.setToolTip(
+                    _i18n.tr("The bundled user manual is not available.")
+                )
             bottom.addWidget(manual_btn)
             # ePy Blender: a real launcher COMMAND, not an executable this
             # repository builds. Disabled, with the reason, when it is absent.
@@ -867,6 +874,12 @@ def build_window(
             replacement = build_window(self._files, backend=self._backend)
             replacement.show()
             self.close()
+
+        def closeEvent(self, event) -> None:  # noqa: N802
+            """Remember the selector geometry across launches."""
+            self._settings.setValue("window/geometry", self.saveGeometry())
+            self._settings.sync()
+            super().closeEvent(event)
 
         def _launch_command(self, command: str) -> None:
             """Start a launcher command (a path, or ``python -m ...``)."""

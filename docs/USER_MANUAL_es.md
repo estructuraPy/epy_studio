@@ -8,15 +8,19 @@ Markdown: doble clic al archivo y elija el editor adecuado.
 
 Autor: Ing. Angel Navarro-Mora M.Sc. — ANM Ingeniería.
 
-## Los tres editores
+## Las aplicaciones
 
 | Herramienta | Úsela para | Exporta a |
 |---|---|---|
 | **ePy Reports** | Reportes técnicos con vista previa en vivo | PDF, Word, HTML autocontenido |
 | **ePy Slides** | Presentaciones | reveal.js HTML, PowerPoint |
 | **ePy Papers** | Manuscritos académicos | PDF con plantillas de revista |
+| **ePy Draft** | Redacci?n por lotes sobre una biblioteca de referencia | Markdown, PDF, DOCX |
+| **ePy Quoting** | Ofertas deterministas de ingenier?a | Carpeta de oferta, .zepy |
+| **ePy Outreach** | Contactos, investigaci?n y cartas | Espacio de trabajo, .zepy |
+| **ePy Project** | Tareas, Gantt, Kanban y seguimiento | Markdown, PDF, HTML, .zepy |
 
-Los tres editan el mismo formato fuente — Markdown con extensiones
+Los editores de documentos editan el mismo formato fuente — Markdown con extensiones
 Quarto — así que un documento puede moverse entre ellos sin conversión.
 
 ## Demo y recorrido guiado

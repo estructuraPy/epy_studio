@@ -45,7 +45,7 @@ jobs:
         shell: pwsh
         run: |
           foreach ($r in @('epy_export', 'epy_reports', 'epy_slides',
-                           'epy_papers')) {
+                           'epy_papers', 'epy_project')) {
             git clone --depth 1 "https://github.com/estructuraPy/$r.git" $r
             if ($LASTEXITCODE -ne 0) { throw "cannot clone $r" }
           }
@@ -84,13 +84,22 @@ jobs:
           # epy_export first: the apps depend on it and it is on no index.
           python -m pip install -e .\epy_export
           foreach ($r in @('epy_reports', 'epy_slides', 'epy_papers',
-                           'epy_draft', 'epy_quoting', 'epy_outreach')) {
+                           'epy_project', 'epy_draft', 'epy_quoting',
+                           'epy_outreach')) {
             if (Test-Path $r) { python -m pip install -e ".\$r" }
           }
 
       - name: Build the bundle
         working-directory: epy_studio
         run: python build.py
+
+      - name: Verify the release promise
+        working-directory: epy_studio
+        run: python windows/build_support/verify_release.py
+
+      - name: Verify bundled app assets
+        working-directory: epy_studio
+        run: python windows/build_support/verify_assets.py
 
       - name: Stage the adopted crafts
         env:

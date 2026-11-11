@@ -16,7 +16,6 @@ registration CLI still runs before any Qt import.
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import threading
 from pathlib import Path
@@ -46,7 +45,7 @@ from .._core._catalog import (
     installed_exe,
 )
 
-__all__ = ["APP_NAME", "blender_launch_command", "build_window", "manual_path"]
+__all__ = ["APP_NAME", "build_window", "manual_path"]
 
 APP_NAME = "ePy Studio"
 
@@ -65,25 +64,6 @@ def manual_path() -> Path | None:
         if candidate.is_file():
             return candidate
     return None
-
-
-ENV_BLENDER_LAUNCH = "EPY_BLENDER_LAUNCH"
-"""Names the command that opens Blender with the ePy Suite."""
-
-
-def blender_launch_command() -> str:
-    """Return the command that opens Blender with the suite, or ``""``.
-
-    The launcher is a Python entry point -- ``epy_blender-launch``, installed
-    by the ``epy_blender`` package -- not an executable this repository builds,
-    so a machine without it simply has no Blender action. The variable is the
-    escape hatch for a workspace checkout, where the launcher is
-    ``python -m epy_blender``.
-    """
-    named = os.environ.get(ENV_BLENDER_LAUNCH, "")
-    if named:
-        return named
-    return shutil.which("epy_blender-launch") or ""
 
 
 def preferred_language() -> str:
@@ -522,26 +502,6 @@ def build_window(
                     _i18n.tr("The bundled user manual is not available.")
                 )
             bottom.addWidget(manual_btn)
-            # ePy Blender: a real launcher COMMAND, not an executable this
-            # repository builds. Disabled, with the reason, when it is absent.
-            blender = blender_launch_command()
-            blender_btn = QPushButton(_i18n.tr("ePy Blender"), root)
-            if blender:
-                blender_btn.setToolTip(
-                    _i18n.tr("Open Blender with the ePy Suite addon loaded.")
-                )
-                blender_btn.clicked.connect(
-                    lambda _checked=False, c=blender: self._launch_command(c)
-                )
-            else:
-                blender_btn.setEnabled(False)
-                blender_btn.setToolTip(
-                    _i18n.tr(
-                        "Not available: install epy_blender, or set "
-                        "EPY_BLENDER_LAUNCH to the launcher command."
-                    )
-                )
-            bottom.addWidget(blender_btn)
             # A reader who changes it here changes it for the selector
             # only; each application keeps its own, because each stores
             # the choice under its own name. Studio writes its own key
@@ -880,14 +840,6 @@ def build_window(
             self._settings.setValue("window/geometry", self.saveGeometry())
             self._settings.sync()
             super().closeEvent(event)
-
-        def _launch_command(self, command: str) -> None:
-            """Start a launcher command (a path, or ``python -m ...``)."""
-            subprocess.Popen(  # noqa: S602 - the command is the user's own setting
-                command,
-                shell=True,
-            )
-            self.close()
 
         def _launch(self, exe_path: Path) -> None:
             """Start the selected tool, forwarding files and the hints."""

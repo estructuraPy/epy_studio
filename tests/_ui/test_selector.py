@@ -782,65 +782,18 @@ def test_locate_cancelled_changes_nothing(
     assert selector.load_external_paths() == {}
 
 
-class TestTheBlenderLauncher:
-    """The ePy Blender action: a launcher COMMAND, disabled when absent."""
+def test_the_selector_does_not_offer_blender(qt_app) -> None:
+    """Blender belongs to ePy Suite, not to the Studio selector."""
+    from PySide6.QtWidgets import QPushButton  # noqa: PLC0415
 
-    def test_the_variable_wins(self, monkeypatch) -> None:
-        from epy_studio._ui import selector
+    from epy_studio._core._backends import Backend  # noqa: PLC0415
+    from epy_studio._ui import selector  # noqa: PLC0415
 
-        monkeypatch.setenv(
-            selector.ENV_BLENDER_LAUNCH, "python -m epy_blender")
-        assert selector.blender_launch_command() == "python -m epy_blender"
-
-    def test_then_the_installed_entry_point(self, monkeypatch) -> None:
-        from epy_studio._ui import selector
-
-        monkeypatch.delenv(selector.ENV_BLENDER_LAUNCH, raising=False)
-        monkeypatch.setattr(
-            selector.shutil, "which",
-            lambda name: r"C:\x\epy_blender-launch.exe"
-            if name == "epy_blender-launch" else None)
-        assert selector.blender_launch_command().endswith(".exe")
-
-    def test_a_present_launcher_starts(self, qt_app, monkeypatch) -> None:
-        """The enabled action runs the launcher command."""
-
-        from PySide6.QtWidgets import QPushButton
-
-        from epy_studio._core._backends import Backend
-        from epy_studio._ui import selector
-
-        calls: list[tuple[object, dict[str, object]]] = []
-        monkeypatch.setattr(
-            selector,
-            "blender_launch_command",
-            lambda: "python -m epy_blender",
-        )
-        monkeypatch.setattr(
-            selector.subprocess,
-            "Popen",
-            lambda *args, **kwargs: calls.append((args, kwargs)),
-        )
-        window = selector.build_window(
-            [], backend=Backend(), language="en"
-        )
-        button = next(
-            item
-            for item in window.findChildren(QPushButton)
-            if item.text() == "ePy Blender"
-        )
-        button.click()
-        assert calls == [
-            (("python -m epy_blender",), {"shell": True})
-        ]
-
-
-    def test_absence_is_the_empty_command(self, monkeypatch) -> None:
-        from epy_studio._ui import selector
-
-        monkeypatch.delenv(selector.ENV_BLENDER_LAUNCH, raising=False)
-        monkeypatch.setattr(selector.shutil, "which", lambda _name: None)
-        assert selector.blender_launch_command() == ""
+    window = selector.build_window([], backend=Backend(), language="en")
+    assert not any(
+        button.text() == "ePy Blender"
+        for button in window.findChildren(QPushButton)
+    )
 
 
 # ------------------------------------------- the theme

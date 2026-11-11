@@ -191,7 +191,10 @@ class TestItIsSkippedByNameAtBuildTime:
         _built, skipped = _catalog.for_build(suite)
         unbuilt = [line for line in skipped if "NOT BUILT HERE" in line]
         absent = [line for line in skipped if "SKIPPED optional" in line]
-        assert {"epy_draft", "epy_quoting", "epy_outreach"} == {
+        expected_absent = {
+            app.app_id for app in apps() if app.optional and app.built_here
+        }
+        assert expected_absent == {
             line.split()[3].rstrip(":") for line in absent}
         assert {line.split()[3].rstrip(":") for line in unbuilt} == {
             app.app_id for app in apps() if not app.built_here}

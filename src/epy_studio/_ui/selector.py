@@ -69,7 +69,7 @@ def manual_path() -> Path | None:
 def preferred_language() -> str:
     """Return the language this reader already chose, if any.
 
-    The four applications each store the choice under ``language`` in
+    The applications each store the choice under ``language`` in
     the organisation scope named by ``epy_export.ORGANIZATION``. Studio
     reads the same key rather than asking again: the selector is the
     FIRST window a reader sees, which is the wrong place to be asked
@@ -88,13 +88,9 @@ def preferred_language() -> str:
     """
     from PySide6.QtCore import QLocale, QSettings  # noqa: PLC0415
 
-    current = (
-        "epy_studio",
-        "epy_draft",
-        "epy_reports",
-        "epy_slides",
-        "epy_papers",
-    )
+    # Read the IDs from the one catalog that owns them.  A literal list
+    # here silently stopped covering Project, Quoting and Outreach.
+    current = ("epy_studio",) + tuple(app.app_id for app in apps())
     scopes = [(ORGANIZATION, name) for name in current]
     scopes += [
         (legacy, name)

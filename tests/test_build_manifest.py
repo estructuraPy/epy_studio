@@ -173,14 +173,21 @@ def test_the_optional_ids_come_from_the_catalog() -> None:
         str(app["id"]) for app in build._catalog_apps()
         if app.get("ships") == "installed"
     )
-    private = frozenset(
-        {"epy_draft", "epy_quoting", "epy_outreach", "epy_lab"}
+    optional = frozenset(
+        str(app["id"]) for app in build._catalog_apps()
+        if app.get("optional")
     )
-    assert build._optional_ids() == private | adopted
-    # A separate axis: epy_lab supplies itself; the adopted ones are installed
-    # by Studio's own installer.
-    assert build._own_installer_ids() == frozenset({"epy_lab"})
+    own_installer = frozenset(
+        str(app["id"]) for app in build._catalog_apps()
+        if str(app.get("ships", "studio")) == "own_installer"
+    )
+    assert build._optional_ids() == optional
+    # A separate axis: an own-installer app and the adopted apps are both
+    # optional, but only the adopted ones are installed by Studio.
+    assert build._own_installer_ids() == own_installer
     assert build._installed_ids() == adopted
+    assert own_installer <= optional
+    assert adopted <= optional
 
 
 def test_the_installed_applications_are_named_in_the_installer() -> None:

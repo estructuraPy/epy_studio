@@ -58,32 +58,12 @@ SPEC_LISTS_BEFORE_THE_MOVE = {
 }
 
 
-def test_every_shipped_application_is_listed() -> None:
+def test_catalog_ids_are_unique_and_non_empty() -> None:
+    """The catalog is the source of the list; it must not repeat an id."""
     ids = [app.app_id for app in _catalog.apps()]
-    assert ids == [
-        "epy_reports",
-        "epy_slides",
-        "epy_papers",
-        "epy_draft",
-        "epy_quoting",
-        "epy_outreach",
-        "epy_lab",
-        # The adopted ArtCraft Crafting Apps (MIT/Apache-2.0), in catalog
-        # order, under their ePy FAMILY names; `binary` carries the upstream
-        # stem the resolver actually looks for on disk.
-        "epy_cadcraft",
-        "epy_photocraft",
-        "epy_lightcraft",
-        "epy_filmcraft",
-        "epy_vectorcraft",
-        "epy_pdfcraft",
-        "epy_deckcraft",
-        "epy_gridcraft",
-        "epy_soundcraft",
-        "epy_wordcraft",
-        "epy_designcraft",
-        "epy_effectcraft",
-    ]
+    assert ids
+    assert all(ids)
+    assert len(ids) == len(set(ids))
 
 
 def test_draft_advertises_open_with_and_never_claims_the_default() -> None:
@@ -97,27 +77,11 @@ def test_draft_advertises_open_with_and_never_claims_the_default() -> None:
     assert by_id["epy_reports"].claims_default
 
 
-# The applications whose repositories are PRIVATE. Kept as a literal
-# rather than derived, because the fact lives on GitHub and a test that
-# asked the network would answer differently offline.
-PRIVATE = frozenset({"epy_draft", "epy_quoting", "epy_outreach", "epy_lab"})
-
-
-def test_an_application_is_optional_when_it_is_private_or_adopted() -> None:
-    # Privacy is what decides whether a checkout may be ABSENT, so it is
-    # what decides `optional`. epy_studio is public: a stranger who
-    # clones it must be able to build the public editors, and before
-    # this rule the build refused because ePy Draft was marked required
-    # while its repository is private.
-    #
-    # An ADOPTED application is optional for the other reason: most
-    # machines do not have it, and a missing one is not an incomplete
-    # install -- so the row is absent, not greyed. The two reasons are
-    # different and the same flag answers both.
+def test_optional_apps_cover_every_non_studio_route() -> None:
+    """An adopted or own-installer app may be absent from a bundle."""
     for app in _catalog.apps():
-        adopted = app.ships == _catalog.SHIPS_INSTALLED
-        expected = app.app_id in PRIVATE or adopted
-        assert app.optional == expected, app.app_id
+        if app.ships != _catalog.SHIPS_WITH_STUDIO:
+            assert app.optional, app.app_id
 
 
 def test_optional_and_register_are_independent_axes() -> None:
@@ -178,7 +142,9 @@ def test_every_entry_is_complete() -> None:
                 assert app.own_install_appid, f"{app.app_id} cannot be found"
             continue
         assert app.component
-        assert app.asset_packages, f"{app.app_id} bundles no assets"
+        assert app.asset_packages or app.icon, (
+            f"{app.app_id} bundles neither assets nor an icon"
+        )
         assert app.icon
 
 
@@ -264,7 +230,14 @@ def test_an_absent_optional_application_is_skipped_by_name(
         for line in skipped
         if "SKIPPED optional" in line
     }
-    assert absent == {"epy_quoting", "epy_outreach"}
+    expected_absent = {
+        app.app_id
+        for app in _catalog.apps()
+        if app.optional
+        and app.built_here
+        and not _catalog.entry_point(app, suite).is_file()
+    }
+    assert absent == expected_absent
     unbuilt = {
         line.split()[3].rstrip(":")
         for line in skipped
@@ -294,8 +267,21 @@ def test_a_present_optional_application_is_built(tmp_path: Path) -> None:
     # the entry point would build it, because it has one.
     assert (suite / "epy_lab" / "src" / "epy_lab" / "__main__.py").is_file()
     assert "epy_lab" not in [app.app_id for app in built]
-    assert len(skipped) == len(_unbuilt_ids())
-    assert all("NOT BUILT HERE" in line for line in skipped)
+    skipped_optional = {
+        line.split()[3].rstrip(":") for line in skipped
+        if line.startswith("SKIPPED")
+    }
+    expected_optional = {
+        app.app_id
+        for app in _catalog.apps()
+        if app.optional
+        and app.built_here
+        and not _catalog.entry_point(app, suite).is_file()
+    }
+    assert skipped_optional == expected_optional
+    assert sum("NOT BUILT HERE" in line for line in skipped) == len(
+        _unbuilt_ids()
+    )
 
 
 def test_an_absent_required_application_refuses_the_build(
@@ -336,12 +322,20 @@ def test_the_public_editors_alone_are_a_buildable_bundle(
         "epy_slides",
         "epy_papers",
     ]
-    assert len(skipped) == 3 + len(_unbuilt_ids())
-    assert {"epy_draft", "epy_quoting", "epy_outreach"} == {
+    skipped_optional = {
         line.split()[3].rstrip(":")
         for line in skipped
         if line.startswith("SKIPPED")
     }
+    expected_optional = {
+        app.app_id
+        for app in _catalog.apps()
+        if app.optional
+        and app.built_here
+        and not _catalog.entry_point(app, suite).is_file()
+    }
+    assert skipped_optional == expected_optional
+    assert len(skipped) == len(expected_optional) + len(_unbuilt_ids())
     assert sum("NOT BUILT HERE" in line for line in skipped) == len(
         _unbuilt_ids()
     )

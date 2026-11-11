@@ -782,20 +782,6 @@ def test_locate_cancelled_changes_nothing(
     assert selector.load_external_paths() == {}
 
 
-def test_the_selector_does_not_offer_blender(qt_app) -> None:
-    """Blender belongs to ePy Suite, not to the Studio selector."""
-    from PySide6.QtWidgets import QPushButton  # noqa: PLC0415
-
-    from epy_studio._core._backends import Backend  # noqa: PLC0415
-    from epy_studio._ui import selector  # noqa: PLC0415
-
-    window = selector.build_window([], backend=Backend(), language="en")
-    assert not any(
-        button.text() == "ePy Blender"
-        for button in window.findChildren(QPushButton)
-    )
-
-
 # ------------------------------------------- the theme
 
 

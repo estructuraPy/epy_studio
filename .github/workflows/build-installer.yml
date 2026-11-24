@@ -118,10 +118,24 @@ jobs:
               'soundcraft', 'wordcraft', 'designcraft', 'effectcraft')) {
             $dl = Join-Path $env:RUNNER_TEMP "dl_$c"
             New-Item -ItemType Directory -Force -Path $dl | Out-Null
-            gh release download -R "storytold/$c" `
-              -p "*windows-x64-portable.zip" -D $dl --clobber
-            if ($LASTEXITCODE -ne 0) { throw "cannot download $c" }
+            $gh = Start-Process -FilePath "gh" -ArgumentList @(
+              "release", "download", "-R", "storytold/$c",
+              "-p", "*windows-x64-portable.zip", "-D", $dl, "--clobber"
+            ) -NoNewWindow -PassThru
+            if (-not $gh.WaitForExit(120000)) {
+              $gh.Kill()
+              Write-Warning "skipped $c: download timed out"
+              continue
+            }
+            if ($gh.ExitCode -ne 0) {
+              Write-Warning "skipped $c: download failed"
+              continue
+            }
             $zip = Get-ChildItem $dl -Filter *.zip | Select-Object -First 1
+            if ($null -eq $zip) {
+              Write-Warning "skipped $c: no portable zip"
+              continue
+            }
             $ex = Join-Path $env:RUNNER_TEMP "ex_$c"
             Expand-Archive -Path $zip.FullName -DestinationPath $ex -Force
             $inner = Get-ChildItem $ex -Directory | Select-Object -First 1

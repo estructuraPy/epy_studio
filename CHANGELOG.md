@@ -4,6 +4,15 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3] — 2026-11-24
+
+### Fixed
+
+- **An unavailable adopted craft is skipped by name instead of blocking
+  the bundle.** Each upstream download now has a two-minute limit; the
+  installer's `#ifexist` guards compile with whatever was staged, and the
+  document applications are verified independently of the crafts.
+
 ## [0.9.2] — 2026-11-24
 
 ### Fixed

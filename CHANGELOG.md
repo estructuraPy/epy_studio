@@ -4,6 +4,15 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] — 2026-11-24
+
+### Fixed
+
+- **The Windows build clones `epy_project` through `SUITE_PAT`.** That
+  repository is private; the public checkout step tried it anonymously
+  and the build stopped before PyInstaller. It now travels with the other
+  private applications.
+
 ## [0.9.0] — 2026-11-23
 
 ### Added

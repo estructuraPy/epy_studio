@@ -45,7 +45,7 @@ jobs:
         shell: pwsh
         run: |
           foreach ($r in @('epy_export', 'epy_reports', 'epy_slides',
-                           'epy_papers', 'epy_books', 'epy_project')) {
+                           'epy_papers', 'epy_books')) {
             git clone --depth 1 "https://github.com/estructuraPy/$r.git" $r
             if ($LASTEXITCODE -ne 0) { throw "cannot clone $r" }
           }
@@ -55,11 +55,12 @@ jobs:
           GH_TOKEN: ${{ secrets.SUITE_PAT }}
         shell: pwsh
         run: |
-          # The three PRIVATE apps are OPTIONAL in the catalog: without the
-          # token the bundle is built from the public editors + the crafts,
-          # and epy_draft/quoting/outreach are skipped BY NAME (build.py says
-          # so). With it, the full bundle is produced.
-          foreach ($r in @('epy_draft', 'epy_quoting', 'epy_outreach')) {
+          # The PRIVATE apps are OPTIONAL in the catalog: without the token
+          # the bundle is built from the public editors + the crafts, and
+          # epy_draft/quoting/outreach/project are skipped BY NAME (build.py
+          # says so). With it, the full bundle is produced.
+          foreach ($r in @('epy_draft', 'epy_quoting', 'epy_outreach',
+                           'epy_project')) {
             gh repo clone "estructuraPy/$r" $r -- --depth 1 2>$null
             if ($LASTEXITCODE -ne 0) {
               Write-Warning "$r skipped: no SUITE_PAT (it is optional)"

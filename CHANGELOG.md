@@ -4,6 +4,16 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] — 2026-11-24
+
+### Fixed
+
+- **The quoting executable carries the project input report and the
+  profile loader.** The build installs `epy_project` as a regular package,
+  because PyInstaller does not follow the PEP 660 editable finder for a
+  hidden import, and the quoting catalogue now names both modules. The
+  shipped-fix probe refuses an installer that lacks them.
+
 ## [0.9.1] — 2026-11-24
 
 ### Fixed

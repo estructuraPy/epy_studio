@@ -89,6 +89,9 @@ jobs:
                            'epy_quoting', 'epy_outreach')) {
             if (Test-Path $r) { python -m pip install -e ".\$r" }
           }
+          # A hidden import from another application must be a REGULAR
+          # install: PyInstaller does not follow the PEP 660 editable finder.
+          python -m pip install --force-reinstall --no-deps .\epy_project
 
       - name: Build the bundle
         working-directory: epy_studio

@@ -111,7 +111,8 @@
         "branding"
       ],
       "hidden_imports": [
-        "epy_project.input_report"
+        "epy_project.input_report",
+        "epy_project.project_profile"
       ],
       "icon": "_core/_packaging/assets_build/epy_quoting.ico",
       "description": "Service offers — fee quotation for structural-engineering work"

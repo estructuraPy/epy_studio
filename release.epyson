@@ -1,4 +1,4 @@
-{
+﻿{
   "config_id": "release",
   "version": "1.0.0",
   "description": "What THIS release of ePy Studio promises to carry, as opposed to what the catalog says it CAN carry.",
@@ -17,6 +17,7 @@
     "epy_quoting": "v0.2.0",
     "epy_outreach": "v0.2.0",
     "epy_project": "v0.3.0",
-    "epy_docs": "v1.3.1"
+    "epy_docs": "v1.3.2"
   }
 }
+

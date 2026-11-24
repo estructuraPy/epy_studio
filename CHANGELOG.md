@@ -4,6 +4,15 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.4] — 2026-11-24
+
+### Fixed
+
+- **The adopted-crafts step cannot block the document bundle.** The step
+  is best-effort: a craft download or unzip that fails leaves a warning,
+  and the installer compiles with the `#ifexist` guards for whatever was
+  staged. The eight ePy applications are verified before this step runs.
+
 ## [0.9.3] — 2026-11-24
 
 ### Fixed

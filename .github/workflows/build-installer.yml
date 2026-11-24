@@ -106,6 +106,7 @@ jobs:
         run: python windows/build_support/verify_assets.py
 
       - name: Stage the adopted crafts
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh

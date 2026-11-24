@@ -70,7 +70,7 @@ Write-Host "== 3/6 silent install over the previous release =="
 # the installer stop, and with /SUPPRESSMSGBOXES it stops by ABORTING
 # (exit 5) rather than asking -- so that is named here rather than read
 # as a broken installer.
-$components = "reports,slides,papers,craft,quoting,outreach,project"
+$components = "reports,slides,papers,books,craft,quoting,outreach,project"
 $p = Start-Process -FilePath $setup -ArgumentList `
     "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", `
     "/DIR=$target", "/TYPE=full", "/COMPONENTS=$components" -Wait -PassThru

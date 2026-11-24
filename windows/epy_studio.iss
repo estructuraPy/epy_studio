@@ -24,7 +24,7 @@
 
 #define AppName "ePy Studio"
 #define AppDirName "epy_studio"
-#define AppVersion "0.8.4"
+#define AppVersion "0.9.0"
 #define AppPublisher "Ing. Angel Navarro-Mora M.Sc."
 #define AppURL "https://github.com/estructuraPy/epy_studio"
 #define AppId "{{7E2F9A41-5C38-4D06-B1E9-3A8D24C7F015}"
@@ -102,6 +102,8 @@ english.CompDesigncraft=ePy Layout - Page layout and composition
 spanish.CompDesigncraft=ePy Layout - Maquetación y composición de páginas
 english.CompEffectcraft=ePy Motion - Motion graphics and VFX
 spanish.CompEffectcraft=ePy Motion - Gráficos en movimiento y VFX
+english.CompBooks=ePy Books - Book authoring and editorial design
+spanish.CompBooks=ePy Books - Autoría y diseño editorial de libros
 
 
 [Types]
@@ -118,6 +120,9 @@ Name: "papers"; Description: "{cm:CompPapers}"; Types: full custom
 ; way ePy Quoting's are. Unlike Quoting it DOES register
 ; document types, so its [Run] lines are guarded too: optional
 ; and register are independent axes.
+#ifexist DistDir + "\epy_books.exe"
+Name: "books"; Description: "{cm:CompBooks}"; Types: full custom
+#endif
 #ifexist DistDir + "\epy_draft.exe"
 Name: "craft"; Description: "{cm:CompCraft}"; Types: full custom
 #endif
@@ -190,6 +195,9 @@ Source: "..\docs\USER_MANUAL_es.md"; DestDir: "{app}\docs"; Flags: ignoreversion
 Source: "{#DistDir}\epy_reports.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: reports
 Source: "{#DistDir}\epy_slides.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: slides
 Source: "{#DistDir}\epy_papers.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: papers
+#ifexist DistDir + "\epy_books.exe"
+Source: "{#DistDir}\epy_books.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: books
+#endif
 #ifexist DistDir + "\epy_draft.exe"
 Source: "{#DistDir}\epy_draft.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: craft
 #endif
@@ -261,6 +269,9 @@ Name: "{autoprograms}\{#AppName}"; Filename: "{app}\epy_studio.exe"; IconFilenam
 Name: "{autoprograms}\ePy Reports"; Filename: "{app}\epy_reports.exe"; IconFilename: "{app}\epy_reports.exe"; Components: reports
 Name: "{autoprograms}\ePy Slides"; Filename: "{app}\epy_slides.exe"; IconFilename: "{app}\epy_slides.exe"; Components: slides
 Name: "{autoprograms}\ePy Papers"; Filename: "{app}\epy_papers.exe"; IconFilename: "{app}\epy_papers.exe"; Components: papers
+#ifexist DistDir + "\epy_books.exe"
+Name: "{autoprograms}\ePy Books"; Filename: "{app}\epy_books.exe"; IconFilename: "{app}\epy_books.exe"; Components: books
+#endif
 #ifexist DistDir + "\epy_draft.exe"
 Name: "{autoprograms}\ePy Draft"; Filename: "{app}\epy_draft.exe"; IconFilename: "{app}\epy_draft.exe"; Components: craft
 #endif

@@ -66,6 +66,20 @@
       "description": "Academic manuscripts — live preview, journal profiles, exports to PDF and Word"
     },
     {
+      "id": "epy_books",
+      "display": "ePy Books",
+      "component": "books",
+      "register": "none",
+      "optional": true,
+      "asset_packages": [
+        "branding",
+        "csl"
+      ],
+      "hidden_imports": [],
+      "icon": "_core/_packaging/assets_build/epy_books.ico",
+      "description": "Books — editorial design, project history, AEC layouts, PDF and manuscript exports"
+    },
+    {
       "id": "epy_draft",
       "display": "ePy Draft",
       "component": "craft",
@@ -96,7 +110,9 @@
       "asset_packages": [
         "branding"
       ],
-      "hidden_imports": [],
+      "hidden_imports": [
+        "epy_project.input_report"
+      ],
       "icon": "_core/_packaging/assets_build/epy_quoting.ico",
       "description": "Service offers — fee quotation for structural-engineering work"
     },
@@ -132,10 +148,11 @@
       "hidden_imports": [
         "networkx",
         "pydantic",
-        "epy_units"
+        "epy_units",
+        "epy_project.input_report"
       ],
       "icon": "_core/_packaging/assets_build/epy_project.ico",
-      "description": "Project management - Gantt, Kanban, resources, tracking and reports"
+      "description": "Project management — Gantt, Kanban, resources, tracking and reports"
     },
     {
       "id": "epy_lab",

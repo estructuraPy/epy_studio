@@ -85,6 +85,15 @@ SHIPPED_FIXES = (
     # which is not a str constant -- so this row cannot pass on the old
     # code; measured on both.
     ("epy_reports", "epy_reports._core.renderer", "PNG"),
+    # The input report now carries technical proposals, not a generic
+    # administrative list. Both executables that can write it must ship
+    # the same generator.
+    ("epy_project", "epy_project.input_report", "Pendiente de consenso"),
+    ("epy_quoting", "epy_project.input_report", "Pendiente de consenso"),
+    # The project profile states the typology and the quoting service family;
+    # the two executables that write the report must ship its loader.
+    ("epy_project", "epy_project.project_profile", "proyecto.perfil.epyson"),
+    ("epy_quoting", "epy_project.project_profile", "proyecto.perfil.epyson"),
     # A figure label carries attributes after its number, so a pattern
     # demanding "}" right after the digits matched none of them and every
     # inserted figure came back labelled fig-1, breaking every cross

@@ -30,6 +30,8 @@ from epy_export import (
 
 from .._core import _i18n
 from .._core._backends import (
+    ENV_PYTHON,
+    ENV_VERSION,
     Backend,
     detect_docs,
     handoff_env,
@@ -324,7 +326,12 @@ def build_window(
         QUrl,  # noqa: PLC0415
         Signal,
     )
-    from PySide6.QtGui import QDesktopServices, QIcon  # noqa: PLC0415
+    from PySide6.QtGui import (  # noqa: PLC0415
+        QAction,
+        QDesktopServices,
+        QIcon,
+        QKeySequence,
+    )
     from PySide6.QtWidgets import (  # noqa: PLC0415
         QCheckBox,
         QComboBox,
@@ -406,6 +413,24 @@ def build_window(
             geometry = self._settings.value("window/geometry")
             if geometry is not None:
                 self.restoreGeometry(geometry)
+
+            file_menu = self.menuBar().addMenu(_i18n.tr("File"))
+            self.save_action = QAction(_i18n.tr("Save"), self)
+            self.save_action.setShortcut(QKeySequence.StandardKey.Save)
+            self.save_action.triggered.connect(self._save_settings)
+            file_menu.addAction(self.save_action)
+            file_menu.addSeparator()
+            self.quit_action = QAction(_i18n.tr("&Quit"), self)
+            self.quit_action.setShortcut(QKeySequence.StandardKey.Quit)
+            self.quit_action.triggered.connect(self.close)
+            file_menu.addAction(self.quit_action)
+
+            help_menu = self.menuBar().addMenu(_i18n.tr("Help"))
+            self.update_action = QAction(
+                _i18n.tr("Check for updates..."), self
+            )
+            self.update_action.triggered.connect(self._open_updates)
+            help_menu.addAction(self.update_action)
 
             root = QWidget(self)
             layout = QVBoxLayout(root)
@@ -831,6 +856,18 @@ def build_window(
             replacement.show()
             self.close()
 
+        def _open_updates(self) -> None:
+            """Open the ePy Studio releases page."""
+            from epy_export import open_releases  # noqa: PLC0415
+
+            open_releases("epy_studio", self)
+
+        def _save_settings(self) -> None:
+            """Persist the selector's current choices and geometry."""
+            self._settings.setValue("window/geometry", self.saveGeometry())
+            self._settings.sync()
+            self.statusBar().showMessage(_i18n.tr("Settings saved."), 3000)
+
         def closeEvent(self, event) -> None:  # noqa: N802
             """Remember the selector geometry across launches."""
             self._settings.setValue("window/geometry", self.saveGeometry())
@@ -839,18 +876,18 @@ def build_window(
 
         def _launch(self, exe_path: Path) -> None:
             """Start the selected tool, forwarding files and the hints."""
+            env = {**os.environ, **craft_env()}
+            # A hint is OURS to give: when the offer is off, a stale value
+            # inherited from the parent process must not reach the child.
+            env.pop(ENV_PYTHON, None)
+            env.pop(ENV_VERSION, None)
+            env.update(
+                handoff_env(self._settled_backend(), offer=docs_offered())
+            )
             subprocess.Popen(  # noqa: S603 — fixed path in our install dir
                 [str(exe_path), *self._files],
                 cwd=str(exe_path.parent),
-                env={
-                    **os.environ,
-                    **handoff_env(
-                        self._settled_backend(), offer=docs_offered()
-                    ),
-                    # The adopted ArtCraft CLIs found on this machine, so a
-                    # drawing flow the launched app drives can reach them.
-                    **craft_env(),
-                },
+                env=env,
             )
             self.close()
 

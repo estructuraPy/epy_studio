@@ -45,7 +45,7 @@ jobs:
         shell: pwsh
         run: |
           foreach ($r in @('epy_export', 'epy_reports', 'epy_slides',
-                           'epy_papers', 'epy_project')) {
+                           'epy_papers', 'epy_books', 'epy_project')) {
             git clone --depth 1 "https://github.com/estructuraPy/$r.git" $r
             if ($LASTEXITCODE -ne 0) { throw "cannot clone $r" }
           }

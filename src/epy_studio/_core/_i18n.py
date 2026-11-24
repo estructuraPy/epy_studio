@@ -25,6 +25,12 @@ _lang = "en"
 _ES: dict[str, str] = {
     "ePy Studio": "ePy Studio",
     "ePy Suite": "ePy Suite",
+    "File": "Archivo",
+    "Save": "Guardar",
+    "&Quit": "&Salir",
+    "Help": "Ayuda",
+    "Check for updates...": "Buscar actualizaciones...",
+    "Settings saved.": "Configuraci?n guardada.",
     "Applications": "Aplicaciones",
     "Choose the editor for your document:":
         "Elija el editor para su documento:",
@@ -90,6 +96,10 @@ _ES: dict[str, str] = {
     "PDF and Word":
         "Manuscritos académicos — vista previa en vivo, perfiles de revista, "
         "exporta a PDF y Word",
+    "Books — editorial design, project history, AEC layouts, PDF and "
+    "manuscript exports":
+        "Libros — diseño editorial, historial del proyecto, maquetas AEC, "
+        "exporta a PDF y manuscrito",
     "Batch drafting over your reference library — no preview, renders "
     "through the other three":
         "Redacción por lotes sobre su biblioteca de referencias — sin vista "
@@ -101,6 +111,9 @@ _ES: dict[str, str] = {
     "service-presentation letters":
         "Prospección comercial — registro de contactos, investigación del "
         "cliente y cartas de presentación de servicios",
+    "Project management — Gantt, Kanban, resources, tracking and reports":
+        "Gestión de proyectos — Gantt, Kanban, recursos, seguimiento e "
+        "informes",
     "Virtual structures laboratory — parametric experiments, exports "
     "interactive pages, animations and .kepy cases":
         "Laboratorio virtual de estructuras — experimentos paramétricos, "

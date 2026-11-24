@@ -4,6 +4,23 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] — 2026-11-23
+
+### Added
+
+- **ePy Books joins the release promise.** The catalog has carried it
+  since 1.4.0; this release makes the build refuse to cut an installer
+  without it, rather than printing a SKIP line nobody re-reads.
+
+### Changed
+
+- Requires `epy_export>=0.5.0`, the shared release helper and PDF gates.
+
+### Fixed
+
+- The version is one number again in `pyproject.toml`, `__init__.py`,
+  the installer script and this changelog.
+
 ## [0.8.4] — 2026-09-17
 
 The installed bundle was eight days behind: four fixes were in git and

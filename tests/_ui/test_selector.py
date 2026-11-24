@@ -842,3 +842,136 @@ def test_choosing_a_column_count_rebuilds(qt_app, ini_settings) -> None:
     window = selector.build_window([], backend=Backend(), language="en")
     window._set_columns(4)
     assert selector.current_columns() == 4
+
+
+# ------------------------------- icons, settings and updates
+
+
+def test_a_settled_answer_is_returned_without_waiting(
+    qt_app, scratch_registry
+) -> None:
+    # A launch asks through _settled_backend, and the window the language
+    # switch rebuilds hands over an answer it already has. Marking it
+    # unanswered while the event is set is the branch that must not
+    # block: the wait returns immediately and the answer is the one the
+    # window was built with.
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    found = Backend()
+    window = selector.build_window([], backend=found, language="en")
+    try:
+        window._answered = False
+        window._settled.set()
+        assert window._settled_backend() is found
+    finally:
+        window.close()
+
+
+def test_an_existing_file_lends_its_icon(
+    qt_app, tmp_path, scratch_registry
+) -> None:
+    # The card asks _app_icon for a real path before it uses a letter
+    # badge. Two kinds of file answer: a Windows executable through the
+    # shell provider (notepad.exe, copied and never launched), and an
+    # icon Qt itself can read whatever the extension says. The app's own
+    # icon fallback is emptied so only the executable path can answer.
+    import shutil
+    from dataclasses import replace
+    from pathlib import Path
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    app = replace(next(item for item in selector.apps() if item.icon), icon="")
+    window = selector.build_window([], backend=Backend(), language="en")
+    try:
+        exe = tmp_path / f"{app.app_id}.exe"
+        shutil.copyfile(r"C:\Windows\System32\notepad.exe", exe)
+        icon = window._app_icon(app, exe)
+        assert icon is not None
+        assert not icon.isNull()
+
+        asset = (
+            Path(selector.__file__).resolve().parents[1]
+            / "_core/_packaging/assets_build/epy_studio.ico"
+        )
+        copied = tmp_path / "epy_studio.exe"
+        shutil.copyfile(asset, copied)
+        icon = window._app_icon(app, copied)
+        assert icon is not None
+        assert not icon.isNull()
+    finally:
+        window.close()
+
+
+def test_an_icon_that_is_not_on_disk_is_no_icon(
+    qt_app, tmp_path, scratch_registry
+) -> None:
+    # The catalog names an icon, but this checkout need not carry it.
+    # No candidate under either suite root is found, so the card falls
+    # back to its letter badge rather than to a broken pixmap.
+    from dataclasses import replace
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    app = next(item for item in selector.apps() if item.icon)
+    missing = replace(app, icon="no_such_icon_for_test.ico")
+    window = selector.build_window([], backend=Backend(), language="en")
+    try:
+        assert window._app_icon(missing, tmp_path / "absent.exe") is None
+    finally:
+        window.close()
+
+
+def test_checking_for_updates_opens_the_studio_releases_page(
+    qt_app, monkeypatch, scratch_registry
+) -> None:
+    # The Help entry hands the window to epy_export so the browser opens
+    # against it; the package name is Studio's own, not a sibling's.
+    import epy_export
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    calls: list[tuple[str, object]] = []
+    monkeypatch.setattr(
+        epy_export,
+        "open_releases",
+        lambda package, parent: calls.append((package, parent)),
+    )
+    window = selector.build_window([], backend=Backend(), language="en")
+    try:
+        window._open_updates()
+        assert calls == [("epy_studio", window)]
+    finally:
+        window.close()
+
+
+def test_saving_the_settings_stores_the_geometry_and_says_so(
+    qt_app, scratch_registry
+) -> None:
+    # Save is the menu counterpart of closing the window: the geometry
+    # is persisted at once and the status strip confirms it. Read back
+    # through a second QSettings so the file, not the in-memory object,
+    # is what the assertion trusts.
+    from epy_export import ORGANIZATION
+
+    from epy_studio._core._backends import Backend
+    from epy_studio._ui import selector
+
+    window = selector.build_window([], backend=Backend(), language="en")
+    try:
+        window._save_settings()
+        assert window.statusBar().currentMessage() == "Settings saved."
+        stored = window._settings.value("window/geometry")
+        assert stored is not None
+        assert len(stored) > 0
+        again = scratch_registry(ORGANIZATION, "epy_studio").value(
+            "window/geometry"
+        )
+        assert again is not None
+        assert len(again) > 0
+    finally:
+        window.close()

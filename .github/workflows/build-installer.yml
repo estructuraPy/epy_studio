@@ -84,8 +84,8 @@ jobs:
           # epy_export first: the apps depend on it and it is on no index.
           python -m pip install -e .\epy_export
           foreach ($r in @('epy_reports', 'epy_slides', 'epy_papers',
-                           'epy_project', 'epy_draft', 'epy_quoting',
-                           'epy_outreach')) {
+                           'epy_books', 'epy_project', 'epy_draft',
+                           'epy_quoting', 'epy_outreach')) {
             if (Test-Path $r) { python -m pip install -e ".\$r" }
           }
 

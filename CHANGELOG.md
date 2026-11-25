@@ -4,6 +4,12 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.2] — 2026-11-24
+
+### Changed
+
+- **epy_quoting v0.9.1.** The quoting gate reaches 100 % coverage with no skipped test; the release matrix records the corrected tag.
+
 ## [0.10.1] — 2026-11-24
 
 ### Changed

@@ -870,10 +870,6 @@ def test_a_settled_answer_is_returned_without_waiting(
         window.close()
 
 
-@pytest.mark.skipif(
-    sys.platform != "win32",
-    reason="notepad.exe and the shell icon provider are Windows-only",
-)
 def test_an_existing_file_lends_its_icon(
     qt_app, tmp_path, scratch_registry
 ) -> None:
@@ -892,11 +888,12 @@ def test_an_existing_file_lends_its_icon(
     app = replace(next(item for item in selector.apps() if item.icon), icon="")
     window = selector.build_window([], backend=Backend(), language="en")
     try:
-        exe = tmp_path / f"{app.app_id}.exe"
-        shutil.copyfile(r"C:\Windows\System32\notepad.exe", exe)
-        icon = window._app_icon(app, exe)
-        assert icon is not None
-        assert not icon.isNull()
+        if sys.platform == "win32":
+            exe = tmp_path / f"{app.app_id}.exe"
+            shutil.copyfile(r"C:\Windows\System32\notepad.exe", exe)
+            icon = window._app_icon(app, exe)
+            assert icon is not None
+            assert not icon.isNull()
 
         asset = (
             Path(selector.__file__).resolve().parents[1]

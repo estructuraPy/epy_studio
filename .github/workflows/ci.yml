@@ -268,7 +268,9 @@ jobs:
         # The standard-id rule unions the catalogs of every sibling library;
         # a one-repository runner has none, and the rule refuses to report
         # every documented id as unknown. One sibling is enough to seed it.
-        run: git clone --depth 1 https://github.com/estructuraPy/epy_concrete.git ../epy_concrete
+        env:
+          SUITE_PAT: ${{ secrets.SUITE_PAT }}
+        run: git clone --depth 1 "https://x-access-token:${SUITE_PAT}@github.com/estructuraPy/epy_concrete.git" ../epy_concrete
       - name: housekeeper --strict
         env:
           PYTHONDONTWRITEBYTECODE: "1"

@@ -1,6 +1,6 @@
 {
   "config_id": "apps",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Which applications this Studio bundle carries: the executable each ships, how it is presented in the selector, which installer component installs it, and whether it may register as the default document handler.",
   "audit_status": "n_a",
   "audit_notes": "Application bundle manifest (executables, selector text, installer components, file-association policy): packaging configuration with no physical, normative or monetary magnitude. Was marked verified without any reference; there is nothing to verify against a document.",
@@ -173,6 +173,26 @@
       ],
       "icon": "_core/_packaging/assets_build/epy_scena.ico",
       "description": "Private scenario simulator — scripted and LLM client dialogues, metrics and evidence packages"
+    },
+    {
+      "id": "epy_files",
+      "display": "ePy Files",
+      "component": "files",
+      "register": "none",
+      "optional": true,
+      "private": true,
+      "asset_packages": [],
+      "hidden_imports": [
+        "PySide6",
+        "epy_export",
+        "fitz",
+        "pymupdf",
+        "openpyxl",
+        "docx",
+        "langdetect"
+      ],
+      "icon": "_core/_packaging/assets_build/epy_files.ico",
+      "description": "Private reference library — records, cite keys, cloud sources, contained viewer, bib/CSL and zepy sharing"
     },
     {
       "id": "epy_lab",

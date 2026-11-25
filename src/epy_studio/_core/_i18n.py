@@ -37,6 +37,10 @@ _ES: dict[str, str] = {
     "Open <b>{names}</b> with:": "Abrir <b>{names}</b> con:",
     "Open": "Abrir",
     "Private": "Privada",
+    "Private reference library — records, cite keys, cloud sources, "
+    "contained viewer, bib/CSL and zepy sharing":
+        "Biblioteca privada de referencias - fichas, cite keys, fuentes en "
+        "nube, visor contenido, bib/CSL y zepy",
     "Private scenario simulator — scripted and LLM client dialogues, "
     "metrics and evidence packages":
         "Simulador privado de escenarios - dialogos guionados o con LLM, "

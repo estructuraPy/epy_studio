@@ -4,6 +4,12 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] — 2026-11-24
+
+### Changed
+
+- **epy_quoting v0.9.0.** The corporate base salary closes at the ANM engineer salary and the law floor stays at the official 2019 arancel. The release matrix now records the new quoting tag.
+
 ## [0.10.0] — 2026-11-24
 
 ### Changed

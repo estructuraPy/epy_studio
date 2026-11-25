@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import sys
+
 import pytest
 
 from epy_studio._core._backends import Backend
@@ -868,6 +870,10 @@ def test_a_settled_answer_is_returned_without_waiting(
         window.close()
 
 
+@pytest.mark.skipif(
+    sys.platform != "win32",
+    reason="notepad.exe and the shell icon provider are Windows-only",
+)
 def test_an_existing_file_lends_its_icon(
     qt_app, tmp_path, scratch_registry
 ) -> None:

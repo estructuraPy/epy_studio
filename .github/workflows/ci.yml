@@ -264,6 +264,11 @@ jobs:
       # like epy_docs. What DOES fail here is everything this repository
       # can answer on its own, which is most of it, and which used to run
       # only when somebody remembered.
+      - name: Check out a sibling standards catalog
+        # The standard-id rule unions the catalogs of every sibling library;
+        # a one-repository runner has none, and the rule refuses to report
+        # every documented id as unknown. One sibling is enough to seed it.
+        run: git clone --depth 1 https://github.com/estructuraPy/epy_concrete.git ../epy_concrete
       - name: housekeeper --strict
         env:
           PYTHONDONTWRITEBYTECODE: "1"

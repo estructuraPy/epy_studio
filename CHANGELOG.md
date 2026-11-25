@@ -4,6 +4,12 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] — 2026-11-24
+
+### Changed
+
+- **Release matrix.** `release.epyson` records epy_quoting v0.8.0 (58 families, all 11 faculties) and epy_outreach v0.3.0 (faculty taxonomy and contact card v2); epy_docs remains the v1.3.2 commercial add-on.
+
 ## [0.9.4] — 2026-11-24
 
 ### Fixed

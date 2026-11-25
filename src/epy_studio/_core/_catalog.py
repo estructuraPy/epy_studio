@@ -175,6 +175,7 @@ class App:
         hidden_imports: Whatever else it resolves at run time that
             static analysis misses -- entry-point plugins, backends.
         icon: The executable's icon, relative to the package root.
+        private: Whether the selector tags it as private to the owner.
         upstream: Where an ADOPTED application comes from -- its project
             URL and license. Empty for an application of ours, which
             needs no provenance because this repository IS one. For an
@@ -195,6 +196,7 @@ class App:
     asset_packages: tuple[str, ...] = ()
     hidden_imports: tuple[str, ...] = ()
     icon: str = ""
+    private: bool = False
     ships: str = SHIPS_WITH_STUDIO
     own_install_appid: str = ""
     upstream: str = ""
@@ -337,6 +339,7 @@ def apps() -> tuple[App, ...]:
                     str(mod) for mod in item.get("hidden_imports", [])
                 ),
                 icon=str(item.get("icon", "")),
+                private=bool(item.get("private", False)),
                 ships=ships,
                 own_install_appid=str(item.get("own_install_appid", "")),
                 upstream=str(item.get("upstream", "")),

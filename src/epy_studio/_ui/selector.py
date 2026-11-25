@@ -770,6 +770,11 @@ def build_window(
             desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
             desc.setWordWrap(True)
             column.addWidget(desc)
+            if app.private:
+                tag = QLabel(_i18n.tr("Private"), card)
+                tag.setObjectName("AppDesc")
+                tag.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                column.addWidget(tag)
             column.addStretch(1)
 
             if exe_path.is_file():

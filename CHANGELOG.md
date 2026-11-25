@@ -4,6 +4,12 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.3] — 2026-11-24
+
+### Added
+
+- **ePy Scena, private app.** The catalog now carries the private scenario simulator, guarded in the installer like the other owner-only apps. The card is tagged Privada; the app opens with the family theme and exposes the scripted/LLM run, metrics and evidence folder.
+
 ## [0.10.2] — 2026-11-24
 
 ### Changed

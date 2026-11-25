@@ -24,7 +24,7 @@
 
 #define AppName "ePy Studio"
 #define AppDirName "epy_studio"
-#define AppVersion "0.10.2"
+#define AppVersion "0.10.3"
 #define AppPublisher "Ing. Angel Navarro-Mora M.Sc."
 #define AppURL "https://github.com/estructuraPy/epy_studio"
 #define AppId "{{7E2F9A41-5C38-4D06-B1E9-3A8D24C7F015}"
@@ -104,6 +104,8 @@ english.CompEffectcraft=ePy Motion - Motion graphics and VFX
 spanish.CompEffectcraft=ePy Motion - Gráficos en movimiento y VFX
 english.CompBooks=ePy Books - Book authoring and editorial design
 spanish.CompBooks=ePy Books - Autoría y diseño editorial de libros
+english.CompScena=ePy Scena - private scenario simulator
+spanish.CompScena=ePy Scena - simulador privado de escenarios
 
 
 [Types]
@@ -139,6 +141,11 @@ Name: "outreach"; Description: "{cm:CompOutreach}"; Types: full custom
 #endif
 #ifexist DistDir + "\epy_project.exe"
 Name: "project"; Description: "{cm:CompProject}"; Types: full custom
+#endif
+; ePy Scena is a PRIVATE application: a checkout of this PUBLIC
+; repository need not carry it, and every line naming it is guarded.
+#ifexist DistDir + "\epy_scena.exe"
+Name: "scena"; Description: "{cm:CompScena}"; Types: full custom
 #endif
 
 ; Adopted crafting applications, installed from the staged
@@ -209,6 +216,9 @@ Source: "{#DistDir}\epy_outreach.exe"; DestDir: "{app}"; Flags: ignoreversion; C
 #endif
 #ifexist DistDir + "\epy_project.exe"
 Source: "{#DistDir}\epy_project.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: project
+#endif
+#ifexist DistDir + "\epy_scena.exe"
+Source: "{#DistDir}\epy_scena.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: scena
 #endif
 
 ; Adopted crafting applications, installed from the staged
@@ -283,6 +293,9 @@ Name: "{autoprograms}\ePy Outreach"; Filename: "{app}\epy_outreach.exe"; IconFil
 #endif
 #ifexist DistDir + "\epy_project.exe"
 Name: "{autoprograms}\ePy Project"; Filename: "{app}\epy_project.exe"; IconFilename: "{app}\epy_project.exe"; Components: project
+#endif
+#ifexist DistDir + "\epy_scena.exe"
+Name: "{autoprograms}\ePy Scena"; Filename: "{app}\epy_scena.exe"; IconFilename: "{app}\epy_scena.exe"; Components: scena
 #endif
 ; Adopted crafting applications, installed from the staged
 ; dist/.../crafts/<binary>/ tree this bundle carries. Guarded like the

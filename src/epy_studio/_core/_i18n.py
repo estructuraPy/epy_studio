@@ -36,6 +36,11 @@ _ES: dict[str, str] = {
         "Elija el editor para su documento:",
     "Open <b>{names}</b> with:": "Abrir <b>{names}</b> con:",
     "Open": "Abrir",
+    "Private": "Privada",
+    "Private scenario simulator — scripted and LLM client dialogues, "
+    "metrics and evidence packages":
+        "Simulador privado de escenarios - dialogos guionados o con LLM, "
+        "metricas y paquetes de evidencia",
     "User manual": "Manual de usuario",
     "The bundled user manual is not available.":
         "El manual de usuario incluido no est? disponible.",

@@ -1,10 +1,12 @@
 {
   "config_id": "apps",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Which applications this Studio bundle carries: the executable each ships, how it is presented in the selector, which installer component installs it, and whether it may register as the default document handler.",
   "audit_status": "n_a",
   "audit_notes": "Application bundle manifest (executables, selector text, installer components, file-association policy): packaging configuration with no physical, normative or monetary magnitude. Was marked verified without any reference; there is nothing to verify against a document.",
-  "references": {"entries": []},
+  "references": {
+    "entries": []
+  },
   "_note": "One place, because the list was in five and three of them had already drifted -- launcher.py, epy_studio.spec (three sections), windows/epy_studio.iss (five sections), build.py and README, with the last two still saying 'three editors' after the fourth shipped. launcher.py reads this at run time and epy_studio.spec reads it at build time, so a fifth application is one entry here instead of nine edits. The .iss cannot read JSON; build.py refuses to build when the two disagree.",
   "_description_note": "The four sentences answer the SAME questions in the same order: what kind of document, what the editor gives you, what comes out. They did not before -- ePy Reports claimed 'live preview' while Slides and Papers said nothing about it, and all three have it (measured: 15, 16 and 9 files reaching the preview widget), so a reader comparing them would have concluded the other two lacked it. ePy Draft is the one that genuinely differs, and saying so is the point of having a sentence at all. These are English keys; the Spanish lives in _core/_i18n.py.",
   "_optional_note": "An optional application is one the owner hands out, not one the installer offers. Its sibling checkout may be ABSENT when Studio is built: the spec skips it by name, the installer script wraps its lines in #ifexist so it compiles either way, and the selector does not offer it at all when its executable is not there -- not greyed, absent. A required application whose executable is missing keeps its greyed row: that is a custom install the user chose, and saying how to complete it is still right. The lists an application needs at build time -- asset subpackages, hidden imports, its icon -- live here too, so a new application really is one entry and not nine edits.",
@@ -154,6 +156,23 @@
       ],
       "icon": "_core/_packaging/assets_build/epy_project.ico",
       "description": "Project management — Gantt, Kanban, resources, tracking and reports"
+    },
+    {
+      "id": "epy_scena",
+      "display": "ePy Scena",
+      "component": "scena",
+      "register": "none",
+      "optional": true,
+      "private": true,
+      "asset_packages": [],
+      "hidden_imports": [
+        "PySide6",
+        "epy_export",
+        "epy_draft",
+        "epy_outreach"
+      ],
+      "icon": "_core/_packaging/assets_build/epy_scena.ico",
+      "description": "Private scenario simulator — scripted and LLM client dialogues, metrics and evidence packages"
     },
     {
       "id": "epy_lab",

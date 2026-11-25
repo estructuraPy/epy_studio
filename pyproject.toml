@@ -26,7 +26,7 @@ dependencies = [
 # one place the organisation name of every settings scope lives.
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.5", "pyinstaller>=6.0"]
+dev = ["pytest>=8.0", "ruff>=0.5", "pyinstaller>=6.0", "plotly>=5.0"]
 
 [project.gui-scripts]
 epy_studio = "epy_studio.launcher:main"

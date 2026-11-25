@@ -177,9 +177,12 @@ def _bare_visible(tree: ast.AST) -> list[tuple[int, str]]:
                 )
                 if _is_prose(literal):
                     bare.append((arg.lineno, _FSTRING))
-            elif isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-                if _is_prose(arg.value):
-                    bare.append((arg.lineno, arg.value))
+            elif (
+                isinstance(arg, ast.Constant)
+                and isinstance(arg.value, str)
+                and _is_prose(arg.value)
+            ):
+                bare.append((arg.lineno, arg.value))
     return bare
 
 

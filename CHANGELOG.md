@@ -4,6 +4,14 @@ All notable changes to `epy_studio` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] — 2026-11-25
+
+### Changed
+
+- ePy Books, ePy Scena and ePy Files open the demo from the File menu,
+  switch language live and show the shared step-by-step guide.
+- Their demos ship in English and Spanish.
+
 ## [0.11.0] — 2026-11-25
 
 ### Added

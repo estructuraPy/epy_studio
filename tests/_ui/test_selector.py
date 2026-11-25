@@ -871,7 +871,7 @@ def test_a_settled_answer_is_returned_without_waiting(
 
 
 def test_an_existing_file_lends_its_icon(
-    qt_app, tmp_path, scratch_registry
+    qt_app, tmp_path, scratch_registry, monkeypatch
 ) -> None:
     # The card asks _app_icon for a real path before it uses a letter
     # badge. Two kinds of file answer: a Windows executable through the
@@ -902,6 +902,31 @@ def test_an_existing_file_lends_its_icon(
         copied = tmp_path / "epy_studio.exe"
         shutil.copyfile(asset, copied)
         icon = window._app_icon(app, copied)
+        assert icon is not None
+        assert not icon.isNull()
+
+        # The third answer is the catalog's own icon under the suite root.
+        # _app_icon resolves it from its module location, so point that at
+        # the temporary suite rather than writing into a sibling checkout.
+        monkeypatch.setattr(
+            selector,
+            "__file__",
+            str(
+                tmp_path
+                / "suite"
+                / "src"
+                / "epy_studio"
+                / "_ui"
+                / "selector.py"
+            ),
+        )
+        target = (
+            tmp_path / app.app_id / "src" / app.app_id / "fallback.ico"
+        )
+        target.parent.mkdir(parents=True)
+        shutil.copyfile(asset, target)
+        with_icon = replace(app, icon="fallback.ico")
+        icon = window._app_icon(with_icon, tmp_path / "absent.exe")
         assert icon is not None
         assert not icon.isNull()
     finally:

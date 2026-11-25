@@ -265,7 +265,11 @@ jobs:
       # can answer on its own, which is most of it, and which used to run
       # only when somebody remembered.
       - name: housekeeper --strict
-        run: python housekeeper.py --strict
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          python housekeeper.py --apply
+          python housekeeper.py --strict
 
   build:
     name: Build distribution

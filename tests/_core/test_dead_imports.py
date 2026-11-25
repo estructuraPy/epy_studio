@@ -29,7 +29,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parents[1] / "src"
+SRC = Path(__file__).resolve().parents[2] / "src"
 PACKAGE = next(
     p for p in SRC.iterdir() if p.is_dir() and p.name.startswith("epy_")
 )

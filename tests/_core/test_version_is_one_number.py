@@ -25,7 +25,7 @@ from pathlib import Path
 
 import epy_studio
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def _match(rel: str, pattern: str, encoding: str = "utf-8") -> str:

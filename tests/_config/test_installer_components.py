@@ -14,7 +14,7 @@ import json
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 ISS = ROOT / "windows" / "epy_studio.iss"
 CATALOG = ROOT / "src" / "epy_studio" / "_config" / "apps.epyson"
 

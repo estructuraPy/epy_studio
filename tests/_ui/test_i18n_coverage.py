@@ -33,7 +33,7 @@ import ast
 import re
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 SRC = REPO / "src"
 PACKAGE = next(
     p for p in SRC.iterdir() if p.is_dir() and p.name.startswith("epy_")
